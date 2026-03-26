@@ -34,8 +34,8 @@ pub fn MaCrossStrategy::name(self : MaCrossStrategy) -> String {
 ///|
 /// Initialize strategy
 pub fn MaCrossStrategy::on_init(
-  self : MaCrossStrategy,
-  ctx : @strategy.StrategyContext,
+  _self : MaCrossStrategy,
+  _ctx : @strategy.StrategyContext,
 ) -> Unit {
   // No initialization needed
 }
@@ -45,7 +45,7 @@ pub fn MaCrossStrategy::on_init(
 pub fn MaCrossStrategy::on_bar(
   self : MaCrossStrategy,
   kline : @data.KLine,
-  ctx : @strategy.StrategyContext,
+  _ctx : @strategy.StrategyContext,
   close_history : Array[Float],
 ) -> @strategy.Signal {
   if close_history.length() < self.slow_period {

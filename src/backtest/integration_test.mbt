@@ -65,7 +65,7 @@ test "integration: Data to Indicator to Strategy pipeline" {
             action: @strategy.Action::Buy,
             price: kline.close,
             timestamp: kline.date,
-            strength: Float::from_double((fast_ma[len - 1] - slow_ma[len - 1]) / slow_ma[len - 1]),
+            strength: (fast_ma[len - 1] - slow_ma[len - 1]) / slow_ma[len - 1],
           }
         } else {
           @strategy.Signal::{
@@ -281,7 +281,7 @@ test "integration: Indicator RSI overbought/oversold to strategy signal" {
             action: @strategy.Action::Sell,
             price: kline.close,
             timestamp: kline.date,
-            strength: Float::from_double((last_rsi - 70.0) / 30.0),
+            strength: (last_rsi - 70.0) / 30.0,
           }
         } else if last_rsi < 30.0 {
           @strategy.Signal::{
@@ -289,7 +289,7 @@ test "integration: Indicator RSI overbought/oversold to strategy signal" {
             action: @strategy.Action::Buy,
             price: kline.close,
             timestamp: kline.date,
-            strength: Float::from_double((30.0 - last_rsi) / 30.0),
+            strength: (30.0 - last_rsi) / 30.0,
           }
         } else {
           @strategy.Signal::{

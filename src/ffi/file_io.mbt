@@ -35,7 +35,7 @@ extern "c" fn __mkdir_p(path : Bytes) -> Int = "moonbit_mkdir_p"
 /// Read file content as String
 /// Returns None if file doesn't exist or can't be read
 pub fn read_file(path : String) -> String? {
-  let path_bytes = path.to_bytes()
+  let path_bytes = @utf8.encode(path)
   match __read_file_bytes(path_bytes) {
     Some(bytes) =>
       // Create string from bytes using encoding module
@@ -48,8 +48,8 @@ pub fn read_file(path : String) -> String? {
 /// Write string content to file
 /// Returns true on success, false on failure
 pub fn write_file(path : String, content : String) -> Bool {
-  let path_bytes = path.to_bytes()
-  let content_bytes = content.to_bytes()
+  let path_bytes = @utf8.encode(path)
+  let content_bytes = @utf8.encode(content)
   let len = content_bytes.length()
   let result = __write_file_bytes(path_bytes, content_bytes, len)
   result == 0
@@ -58,7 +58,7 @@ pub fn write_file(path : String, content : String) -> Bool {
 ///|
 /// Check if file exists
 pub fn file_exists(path : String) -> Bool {
-  let path_bytes = path.to_bytes()
+  let path_bytes = @utf8.encode(path)
   let result = __file_exists(path_bytes)
   result == 1
 }
@@ -67,7 +67,7 @@ pub fn file_exists(path : String) -> Bool {
 /// Create directory (including parent directories)
 /// Returns true on success, false on failure
 pub fn mkdir_p(path : String) -> Bool {
-  let path_bytes = path.to_bytes()
+  let path_bytes = @utf8.encode(path)
   let result = __mkdir_p(path_bytes)
   result == 0
 }

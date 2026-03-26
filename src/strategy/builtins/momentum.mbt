@@ -38,8 +38,8 @@ pub fn MomentumStrategy::name(self : MomentumStrategy) -> String {
 ///|
 /// Initialize strategy
 pub fn MomentumStrategy::on_init(
-  self : MomentumStrategy,
-  ctx : @strategy.StrategyContext,
+  _self : MomentumStrategy,
+  _ctx : @strategy.StrategyContext,
 ) -> Unit {
   // No initialization needed
 }
@@ -54,7 +54,7 @@ pub fn MomentumStrategy::on_init(
 pub fn MomentumStrategy::on_bar(
   self : MomentumStrategy,
   kline : @data.KLine,
-  ctx : @strategy.StrategyContext,
+  _ctx : @strategy.StrategyContext,
   close_history : Array[Float],
 ) -> @strategy.Signal {
   if close_history.length() < self.rsi_period + 1 {

@@ -49,7 +49,6 @@ pub fn create_portfolio(initial_capital : Float) -> Portfolio {
 ///|
 /// Get total portfolio value
 pub fn Portfolio::total_value(self : Portfolio) -> Float {
-  let zero = Float::from_double(0.0)
   let mut total = self.cash
   for pos in self.positions {
     total = total + pos.value()
@@ -60,8 +59,7 @@ pub fn Portfolio::total_value(self : Portfolio) -> Float {
 ///|
 /// Get total position value
 pub fn Portfolio::position_value(self : Portfolio) -> Float {
-  let zero = Float::from_double(0.0)
-  let mut total = zero
+  let mut total = Float::from_double(0.0)
   for pos in self.positions {
     total = total + pos.value()
   }
