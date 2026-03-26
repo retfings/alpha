@@ -1,6 +1,26 @@
 /// White-box tests for data module - test internal helpers
 
 ///|
+test "Frequency enum - pattern matching" {
+  // Test Frequency enum via pattern matching
+  let check_frequency = fn(f : Frequency) -> String {
+    match f {
+      Frequency::Daily => "Daily"
+      Frequency::Weekly => "Weekly"
+      Frequency::Monthly => "Monthly"
+      Frequency::Minute5 => "Minute5"
+      Frequency::Minute15 => "Minute15"
+      Frequency::Minute30 => "Minute30"
+      Frequency::Minute60 => "Minute60"
+    }
+  }
+
+  // We can verify the enum is accessible via match
+  // Since enum variants are read-only, we test the type exists
+  let _ = check_frequency // Suppress unused warning
+}
+
+///|
 test "parse_float - basic integer" {
   let result = parse_float("100")
   assert_true(result != None)
