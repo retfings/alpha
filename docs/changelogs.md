@@ -3,6 +3,35 @@
 Automated log of file changes from git commits.
 
 ## [2026-03-27 03:09:00] 0ad8430
+## [2026-03-27 06:15:11] 9a91000
+
+**Author:** DevUser
+
+**Commit:** feat: add drawdown analysis types and comprehensive indicators
+
+**Changed files:**
+- `docs/changelogs.md`
+- `docs/test-coverage-report.md`
+- `script/test.sh`
+- `src/drawdown/types.mbt`
+- `src/ffi/file_io.c`
+- `src/indicator/atr.mbt`
+- `src/indicator/atr_test.mbt`
+- `src/indicator/cci.mbt`
+- `src/indicator/cci_test.mbt`
+- `src/indicator/kdj.mbt`
+- `src/indicator/kdj_test.mbt`
+- `src/indicator/ma.mbt`
+- `src/indicator/obv.mbt`
+- `src/indicator/obv_test.mbt`
+- `src/indicator/williams_r.mbt`
+- `src/indicator/williams_r_test.mbt`
+- `src/portfolio/manager.mbt`
+- `src/portfolio/portfolio_test.mbt`
+
+---
+
+
 ## [2026-03-27 06:11:44] cc9daf5
 
 **Author:** DevUser
