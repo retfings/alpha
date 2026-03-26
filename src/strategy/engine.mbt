@@ -54,7 +54,7 @@ pub fn process_bar(
   }
 
   let signal = (strategy.on_bar)(kline, ctx, close_history)
-  StrategyResult::{ signal }
+  StrategyResult::{ signal, }
 }
 
 ///|

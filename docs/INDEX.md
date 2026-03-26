@@ -9,6 +9,7 @@
 | [README](../README.md) | 项目概述和快速开始 | 新用户 |
 | [快速入门](QUICKSTART.md) | 5 分钟快速开始指南 | 新用户 |
 | [用户指南](user-guide.md) | 完整使用教程 | 所有用户 |
+| [API 参考手册](MANUAL.md) | 完整 API 参考手册 | 开发者 |
 | [API 参考](api-reference.md) | 核心模块 API 文档 | 开发者 |
 | [架构设计](architecture.md) | 系统架构说明 | 开发者/架构师 |
 
@@ -53,9 +54,10 @@
 3. [架构优化提案](architecture-optimization-proposals.md) - 功能和架构建议
 
 #### API 和开发
-1. [API 参考](api-reference.md) - 完整 API 文档
-2. [代码优化建议](optimization-proposals.md) - 代码质量改进
-3. [代码修复文档](code-fixes.md) - 修复记录
+1. [API 参考手册](MANUAL.md) - 完整 API 参考手册
+2. [API 参考](api-reference.md) - 核心 API 文档
+3. [代码优化建议](optimization-proposals.md) - 代码质量改进
+4. [代码修复文档](code-fixes.md) - 修复记录
 
 #### 项目管理
 1. [优化路线图](optimization-roadmap.md) - 开发计划总览
@@ -70,6 +72,7 @@
 docs/
 ├── INDEX.md                      # 文档索引（本文件）
 ├── QUICKSTART.md                 # 快速入门指南
+├── MANUAL.md                     # API 参考手册（完整版）
 ├── api-reference.md              # API 参考文档
 ├── architecture.md               # 架构设计
 ├── architecture-improvements.md  # 架构改进建议
@@ -94,6 +97,7 @@ docs/
 | 2026-03-27 | INDEX.md | 初始版本，创建文档索引 | doc-eng |
 | 2026-03-27 | QUICKSTART.md | 创建快速入门指南 | doc-eng |
 | 2026-03-27 | api-reference.md | 更新为中文版 API 文档 | doc-eng |
+| 2026-03-27 | MANUAL.md | 创建完整 API 参考手册 | doc-eng |
 
 ---
 

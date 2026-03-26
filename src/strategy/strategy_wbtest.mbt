@@ -112,9 +112,7 @@ test "StrategyResult creation" {
     timestamp: "2023-01-01",
     strength: 0.8,
   }
-  let result = StrategyResult::{
-    signal,
-  }
+  let result = StrategyResult::{ signal, }
   let is_buy = match result.signal.action {
     Action::Buy => true
     _ => false
@@ -144,7 +142,7 @@ test "process_bar - field assertions" {
   let buy_strategy = Strategy::{
     name: "Always Buy",
     on_init: fn(_) {  },
-    on_bar: fn(kline, ctx, _close_history) {
+    on_bar: fn(kline, _ctx, _close_history) {
       Signal::{
         stock: kline.code,
         action: Action::Buy,

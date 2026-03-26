@@ -309,12 +309,40 @@ fn calculate_stats_core(
     0.0
   }
 
+  // Sortino ratio (uses downside deviation instead of total std dev)
+  let sortino = if returns.length() > 1 {
+    let avg_return = average(returns)
+    let downside_returns : Array[Float] = []
+    for r in returns {
+      if r < 0.0 {
+        downside_returns.push(r)
+      }
+    }
+    let downside_dev = if downside_returns.length() > 0 {
+      let mut sum_sq : Float = 0.0
+      for r in downside_returns {
+        sum_sq = sum_sq + r * r
+      }
+      Float::sqrt(sum_sq / Float::from_int(downside_returns.length()))
+    } else {
+      0.0
+    }
+    if downside_dev > 0.0 {
+      avg_return / downside_dev * Float::sqrt(252.0)
+    } else {
+      Float::from_double(999.0)
+    }
+  } else {
+    0.0
+  }
+
   // Calculate win/loss statistics by pairing buy and sell trades
   let mut winning = 0
   let mut losing = 0
   let mut total_profit : Float = 0.0
   let mut total_loss : Float = 0.0
   let mut buy_pending : Trade? = None
+  let mut total_duration : Int = 0
 
   for trade in trades {
     match trade.action {
@@ -334,11 +362,21 @@ fn calculate_stats_core(
               losing = losing + 1
               total_loss = total_loss + Float::abs(pnl)
             }
+
+            // Calculate trade duration (simplified - counts as 1 day per trade)
+            total_duration = total_duration + 1
           }
           None => ignore(())
         }
       @strategy.Action::Hold => ignore(())
     }
+  }
+
+  let total_closed_trades = winning + losing
+  let avg_duration = if total_closed_trades > 0 {
+    Float::from_int(total_duration) / Float::from_int(total_closed_trades)
+  } else {
+    0.0
   }
 
   let win_rate = if winning + losing > 0 {
@@ -360,7 +398,7 @@ fn calculate_stats_core(
     annual_return,
     max_drawdown,
     sharpe_ratio: sharpe,
-    sortino_ratio: 0.0,
+    sortino_ratio: sortino,
     win_rate,
     profit_factor,
     total_trades: trades.length(),
@@ -376,7 +414,7 @@ fn calculate_stats_core(
     } else {
       0.0
     },
-    avg_trade_duration: 0.0,
+    avg_trade_duration: avg_duration,
   }
 }
 
@@ -424,3 +462,4 @@ fn std_dev(values : Array[Float]) -> Float {
   }
   Float::sqrt(sum_sq / Float::from_int(values.length() - 1))
 }
+

@@ -1283,3 +1283,419 @@ test "end-to-end: Statistics calculation verification" {
   // Step 4: Verify trade log
   assert_true(report.contains("BUY") || report.contains("SELL"))
 }
+
+///|
+test "TradeLog: create and add entries" {
+  // Step 1: Create empty trade log
+  let trade_log = @backtest.create_trade_log()
+  assert_true(trade_log.entries.length() == 0)
+
+  // Step 2: Add trade entries
+  trade_log.add(
+    "2024-01-01",
+    "sh.600000",
+    "BUY",
+    Float::from_double(10.5),
+    Float::from_double(1000.0),
+    None,
+    "Initial position entry",
+  )
+  assert_true(trade_log.entries.length() == 1)
+
+  trade_log.add(
+    "2024-01-05",
+    "sh.600000",
+    "SELL",
+    Float::from_double(11.2),
+    Float::from_double(1000.0),
+    Some(Float::from_double(699.3)),
+    "Exit position with profit",
+  )
+  assert_true(trade_log.entries.length() == 2)
+
+  // Step 3: Verify entries
+  let entry1 = trade_log.entries[0]
+  assert_true(entry1.date == "2024-01-01")
+  assert_true(entry1.stock == "sh.600000")
+  assert_true(entry1.action == "BUY")
+  assert_true(entry1.price == Float::from_double(10.5))
+  assert_true(entry1.quantity == Float::from_double(1000.0))
+  assert_true(entry1.pnl == None)
+  assert_true(entry1.commentary == "Initial position entry")
+
+  let entry2 = trade_log.entries[1]
+  assert_true(entry2.date == "2024-01-05")
+  assert_true(entry2.action == "SELL")
+  match entry2.pnl {
+    Some(pnl) => assert_true(pnl == Float::from_double(699.3))
+    None => fail("PnL should be Some")
+  }
+}
+
+///|
+test "boundary: backtest with minimal capital" {
+  // Test with very small initial capital
+  let config = @strategy.BacktestConfig::{
+    start_date: "2024-01-01",
+    end_date: "2024-01-05",
+    initial_capital: Float::from_double(100.0),
+    commission_rate: Float::from_double(0.0003),
+    slippage: Float::from_double(0.001),
+    benchmark: None,
+  }
+  let engine = @backtest.create_backtest_engine(config)
+  assert_true(engine.config.initial_capital == Float::from_double(100.0))
+
+  // Create minimal K-line data
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-01",
+      Float::from_double(10.0),
+      Float::from_double(10.5),
+      Float::from_double(9.8),
+      Float::from_double(10.2),
+      Float::from_double(1000000.0),
+      Float::from_double(10200000.0),
+      Float::from_double(0.01),
+    ),
+  ]
+
+  let hold_strategy = @strategy.Strategy::{
+    name: "Hold",
+    on_init: fn(_) {  },
+    on_bar: fn(kline, _ctx, _close_history) {
+      @strategy.Signal::hold(kline.code, kline.close, kline.date)
+    },
+  }
+
+  let result = @backtest.run_backtest(engine, klines, hold_strategy)
+  assert_true(result.initial_capital == Float::from_double(100.0))
+}
+
+///|
+test "boundary: backtest with extreme drawdown scenario" {
+  // Create K-line data with severe price decline (>50% drawdown)
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-01",
+      Float::from_double(100.0),
+      Float::from_double(105.0),
+      Float::from_double(98.0),
+      Float::from_double(102.0),
+      Float::from_double(1000000.0),
+      Float::from_double(102000000.0),
+      Float::from_double(0.05),
+    ),
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-02",
+      Float::from_double(102.0),
+      Float::from_double(108.0),
+      Float::from_double(100.0),
+      Float::from_double(105.0),
+      Float::from_double(1100000.0),
+      Float::from_double(115500000.0),
+      Float::from_double(0.055),
+    ),
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-03",
+      Float::from_double(105.0),
+      Float::from_double(110.0),
+      Float::from_double(103.0),
+      Float::from_double(108.0),
+      Float::from_double(1200000.0),
+      Float::from_double(129600000.0),
+      Float::from_double(0.06),
+    ),
+    // Start crash
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-04",
+      Float::from_double(108.0),
+      Float::from_double(110.0),
+      Float::from_double(85.0),
+      Float::from_double(88.0),
+      Float::from_double(5000000.0),
+      Float::from_double(440000000.0),
+      Float::from_double(0.2),
+    ),
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-05",
+      Float::from_double(88.0),
+      Float::from_double(92.0),
+      Float::from_double(70.0),
+      Float::from_double(72.0),
+      Float::from_double(6000000.0),
+      Float::from_double(432000000.0),
+      Float::from_double(0.25),
+    ),
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-06",
+      Float::from_double(72.0),
+      Float::from_double(75.0),
+      Float::from_double(50.0),
+      Float::from_double(52.0),
+      Float::from_double(7000000.0),
+      Float::from_double(364000000.0),
+      Float::from_double(0.3),
+    ),
+  ]
+
+  let config = @strategy.BacktestConfig::{
+    start_date: "2024-01-01",
+    end_date: "2024-01-06",
+    initial_capital: Float::from_double(100000.0),
+    commission_rate: Float::from_double(0.0003),
+    slippage: Float::from_double(0.001),
+    benchmark: None,
+  }
+
+  let engine = @backtest.create_backtest_engine(config)
+
+  // Hold strategy - just verify backtest runs with volatile data
+  let hold_strategy = @strategy.Strategy::{
+    name: "Hold",
+    on_init: fn(_) {  },
+    on_bar: fn(kline, _ctx, _close_history) {
+      @strategy.Signal::hold(kline.code, kline.close, kline.date)
+    },
+  }
+
+  let result = @backtest.run_backtest(engine, klines, hold_strategy)
+
+  // Verify backtest completed successfully
+  // Note: equity_curve may be empty if less than 20 bars of data
+  assert_true(result.initial_capital == Float::from_double(100000.0))
+  assert_true(result.final_capital >= Float::from_double(0.0))
+}
+
+///|
+test "boundary: zero commission and slippage" {
+  let config = @strategy.BacktestConfig::{
+    start_date: "2024-01-01",
+    end_date: "2024-01-05",
+    initial_capital: Float::from_double(100000.0),
+    commission_rate: Float::from_double(0.0),
+    slippage: Float::from_double(0.0),
+    benchmark: None,
+  }
+  let engine = @backtest.create_backtest_engine(config)
+  assert_true(engine.config.commission_rate == Float::from_double(0.0))
+  assert_true(engine.config.slippage == Float::from_double(0.0))
+
+  // Create simple K-line data
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000",
+      "2024-01-01",
+      Float::from_double(10.0),
+      Float::from_double(10.5),
+      Float::from_double(9.8),
+      Float::from_double(10.2),
+      Float::from_double(1000000.0),
+      Float::from_double(10200000.0),
+      Float::from_double(0.01),
+    ),
+  ]
+
+  let hold_strategy = @strategy.Strategy::{
+    name: "Hold",
+    on_init: fn(_) {  },
+    on_bar: fn(kline, _ctx, _close_history) {
+      @strategy.Signal::hold(kline.code, kline.close, kline.date)
+    },
+  }
+
+  let result = @backtest.run_backtest(engine, klines, hold_strategy)
+  assert_true(result.initial_capital == Float::from_double(100000.0))
+}
+
+///|
+test "helper: calculate_returns from equity series" {
+  // Test equity curve: 100000, 105000, 110000, 108000, 115000
+  let equities : Array[Float] = [
+    Float::from_double(100000.0),
+    Float::from_double(105000.0),
+    Float::from_double(110000.0),
+    Float::from_double(108000.0),
+    Float::from_double(115000.0),
+  ]
+
+  // Calculate returns manually to verify
+  // Returns: (105000-100000)/100000 = 0.05
+  //          (110000-105000)/105000 = 0.0476...
+  //          (108000-110000)/110000 = -0.0181...
+  //          (115000-108000)/108000 = 0.0648...
+  let returns : Array[Float] = []
+  let mut i = 1
+  while i < equities.length() {
+    let ret = (equities[i] - equities[i - 1]) / equities[i - 1]
+    returns.push(ret)
+    i = i + 1
+  }
+
+  assert_true(returns.length() == 4)
+  assert_true(
+    returns[0] > Float::from_double(0.04) &&
+    returns[0] < Float::from_double(0.06),
+  )
+  assert_true(
+    returns[1] > Float::from_double(0.04) &&
+    returns[1] < Float::from_double(0.05),
+  )
+  assert_true(returns[2] < Float::from_double(0.0))
+  assert_true(returns[3] > Float::from_double(0.06))
+}
+
+///|
+test "helper: average calculation" {
+  let values : Array[Float] = [
+    Float::from_double(10.0),
+    Float::from_double(20.0),
+    Float::from_double(30.0),
+    Float::from_double(40.0),
+    Float::from_double(50.0),
+  ]
+
+  let mut sum : Float = Float::from_double(0.0)
+  for v in values {
+    sum = sum + v
+  }
+  let avg = sum / Float::from_int(values.length())
+
+  assert_true(avg == Float::from_double(30.0))
+}
+
+///|
+test "helper: average of empty array" {
+  let values : Array[Float] = []
+  let mut sum : Float = Float::from_double(0.0)
+  for v in values {
+    sum = sum + v
+  }
+  let avg = if values.length() == 0 {
+    Float::from_double(0.0)
+  } else {
+    sum / Float::from_int(values.length())
+  }
+  assert_true(avg == Float::from_double(0.0))
+}
+
+///|
+test "helper: std_dev calculation" {
+  let values : Array[Float] = [
+    Float::from_double(2.0),
+    Float::from_double(4.0),
+    Float::from_double(4.0),
+    Float::from_double(4.0),
+    Float::from_double(5.0),
+    Float::from_double(5.0),
+    Float::from_double(7.0),
+    Float::from_double(9.0),
+  ]
+
+  // Mean = 5
+  let mut sum : Float = Float::from_double(0.0)
+  for v in values {
+    sum = sum + v
+  }
+  let mean = sum / Float::from_int(values.length())
+  assert_true(mean == Float::from_double(5.0))
+
+  // Variance = sum((x - mean)^2) / (n-1)
+  let mut sum_sq : Float = Float::from_double(0.0)
+  for v in values {
+    let diff = v - mean
+    sum_sq = sum_sq + diff * diff
+  }
+  let variance = sum_sq / Float::from_int(values.length() - 1)
+
+  // Std dev = sqrt(variance)
+  let std = Float::sqrt(variance)
+  // Expected std dev ≈ 2.138
+  assert_true(std > Float::from_double(2.0) && std < Float::from_double(2.5))
+}
+
+///|
+test "helper: std_dev of constant array is zero" {
+  let values : Array[Float] = [
+    Float::from_double(5.0),
+    Float::from_double(5.0),
+    Float::from_double(5.0),
+  ]
+
+  let mut sum : Float = Float::from_double(0.0)
+  for v in values {
+    sum = sum + v
+  }
+  let mean = sum / Float::from_int(values.length())
+  let mut sum_sq : Float = Float::from_double(0.0)
+  for v in values {
+    let diff = v - mean
+    sum_sq = sum_sq + diff * diff
+  }
+  let std = if values.length() < 2 {
+    Float::from_double(0.0)
+  } else {
+    Float::sqrt(sum_sq / Float::from_int(values.length() - 1))
+  }
+
+  assert_true(std == Float::from_double(0.0))
+}
+
+///|
+test "helper: std_dev of single element" {
+  let values : Array[Float] = [Float::from_double(5.0)]
+  let mut sum : Float = Float::from_double(0.0)
+  for v in values {
+    sum = sum + v
+  }
+  let mean = sum / Float::from_int(values.length())
+  let mut sum_sq : Float = Float::from_double(0.0)
+  for v in values {
+    let diff = v - mean
+    sum_sq = sum_sq + diff * diff
+  }
+  let std = if values.length() < 2 {
+    Float::from_double(0.0)
+  } else {
+    Float::sqrt(sum_sq / Float::from_int(values.length() - 1))
+  }
+  assert_true(std == Float::from_double(0.0))
+}
+
+///|
+test "boundary: empty equity curve handling" {
+  let equity_curve : Array[Float] = []
+
+  // Returns should be empty
+  let returns : Array[Float] = []
+  let mut i = 1
+  while i < equity_curve.length() {
+    let ret = (equity_curve[i] - equity_curve[i - 1]) / equity_curve[i - 1]
+    returns.push(ret)
+    i = i + 1
+  }
+
+  assert_true(returns.length() == 0)
+}
+
+///|
+test "boundary: single equity point" {
+  let equity_curve : Array[Float] = [Float::from_double(100000.0)]
+
+  let returns : Array[Float] = []
+  let mut i = 1
+  while i < equity_curve.length() {
+    let ret = (equity_curve[i] - equity_curve[i - 1]) / equity_curve[i - 1]
+    returns.push(ret)
+    i = i + 1
+  }
+
+  assert_true(returns.length() == 0)
+}

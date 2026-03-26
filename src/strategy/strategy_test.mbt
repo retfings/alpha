@@ -26,9 +26,7 @@ test "StrategyResult - field assertions" {
     timestamp: "2023-01-01",
     strength: 0.8,
   }
-  let result = @strategy.StrategyResult::{
-    signal,
-  }
+  let result = @strategy.StrategyResult::{ signal, }
   // json_inspect disabled for struct types - use field assertions instead
   let is_buy = match result.signal.action {
     @strategy.Action::Buy => true
@@ -113,7 +111,7 @@ test "process_bar - field assertions" {
   let hold_strategy = @strategy.Strategy::{
     name: "Hold Strategy",
     on_init: fn(_) {  },
-    on_bar: fn(kline, ctx, close_history) {
+    on_bar: fn(kline, _ctx, _close_history) {
       @strategy.Signal::{
         stock: kline.code,
         action: @strategy.Action::Hold,

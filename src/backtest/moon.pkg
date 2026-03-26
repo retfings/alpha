@@ -4,8 +4,8 @@ import {
   "username/alpha/src/strategy" @strategy,
   "username/alpha/src/risk" @risk,
   "username/alpha/src/drawdown" @drawdown,
-  "username/alpha/src/indicator" @indicator,
   "username/alpha/src/ffi" @ffi,
+  "username/alpha/src/indicator" @indicator,
   "moonbitlang/core/json",
   "moonbitlang/core/math",
 }
