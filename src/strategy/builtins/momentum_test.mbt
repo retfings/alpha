@@ -66,7 +66,9 @@ test "MomentumStrategy::on_bar - insufficient history returns Hold" {
     last_signal: None,
   }
   // Only 10 data points, less than rsi_period + 1 (15)
-  let history : Array[Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+  let history : Array[Float] = [
+    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   assert_true(signal.action == @strategy.Action::Hold)
@@ -98,13 +100,16 @@ test "MomentumStrategy::on_bar - oversold scenario (Buy signal)" {
   // Simulate declining prices that would result in low RSI (oversold)
   // Sharp decline followed by slight recovery
   let history : Array[Float] = [
-    20.0, 19.5, 19.0, 18.5, 18.0, 17.5, 17.0, 16.5, 16.0, 15.5,
-    15.0, 14.5, 14.0, 13.5, 13.0, 12.5, 12.0, 11.5, 11.0, 10.0,
+    20.0, 19.5, 19.0, 18.5, 18.0, 17.5, 17.0, 16.5, 16.0, 15.5, 15.0, 14.5, 14.0,
+    13.5, 13.0, 12.5, 12.0, 11.5, 11.0, 10.0,
   ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // RSI should be low, potentially triggering Buy
-  assert_true(signal.action == @strategy.Action::Buy || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Buy ||
+    signal.action == @strategy.Action::Hold,
+  )
   json_inspect({
     action: signal.action.to_string(),
     strength: signal.strength,
@@ -136,13 +141,16 @@ test "MomentumStrategy::on_bar - overbought scenario (Sell signal)" {
   // Simulate rising prices that would result in high RSI (overbought)
   // Sharp increase
   let history : Array[Float] = [
-    5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5,
-    10.0, 12.0, 14.0, 16.0, 18.0, 19.0, 20.0, 21.0, 22.0, 22.5,
+    5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 12.0, 14.0, 16.0, 18.0,
+    19.0, 20.0, 21.0, 22.0, 22.5,
   ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // RSI should be high, potentially triggering Sell
-  assert_true(signal.action == @strategy.Action::Sell || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Sell ||
+    signal.action == @strategy.Action::Hold,
+  )
   json_inspect({
     action: signal.action.to_string(),
     strength: signal.strength,
@@ -155,12 +163,12 @@ test "MomentumStrategy::is_oversold - detection" {
   let strategy = create_momentum_strategy(14, 70.0, 30.0)
   // Declining prices should result in oversold condition
   let declining_history : Array[Float] = [
-    20.0, 19.0, 18.0, 17.0, 16.0, 15.0, 14.0, 13.0, 12.0, 11.0,
-    10.0, 9.5, 9.0, 8.5, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5,
+    20.0, 19.0, 18.0, 17.0, 16.0, 15.0, 14.0, 13.0, 12.0, 11.0, 10.0, 9.5, 9.0, 8.5,
+    8.0, 7.5, 7.0, 6.5, 6.0, 5.5,
   ]
   let is_oversold = strategy.is_oversold(declining_history)
   // Should detect oversold condition
-  json_inspect({ is_oversold })
+  json_inspect({ is_oversold, })
 }
 
 ///|
@@ -168,24 +176,24 @@ test "MomentumStrategy::is_overbought - detection" {
   let strategy = create_momentum_strategy(14, 70.0, 30.0)
   // Rising prices should result in overbought condition
   let rising_history : Array[Float] = [
-    5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0,
-    15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0,
+    5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
+    19.0, 20.0, 21.0, 22.0, 23.0, 24.0,
   ]
   let is_overbought = strategy.is_overbought(rising_history)
-  json_inspect({ is_overbought })
+  json_inspect({ is_overbought, })
 }
 
 ///|
 test "MomentumStrategy::get_current_rsi - value check" {
   let strategy = create_momentum_strategy(14, 70.0, 30.0)
   let history : Array[Float] = [
-    10.0, 10.5, 11.0, 10.8, 11.2, 11.5, 11.3, 11.8, 12.0, 11.9,
-    12.2, 12.5, 12.3, 12.8, 13.0, 12.9, 13.2, 13.5, 13.3, 13.8,
+    10.0, 10.5, 11.0, 10.8, 11.2, 11.5, 11.3, 11.8, 12.0, 11.9, 12.2, 12.5, 12.3,
+    12.8, 13.0, 12.9, 13.2, 13.5, 13.3, 13.8,
   ]
   let rsi = strategy.get_current_rsi(history)
   // RSI should be between 0 and 100
   assert_true(rsi >= 0.0 && rsi <= 100.0)
-  json_inspect({ rsi })
+  json_inspect({ rsi, })
 }
 
 ///|
@@ -211,9 +219,27 @@ test "MomentumStrategy - snapshot of signals with various scenarios" {
   }
 
   let scenarios = [
-    ("declining", [20.0, 19.0, 18.0, 17.0, 16.0, 15.0, 14.0, 13.0, 12.0, 11.0, 10.0, 9.5, 9.0, 8.5, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5]),
-    ("rising", [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0]),
-    ("sideways", [10.0, 10.1, 9.9, 10.0, 10.2, 9.8, 10.0, 10.1, 9.9, 10.0, 10.1, 9.9, 10.0, 10.2, 9.8, 10.0, 10.1, 9.9, 10.0, 10.05]),
+    (
+      "declining",
+      [
+        20.0, 19.0, 18.0, 17.0, 16.0, 15.0, 14.0, 13.0, 12.0, 11.0, 10.0, 9.5, 9.0,
+        8.5, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5,
+      ],
+    ),
+    (
+      "rising",
+      [
+        5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
+        18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0,
+      ],
+    ),
+    (
+      "sideways",
+      [
+        10.0, 10.1, 9.9, 10.0, 10.2, 9.8, 10.0, 10.1, 9.9, 10.0, 10.1, 9.9, 10.0,
+        10.2, 9.8, 10.0, 10.1, 9.9, 10.0, 10.05,
+      ],
+    ),
   ]
 
   let results = scenarios.map(fn(scenario) {

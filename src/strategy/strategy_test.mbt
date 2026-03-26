@@ -27,7 +27,7 @@ test "StrategyResult - snapshot test" {
     strength: 0.8,
   }
   let result = @strategy.StrategyResult::{
-    signal: signal,
+    signal,
     executed: true,
     exec_price: 10.5,
     exec_volume: 1000.0,
@@ -86,10 +86,7 @@ test "StrategyContext - snapshot tests" {
     last_signal: Some(signal),
   }
 
-  json_inspect({
-    no_signal: ctx_no_signal,
-    with_signal: ctx_with_signal,
-  })
+  json_inspect({ no_signal: ctx_no_signal, with_signal: ctx_with_signal })
 }
 
 ///|
@@ -121,7 +118,7 @@ test "process_bar - snapshot test" {
   // Create a simple strategy that always holds
   let hold_strategy = @strategy.Strategy::{
     name: "Hold Strategy",
-    on_init: fn(_) { },
+    on_init: fn(_) {  },
     on_bar: fn(kline, ctx) {
       @strategy.Signal::{
         stock: kline.code,
@@ -141,9 +138,7 @@ test "process_bar - snapshot test" {
 test "get_engine_stats - after processing bars" {
   let engine = @strategy.create_strategy_engine(100000.0)
   let (capital, position, signal_count) = @strategy.get_engine_stats(engine)
-  json_inspect({
-    initial: { capital, position, signal_count },
-  })
+  json_inspect({ initial: { capital, position, signal_count } })
 }
 
 ///|

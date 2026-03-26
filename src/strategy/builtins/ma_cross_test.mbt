@@ -65,7 +65,9 @@ test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
     last_signal: None,
   }
   // Only 10 data points, less than slow_period (20)
-  let history : Array[Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+  let history : Array[Float] = [
+    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   assert_true(signal.action == @strategy.Action::Hold)
@@ -96,12 +98,17 @@ test "MaCrossStrategy::on_bar - golden cross detection" {
   }
   // Uptrend: fast MA should cross above slow MA
   // Prices: 1,2,3,4,5,6,7,8,9,10 - rising trend
-  let history : Array[Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+  let history : Array[Float] = [
+    1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // After a sustained uptrend, fast MA should be above slow MA
   // The crossover from below should trigger a Buy
-  assert_true(signal.action == @strategy.Action::Buy || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Buy ||
+    signal.action == @strategy.Action::Hold,
+  )
   json_inspect({
     action: signal.action.to_string(),
     strength: signal.strength,
@@ -132,12 +139,17 @@ test "MaCrossStrategy::on_bar - death cross detection" {
   }
   // Downtrend: fast MA should cross below slow MA
   // Prices: 10,9,8,7,6,5,4,3,2,1 - falling trend
-  let history : Array[Float] = [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]
+  let history : Array[Float] = [
+    10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // After a sustained downtrend, fast MA should be below slow MA
   // The crossover from above should trigger a Sell
-  assert_true(signal.action == @strategy.Action::Sell || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Sell ||
+    signal.action == @strategy.Action::Hold,
+  )
   json_inspect({
     action: signal.action.to_string(),
     strength: signal.strength,
