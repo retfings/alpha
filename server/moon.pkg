@@ -6,4 +6,5 @@ import {
   "username/alpha/src/portfolio" @portfolio,
   "username/alpha/src/indicator" @indicator,
   "username/alpha/src/backtest" @backtest,
+  "username/alpha/src/strategy/builtins" @builtins,
 }

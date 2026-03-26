@@ -396,3 +396,232 @@ test "Portfolio Show instance snapshot" {
   // Just verify the portfolio can be inspected without error
   inspect(portfolio.cash, content="95000")
 }
+
+///|
+test "Portfolio calculate_position_pnl snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+  ignore(portfolio.buy("sz.000001", 300.0, 20.0))
+
+  let get_price = fn(code) -> Float {
+    if code == "sh.600000" {
+      Float::from_double(12.0)
+    } else {
+      Float::from_double(18.0)
+    }
+  }
+  portfolio.update_prices(get_price)
+
+  let pnl = portfolio.calculate_position_pnl()
+  // sh.600000: (12-10)*500 = 1000, sz.000001: (18-20)*300 = -600
+  // Total: 1000 - 600 = 400
+  inspect(pnl > Float::from_double(399.0), content="true")
+  inspect(pnl < Float::from_double(401.0), content="true")
+}
+
+///|
+test "Portfolio calculate_position_pnl_pct snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  let get_price = fn(code) -> Float {
+    if code == "sh.600000" {
+      Float::from_double(11.0)
+    } else {
+      Float::from_double(10.0)
+    }
+  }
+  portfolio.update_prices(get_price)
+
+  let pnl_pct = portfolio.calculate_position_pnl_pct()
+  // (11-10)/10 = 0.1 = 10%
+  inspect(pnl_pct > Float::from_double(0.09), content="true")
+  inspect(pnl_pct < Float::from_double(0.11), content="true")
+}
+
+///|
+test "Portfolio get_total_exposure snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+  ignore(portfolio.buy("sz.000001", 300.0, 20.0))
+
+  let exposure = portfolio.get_total_exposure()
+  // 500*10 + 300*20 = 5000 + 6000 = 11000
+  inspect(exposure, content="11000")
+}
+
+///|
+test "Portfolio get_position found snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  match portfolio.get_position("sh.600000") {
+    Some(pos) => {
+      inspect(pos.quantity, content="500")
+      inspect(pos.avg_cost, content="10")
+    }
+    None => fail("Position should exist"),
+  }
+}
+
+///|
+test "Portfolio get_position not found snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  match portfolio.get_position("sz.000001") {
+    Some(_) => fail("Position should not exist")
+    None => inspect("Position not found", content="Position not found")
+  }
+}
+
+///|
+test "Portfolio get_position_pnl snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  let get_price = fn(code) -> Float {
+    if code == "sh.600000" {
+      Float::from_double(12.0)
+    } else {
+      Float::from_double(10.0)
+    }
+  }
+  portfolio.update_prices(get_price)
+
+  let pnl = portfolio.get_position_pnl("sh.600000")
+  // (12-10)*500 = 1000
+  inspect(pnl > Float::from_double(999.0), content="true")
+  inspect(pnl < Float::from_double(1001.0), content="true")
+}
+
+///|
+test "Portfolio get_position_pnl non-existent snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  let pnl = portfolio.get_position_pnl("sz.000001")
+  inspect(pnl, content="0")
+}
+
+///|
+test "Portfolio get_position_pnl_pct snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  let get_price = fn(code) -> Float {
+    if code == "sh.600000" {
+      Float::from_double(11.5)
+    } else {
+      Float::from_double(10.0)
+    }
+  }
+  portfolio.update_prices(get_price)
+
+  let pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
+  // (11.5-10)/10 = 0.15 = 15%
+  inspect(pnl_pct > Float::from_double(0.14), content="true")
+  inspect(pnl_pct < Float::from_double(0.16), content="true")
+}
+
+///|
+test "Portfolio position_count snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  inspect(portfolio.position_count(), content="0")
+
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+  inspect(portfolio.position_count(), content="1")
+
+  ignore(portfolio.buy("sz.000001", 300.0, 20.0))
+  inspect(portfolio.position_count(), content="2")
+
+  ignore(portfolio.sell("sh.600000", 500.0, 12.0))
+  inspect(portfolio.position_count(), content="1")
+}
+
+///|
+test "Portfolio has_position snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  inspect(portfolio.has_position("sh.600000"), content="true")
+  inspect(portfolio.has_position("sz.000001"), content="false")
+}
+
+///|
+test "Portfolio calculate_daily_pnl snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+
+  let get_price = fn(code) -> Float {
+    if code == "sh.600000" {
+      Float::from_double(12.0)
+    } else {
+      Float::from_double(10.0)
+    }
+  }
+  portfolio.update_prices(get_price)
+
+  let prev_values = Map::new()
+  let current_prices = Map::new()
+  let daily_pnl = portfolio.calculate_daily_pnl(prev_values, current_prices)
+  // Simplified implementation returns position P&L
+  // (12-10)*500 = 1000
+  inspect(daily_pnl > Float::from_double(999.0), content="true")
+  inspect(daily_pnl < Float::from_double(1001.0), content="true")
+}
+
+///|
+test "Portfolio comprehensive P&L tracking scenario snapshot" {
+  let portfolio = @portfolio.create_portfolio(200000.0)
+
+  // Build positions
+  ignore(portfolio.buy("sh.600000", 1000.0, 10.0))
+  ignore(portfolio.buy("sz.000001", 500.0, 20.0))
+  ignore(portfolio.buy("sh.600036", 800.0, 30.0))
+
+  // Update prices to simulate market movement
+  let get_price = fn(code) -> Float {
+    if code == "sh.600000" {
+      Float::from_double(11.0) // +10%
+    } else if code == "sz.000001" {
+      Float::from_double(19.0) // -5%
+    } else {
+      Float::from_double(33.0) // +10%
+    }
+  }
+  portfolio.update_prices(get_price)
+
+  // Check total P&L
+  let total_pnl = portfolio.calculate_position_pnl()
+  // sh.600000: (11-10)*1000 = 1000
+  // sz.000001: (19-20)*500 = -500
+  // sh.600036: (33-30)*800 = 2400
+  // Total: 1000 - 500 + 2400 = 2900
+  inspect(total_pnl > Float::from_double(2899.0), content="true")
+  inspect(total_pnl < Float::from_double(2901.0), content="true")
+
+  // Check individual position P&L
+  let pnl_sh600000 = portfolio.get_position_pnl("sh.600000")
+  inspect(pnl_sh600000 > Float::from_double(999.0), content="true")
+  inspect(pnl_sh600000 < Float::from_double(1001.0), content="true")
+
+  let pnl_sz000001 = portfolio.get_position_pnl("sz.000001")
+  inspect(pnl_sz000001 < Float::from_double(-499.0), content="true")
+  inspect(pnl_sz000001 > Float::from_double(-501.0), content="true")
+
+  // Check exposure
+  let exposure = portfolio.get_total_exposure()
+  // 11*1000 + 19*500 + 33*800 = 11000 + 9500 + 26400 = 46900
+  inspect(exposure > Float::from_double(46899.0), content="true")
+  inspect(exposure < Float::from_double(46901.0), content="true")
+
+  // Check position count
+  inspect(portfolio.position_count(), content="3")
+
+  // Verify all positions exist
+  inspect(portfolio.has_position("sh.600000"), content="true")
+  inspect(portfolio.has_position("sz.000001"), content="true")
+  inspect(portfolio.has_position("sh.600036"), content="true")
+  inspect(portfolio.has_position("sh.999999"), content="false")
+}

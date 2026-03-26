@@ -352,47 +352,55 @@ pub fn run_backtest_api(request : BacktestRequest) -> Result[@backtest.BacktestR
         benchmark: None,
       }
 
-      // Get strategy
-      let strategy = get_strategy_by_name(request.strategy)
+      // Create backtest engine
+      let engine = @backtest.create_backtest_engine(config)
+
+      // Get strategy and run backtest
+      let strategy = get_strategy_wrapper(request.strategy)
 
       match strategy {
         Some(st) => {
-          // Run backtest
-          let data_map = {
-            let m = Map::empty()
-            m.insert(request.stock_code, kline_data.klines)
-            m
-          }
-
-          let result = @backtest.run_backtest(st, data_map, config)
+          // Run backtest with strategy
+          let result = @backtest.run_backtest_with_strategy(
+            engine,
+            kline_data.klines,
+            st,
+          )
           Ok(result)
         }
-        None => Err("Strategy '\{request.strategy}' not found"),
+        None => Err("Strategy '\{request.strategy}' not found")
       }
     }
-    Err(e) => Err("Failed to load data: " + e),
+    Err(e) => Err("Failed to load data: " + e)
   }
 }
 
 ///|
-/// Get strategy by name
-fn get_strategy_by_name(name : String) -> @strategy.Strategy? {
+/// Get strategy wrapper - returns Strategy record
+fn get_strategy_wrapper(name : String) -> @strategy.Strategy? {
   match name {
     "ma_cross" => {
-      let s = @strategy.MaCrossStrategy::{
-        short_period: 10,
-        long_period: 30,
-      }
-      Some(s)
+      let ma_cross = @strategy_builtins.create_ma_cross_strategy(10, 30)
+      // Create Strategy record that wraps MaCrossStrategy
+      Some(@strategy.Strategy::{
+        name: ma_cross.name,
+        on_init: fn(_) { ignore(ma_cross) },
+        on_bar: fn(kline, ctx, history) {
+          @strategy_builtins.MaCrossStrategy_on_bar(ma_cross, kline, ctx, history)
+        },
+      })
     }
     "momentum" => {
-      let s = @strategy.MomentumStrategy::{
-        lookback_period: 20,
-        threshold: 0.05,
-      }
-      Some(s)
+      let momentum = @strategy_builtins.create_momentum_strategy(20, 0.05)
+      Some(@strategy.Strategy::{
+        name: momentum.name,
+        on_init: fn(_) { ignore(momentum) },
+        on_bar: fn(kline, ctx, history) {
+          @strategy_builtins.MomentumStrategy_on_bar(momentum, kline, ctx, history)
+        },
+      })
     }
-    _ => None,
+    _ => None
   }
 }
 

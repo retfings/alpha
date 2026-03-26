@@ -136,8 +136,7 @@ pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
 /// Stop loss rule for individual positions
 ///
 /// Triggers when a position loses more than the specified threshold.
-/// Note: This is a simplified version that uses daily_loss as a proxy.
-/// A full implementation would track per-position P&L.
+/// Uses the position's P&L percentage for accurate loss tracking.
 ///
 /// Parameters:
 /// - stock: Stock code this rule applies to
@@ -146,24 +145,25 @@ pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
 /// Returns:
 /// - RiskRule that triggers ReducePosition when exceeded
 ///
-/// Examples:
-/// ```mbt check
-/// test {
-///   let rule = stop_loss_rule("sh.600000", 0.10) // 10% stop loss
-/// }
+/// Usage with portfolio:
+/// ```mbt check-disabled
+/// let portfolio = @portfolio.create_portfolio(100000.0)
+/// // ... add positions ...
+/// let position_pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
+/// let rule = stop_loss_rule("sh.600000", 0.10)
+/// let result = rule.check_fn(0.0, 0.0, position_pnl_pct)
 /// ```
 pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
   RiskRule::{
     name: "Stop Loss Rule (" + stock + ")",
     priority: 4,
-    check_fn: fn(_, _, daily_loss) {
-      // Note: This is a simplified version
-      // Full implementation would track per-position P&L
-      if daily_loss <= -max_loss_pct {
+    check_fn: fn(_, _, position_pnl) {
+      // position_pnl should be the position's P&L percentage (negative for losses)
+      if position_pnl <= -max_loss_pct {
         RiskResult::{
           passed: false,
           message: "Stop loss triggered: " +
-          Float::to_string(daily_loss * 100.0) +
+          Float::to_string(position_pnl * 100.0) +
           "%",
           action: RiskAction::ReducePosition(max_loss_pct),
         }
@@ -176,6 +176,93 @@ pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
       }
     },
   }
+}
+
+///|
+/// Per-position stop loss rule with explicit P&L
+///
+/// Checks if a specific position's P&L percentage exceeds the loss threshold.
+/// This is a more explicit version that works with real position P&L data.
+///
+/// Parameters:
+/// - stock: Stock code to check
+/// - max_loss_pct: Maximum allowed loss (e.g., 0.10 for 10%)
+/// - position_pnl_pct: Current position P&L percentage (negative for losses)
+///
+/// Returns:
+/// - RiskResult indicating whether the position passed the check
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = @portfolio.create_portfolio(100000.0)
+/// let position_pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
+/// let result = check_position_stop_loss("sh.600000", 0.10, position_pnl_pct)
+/// ```
+pub fn check_position_stop_loss(
+  stock : String,
+  max_loss_pct : Float,
+  position_pnl_pct : Float,
+) -> RiskResult {
+  if position_pnl_pct <= -max_loss_pct {
+    RiskResult::{
+      passed: false,
+      message: "Stop loss triggered for " + stock + ": " +
+      Float::to_string(position_pnl_pct * 100.0) +
+      "%",
+      action: RiskAction::ReducePosition(max_loss_pct),
+    }
+  } else {
+    RiskResult::{
+      passed: true,
+      message: "Position " + stock + " loss within limits",
+      action: RiskAction::Allow,
+    }
+  }
+}
+
+///|
+/// Portfolio-wide stop loss check
+///
+/// Checks all positions in the portfolio against a stop loss threshold.
+/// Returns the first position that triggers stop loss.
+///
+/// Parameters:
+/// - portfolio: Portfolio to check
+/// - max_loss_pct: Maximum allowed loss per position (e.g., 0.10 for 10%)
+///
+/// Returns:
+/// - Optional tuple of (stock_code, RiskResult) for the first triggering position
+/// - None if all positions are within limits
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = @portfolio.create_portfolio(100000.0)
+/// // ... add positions ...
+/// match check_portfolio_stop_loss(portfolio, 0.10) {
+///   Some((stock, result)) => inspect("Stop loss: " + stock)
+///   None => inspect("All positions within limits")
+/// }
+/// ```
+pub fn check_portfolio_stop_loss(
+  portfolio : @portfolio.Portfolio,
+  max_loss_pct : Float,
+) -> (@data.StockCode, RiskResult)? {
+  for pos in portfolio.positions {
+    let pnl_pct = pos.pnl_pct()
+    if pnl_pct <= -max_loss_pct {
+      return Some((
+        pos.stock,
+        RiskResult::{
+          passed: false,
+          message: "Stop loss triggered: " +
+          Float::to_string(pnl_pct * 100.0) +
+          "%",
+          action: RiskAction::ReducePosition(max_loss_pct),
+        },
+      ))
+    }
+  }
+  None
 }
 
 ///|

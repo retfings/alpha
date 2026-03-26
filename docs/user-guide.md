@@ -163,6 +163,107 @@ Display help information.
 moon run cmd/main help
 ```
 
+---
+
+## Web Interface
+
+The framework includes a web-based dashboard for visualizing backtest results and monitoring portfolio performance.
+
+### Starting the Web Server
+
+```bash
+# Start the HTTP server (requires Node.js)
+node server/server.js
+
+# Server starts at http://localhost:3000
+```
+
+### Dashboard Features
+
+The web interface provides:
+
+1. **Dashboard Tab**
+   - Portfolio value display
+   - Maximum drawdown metric
+   - Current drawdown metric
+   - Sharpe ratio display
+   - Equity curve chart (Chart.js)
+   - Drawdown curve chart
+
+2. **Backtest Tab**
+   - Stock selection dropdown
+   - Strategy selection (MA Cross, Momentum)
+   - Date range picker
+   - Initial capital configuration
+   - Run backtest button
+   - Results display with:
+     - Total return
+     - Max drawdown
+     - Sharpe ratio
+     - Total trades
+     - Win rate
+     - Trade log table
+
+3. **Analysis Tab**
+   - Drawdown analysis charts
+   - Stock comparison
+   - Performance attribution
+
+4. **Settings Tab**
+   - Risk limit configuration
+   - Data source settings
+   - Display preferences
+
+### Web UI Components
+
+| Component | Description |
+|-----------|-------------|
+| Portfolio Value Card | Displays current total portfolio value |
+| Max Drawdown Card | Shows maximum historical drawdown |
+| Current Drawdown Card | Shows current drawdown from peak |
+| Sharpe Ratio Card | Displays risk-adjusted return metric |
+| Equity Chart | Line chart of portfolio value over time |
+| Drawdown Chart | Line chart of drawdown over time |
+| Trade Log Table | Detailed list of all executed trades |
+
+### API Endpoints
+
+The web interface communicates with the following API endpoints:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stocks/:code/klines` | GET | Get K-line data for stock |
+| `/api/stocks/:code/drawdown` | GET | Analyze stock drawdown |
+| `/api/portfolio/drawdown` | POST | Analyze portfolio drawdown |
+| `/api/backtest` | POST | Run strategy backtest |
+| `/api/backtest/:id` | GET | Get backtest results |
+| `/api/strategies` | GET | List available strategies |
+
+### Example API Usage
+
+```javascript
+// Get stock K-line data
+fetch('/api/stocks/sh.600000/klines?start=2023-01-01&end=2023-12-31')
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// Run backtest
+fetch('/api/backtest', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    stock_code: 'sh.600000',
+    strategy: 'ma_cross',
+    start_date: '2023-01-01',
+    end_date: '2023-12-31',
+    initial_capital: 100000,
+    commission_rate: 0.0003
+  })
+})
+.then(res => res.json())
+.then(result => console.log(result));
+```
+
 ## Configuration
 
 ### Backtest Configuration
