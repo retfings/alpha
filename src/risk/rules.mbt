@@ -653,4 +653,77 @@ pub fn sequential_rules(rules : Array[RiskRule], name : String) -> RiskRule {
 }
 
 ///|
+/// Require at least N rules to pass out of M rules
+///
+/// This combinator checks if at least `min_pass` rules pass out of the provided rules array.
+/// Useful for creating flexible risk policies where not all conditions need to be met.
+///
+/// Parameters:
+/// - rules: Array of rules to check
+/// - min_pass: Minimum number of rules that must pass
+/// - name: Name for the combined rule
+///
+/// Returns:
+/// - A new RiskRule that passes if at least min_pass rules pass
+///
+/// Examples:
+/// ```mbt check-disabled
+/// // Require at least 2 out of 3 rules to pass
+/// let combined = at_least_rules(
+///   [
+///     max_drawdown_rule(0.20),
+///     position_limit_rule(0.90),
+///     daily_loss_limit_rule(0.05),
+///   ],
+///   2, // At least 2 must pass
+///   "Flexible Risk Check",
+/// )
+/// ```
+pub fn at_least_rules(
+  rules : Array[RiskRule],
+  min_pass : Int,
+  name : String,
+) -> RiskRule {
+  let mut min_priority = 999
+  for rule in rules {
+    min_priority = Int::min(min_priority, rule.priority)
+  }
+  RiskRule::{
+    name,
+    priority: min_priority,
+    check_fn: fn(dd, pos_ratio, daily_loss) {
+      let mut pass_count = 0
+      let mut first_failure : RiskResult? = None
+
+      for rule in rules {
+        let result = (rule.check_fn)(dd, pos_ratio, daily_loss)
+        if result.passed {
+          pass_count = pass_count + 1
+        } else if first_failure is None {
+          first_failure = Some(result)
+        }
+      }
+
+      if pass_count >= min_pass {
+        RiskResult::{
+          passed: true,
+          message: "\{pass_count}/\{rules.length()} rules passed (required: \{min_pass})",
+          action: RiskAction::Allow,
+        }
+      } else {
+        match first_failure {
+          Some(failure) => failure
+          None =>
+            RiskResult::{
+              passed: false,
+              message: "Only \{pass_count}/\{rules.length()} rules passed (required: \{min_pass})",
+              action: RiskAction::Reject,
+            }
+        }
+      }
+    },
+  }
+}
+
+///|
 /// Rule Combinators (continued)

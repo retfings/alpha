@@ -8,6 +8,8 @@ import {
 // Values
 pub fn and_rules(RiskRule, RiskRule, String) -> RiskRule
 
+pub fn at_least_rules(Array[RiskRule], Int, String) -> RiskRule
+
 pub fn check_portfolio_stop_loss(@portfolio.Portfolio, Float) -> (String, RiskResult)?
 
 pub fn check_position_stop_loss(String, Float, Float) -> RiskResult

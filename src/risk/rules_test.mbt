@@ -375,3 +375,81 @@ test "sequential_rules with empty rules array" {
   assert_true(result.passed)
   assert_true(result.message == "All 0 rules passed")
 }
+
+///|
+test "at_least_rules combinator" {
+  // Create 3 rules with different thresholds
+  let rules = [
+    @risk.max_drawdown_rule(0.10), // Rule 1: 10% drawdown
+    @risk.position_limit_rule(0.80), // Rule 2: 80% position
+    @risk.daily_loss_limit_rule(0.03), // Rule 3: 3% daily loss
+  ]
+
+  // Require at least 2 out of 3 to pass
+  let combined = @risk.at_least_rules(rules, 2, "At Least 2 of 3")
+
+  assert_true(combined.name == "At Least 2 of 3")
+  assert_true(combined.priority == 1) // Minimum priority
+
+  // All 3 pass -> overall passes
+  let result1 = (combined.check_fn)(-0.05, 0.50, -0.01)
+  assert_true(result1.passed)
+  assert_true(result1.message.contains("3/3"))
+
+  // 2 pass (rule 1 fails: -0.15 <= -0.10) -> overall passes
+  let result2 = (combined.check_fn)(-0.15, 0.50, -0.01)
+  assert_true(result2.passed)
+  assert_true(result2.message.contains("2/3"))
+
+  // 2 pass (rule 2 fails: 0.85 > 0.80) -> overall passes
+  let result3 = (combined.check_fn)(-0.05, 0.85, -0.01)
+  assert_true(result3.passed)
+  assert_true(result3.message.contains("2/3"))
+
+  // 2 pass (rule 3 fails: -0.05 <= -0.03) -> overall passes
+  let result4 = (combined.check_fn)(-0.05, 0.50, -0.05)
+  assert_true(result4.passed)
+  assert_true(result4.message.contains("2/3"))
+
+  // Only 1 passes (rules 1 and 2 fail) -> overall fails
+  let result5 = (combined.check_fn)(-0.15, 0.85, -0.01)
+  assert_true(!result5.passed)
+  // Message comes from first failure (max_drawdown_rule)
+  assert_true(
+    result5.message.contains("Maximum drawdown") ||
+    result5.message.contains("drawdown"),
+  )
+
+  // 0 pass -> overall fails
+  let result6 = (combined.check_fn)(-0.15, 0.85, -0.05)
+  assert_true(!result6.passed)
+  // Message comes from first failure (max_drawdown_rule)
+  assert_true(
+    result6.message.contains("Maximum drawdown") ||
+    result6.message.contains("drawdown"),
+  )
+}
+
+///|
+test "at_least_rules edge cases" {
+  let rules = [@risk.max_drawdown_rule(0.10), @risk.position_limit_rule(0.80)]
+
+  // Require 0 to pass -> always passes
+  let combined0 = @risk.at_least_rules(rules, 0, "Require 0")
+  let result0 = (combined0.check_fn)(-0.15, 0.85, -0.05)
+  assert_true(result0.passed)
+  assert_true(result0.message.contains("0/2"))
+
+  // Require all to pass -> same as AND
+  let combined_all = @risk.at_least_rules(rules, 2, "Require All")
+  let result_all_pass = (combined_all.check_fn)(-0.05, 0.50, 0.0)
+  assert_true(result_all_pass.passed)
+
+  let result_one_fails = (combined_all.check_fn)(-0.15, 0.50, 0.0)
+  assert_true(!result_one_fails.passed)
+
+  // Require more than available -> always fails
+  let combined_impossible = @risk.at_least_rules(rules, 5, "Impossible")
+  let result_imp = (combined_impossible.check_fn)(-0.05, 0.50, 0.0)
+  assert_true(!result_imp.passed)
+}
