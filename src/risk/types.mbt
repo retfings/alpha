@@ -21,9 +21,19 @@ pub enum RiskAction {
 /// Helper functions for creating RiskAction values (for tests)
 ///
 /// These functions provide convenient constructors for testing
-pub fn risk_action_allow() -> RiskAction { RiskAction::Allow }
-pub fn risk_action_reject() -> RiskAction { RiskAction::Reject }
-pub fn risk_action_stop_trading() -> RiskAction { RiskAction::StopTrading }
+pub fn risk_action_allow() -> RiskAction {
+  RiskAction::Allow
+}
+
+///|
+pub fn risk_action_reject() -> RiskAction {
+  RiskAction::Reject
+}
+
+///|
+pub fn risk_action_stop_trading() -> RiskAction {
+  RiskAction::StopTrading
+}
 
 ///|
 /// Create a ReducePosition action
@@ -96,10 +106,12 @@ pub struct RiskEngine {
 /// - Empty risk engine with no rules
 ///
 /// Usage:
-/// ```mbt test
+/// ```mbt check
+/// test {
 /// test "create risk engine" {
 ///   let engine = create_risk_engine()
 ///   engine.add_rule(max_drawdown_rule(0.2))
+/// }
 /// }
 /// ```
 pub fn create_risk_engine() -> RiskEngine {

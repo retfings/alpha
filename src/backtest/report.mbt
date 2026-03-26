@@ -5,7 +5,7 @@
 pub(all) enum ReportFormat {
   Html
   Text
-}
+} derive(Show)
 
 ///|
 /// Report configuration

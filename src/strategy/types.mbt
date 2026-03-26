@@ -25,7 +25,7 @@ pub(all) struct StrategyContext {
   position : Float
   current_price : Float
   last_signal : Signal?
-}
+} derive(ToJson, Show)
 
 ///|
 /// Strategy type as a record of functions

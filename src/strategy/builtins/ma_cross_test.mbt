@@ -42,7 +42,9 @@ test "MaCrossStrategy::on_init - no-op" {
 ///|
 test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
   let strategy = create_ma_cross_strategy(5, 20)
-  let kline = @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -63,7 +65,9 @@ test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
 ///|
 test "MaCrossStrategy::on_bar - golden cross detection" {
   let strategy = create_ma_cross_strategy(3, 5)
-  let kline = @data.KLine::daily("sh.600000", "2023-01-10", 12.0, 12.5, 11.8, 12.3, 1000000.0, 12300000.0, 0.05)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-10", 12.0, 12.5, 11.8, 12.3, 1000000.0, 12300000.0, 0.05,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -89,7 +93,9 @@ test "MaCrossStrategy::on_bar - golden cross detection" {
 ///|
 test "MaCrossStrategy::on_bar - death cross detection" {
   let strategy = create_ma_cross_strategy(3, 5)
-  let kline = @data.KLine::daily("sh.600000", "2023-01-10", 8.0, 8.2, 7.5, 7.8, 1000000.0, 7800000.0, 0.05)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-10", 8.0, 8.2, 7.5, 7.8, 1000000.0, 7800000.0, 0.05,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -115,7 +121,9 @@ test "MaCrossStrategy::on_bar - death cross detection" {
 ///|
 test "MaCrossStrategy::on_bar - snapshot of signal with various histories" {
   let strategy = create_ma_cross_strategy(3, 5)
-  let base_kline = @data.KLine::daily("sh.600000", "2023-01-10", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05)
+  let base_kline = @data.KLine::daily(
+    "sh.600000", "2023-01-10", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,

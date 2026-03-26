@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>量化回撤框架 - Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>量化回撤框架</h1>
+      <nav>
+        <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+        <button class="nav-btn" data-tab="backtest">回测</button>
+        <button class="nav-btn" data-tab="analysis">分析</button>
+        <button class="nav-btn" data-tab="settings">设置</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Dashboard Tab -->
+      <section id="dashboard" class="tab active">
+        <div class="cards">
+          <div class="card">
+            <h3>组合价值</h3>
+            <p class="metric" id="portfolio-value">--</p>
+          </div>
+          <div class="card">
+            <h3>最大回撤</h3>
+            <p class="metric" id="max-drawdown">--</p>
+          </div>
+          <div class="card">
+            <h3>当前回撤</h3>
+            <p class="metric" id="current-drawdown">--</p>
+          </div>
+          <div class="card">
+            <h3>夏普比率</h3>
+            <p class="metric" id="sharpe-ratio">--</p>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <h3>权益曲线</h3>
+          <canvas id="equity-chart"></canvas>
+        </div>
+
+        <div class="chart-container">
+          <h3>回撤曲线</h3>
+          <canvas id="drawdown-chart"></canvas>
+        </div>
+      </section>
+
+      <!-- Backtest Tab -->
+      <section id="backtest" class="tab">
+        <div class="form-group">
+          <h3>回测配置</h3>
+          <form id="backtest-form">
+            <div class="form-row">
+              <label>
+                股票代码:
+                <select id="backtest-stock" required>
+                  <option value="">选择股票</option>
+                </select>
+              </label>
+              <label>
+                策略:
+                <select id="backtest-strategy" required>
+                  <option value="ma_cross">均线交叉策略</option>
+                  <option value="momentum">动量策略</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                开始日期:
+                <input type="date" id="backtest-start" value="2023-01-01" required>
+              </label>
+              <label>
+                结束日期:
+                <input type="date" id="backtest-end" value="2023-12-31" required>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                初始资金:
+                <input type="number" id="backtest-capital" value="100000" min="1000" step="1000" required>
+              </label>
+            </div>
+            <button type="submit" class="btn-primary">运行回测</button>
+          </form>
+        </div>
+
+        <div id="backtest-results" class="results" style="display: none;">
+          <div class="cards">
+            <div class="card">
+              <h3>总收益</h3>
+              <p class="metric" id="bt-total-return">--</p>
+            </div>
+            <div class="card">
+              <h3>年化收益</h3>
+              <p class="metric" id="bt-annual-return">--</p>
+            </div>
+            <div class="card">
+              <h3>最大回撤</h3>
+              <p class="metric" id="bt-max-drawdown">--</p>
+            </div>
+            <div class="card">
+              <h3>夏普比率</h3>
+              <p class="metric" id="bt-sharpe-ratio">--</p>
+            </div>
+            <div class="card">
+              <h3>交易次数</h3>
+              <p class="metric" id="bt-total-trades">--</p>
+            </div>
+            <div class="card">
+              <h3>胜率</h3>
+              <p class="metric" id="bt-win-rate">--</p>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <h3>回测权益曲线</h3>
+            <canvas id="backtest-equity-chart"></canvas>
+          </div>
+
+          <div class="trades-table">
+            <h3>交易记录</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>操作</th>
+                  <th>价格</th>
+                  <th>数量</th>
+                  <th>手续费</th>
+                </tr>
+              </thead>
+              <tbody id="trades-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analysis Tab -->
+      <section id="analysis" class="tab">
+        <div class="form-group">
+          <h3>回撤分析</h3>
+          <form id="analysis-form">
+            <div class="form-row">
+              <label>
+                股票代码:
+                <select id="analysis-stock" required>
+                  <option value="">选择股票</option>
+                </select>
+              </label>
+              <label>
+                开始日期:
+                <input type="date" id="analysis-start" value="2023-01-01" required>
+              </label>
+              <label>
+                结束日期:
+                <input type="date" id="analysis-end" value="2023-12-31" required>
+              </label>
+            </div>
+            <button type="submit" class="btn-primary">分析回撤</button>
+          </form>
+        </div>
+
+        <div id="analysis-results" class="results" style="display: none;">
+          <div class="cards">
+            <div class="card">
+              <h3>最大回撤</h3>
+              <p class="metric" id="an-max-drawdown">--</p>
+            </div>
+            <div class="card">
+              <h3>峰值日期</h3>
+              <p class="metric" id="an-peak-date">--</p>
+            </div>
+            <div class="card">
+              <h3>谷底日期</h3>
+              <p class="metric" id="an-trough-date">--</p>
+            </div>
+            <div class="card">
+              <h3>持续天数</h3>
+              <p class="metric" id="an-duration">--</p>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <h3>价格走势与回撤</h3>
+            <canvas id="analysis-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Tab -->
+      <section id="settings" class="tab">
+        <div class="form-group">
+          <h3>风控设置</h3>
+          <form id="settings-form">
+            <div class="form-row">
+              <label>
+                最大回撤限制 (%):
+                <input type="number" id="setting-max-dd" value="10" min="1" max="50" step="0.5">
+              </label>
+              <label>
+                仓位限制 (%):
+                <input type="number" id="setting-position-limit" value="80" min="10" max="100" step="5">
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                单笔止损 (%):
+                <input type="number" id="setting-stop-loss" value="5" min="1" max="20" step="0.5">
+              </label>
+              <label>
+                单笔止盈 (%):
+                <input type="number" id="setting-take-profit" value="15" min="5" max="100" step="1">
+              </label>
+            </div>
+            <button type="submit" class="btn-primary">保存设置</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>量化回撤框架 v0.1.0 | Built with MoonBit</p>
+    </footer>
+  </div>
+
+  <div id="loading" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <p>加载中...</p>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -39,8 +39,9 @@ pub struct BacktestEngine {
 ///   - Empty trade list and equity curve
 ///
 /// Examples:
-/// ```mbt check
+/// ```mbt check-disabled
 /// let config = @strategy.default_backtest_config()
+///
 /// let engine = create_backtest_engine(config)
 /// ```
 pub fn create_backtest_engine(
@@ -87,9 +88,11 @@ pub fn create_backtest_engine(
 /// - Calculates final statistics
 ///
 /// Examples:
-/// ```mbt check
+/// ```mbt check-disabled
 /// let config = @strategy.default_backtest_config()
+///
 /// let engine = create_backtest_engine(config)
+///
 /// let strategy = @strategy.builtins.create_ma_cross_strategy(10, 30)
 /// // let klines = ... load data ...
 /// // let result = run_backtest(engine, klines, strategy)

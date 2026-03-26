@@ -19,8 +19,10 @@
 /// - RiskRule that triggers StopTrading when exceeded
 ///
 /// Examples:
-/// ```mbt test
-/// let rule = max_drawdown_rule(0.20)  // 20% max drawdown
+/// ```mbt check
+/// test {
+///   let rule = max_drawdown_rule(0.20) // 20% max drawdown
+/// }
 /// ```
 pub fn max_drawdown_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
@@ -59,8 +61,10 @@ pub fn max_drawdown_rule(max_pct : Float) -> RiskRule {
 /// - RiskRule that triggers ReducePosition when exceeded
 ///
 /// Examples:
-/// ```mbt test
-/// let rule = position_limit_rule(0.95)  // 95% max position
+/// ```mbt check
+/// test {
+///   let rule = position_limit_rule(0.95) // 95% max position
+/// }
 /// ```
 pub fn position_limit_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
@@ -99,8 +103,10 @@ pub fn position_limit_rule(max_pct : Float) -> RiskRule {
 /// - RiskRule that triggers StopTrading when exceeded
 ///
 /// Examples:
-/// ```mbt test
-/// let rule = daily_loss_limit_rule(0.05)  // 5% daily loss limit
+/// ```mbt check
+/// test {
+///   let rule = daily_loss_limit_rule(0.05) // 5% daily loss limit
+/// }
 /// ```
 pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
@@ -141,8 +147,10 @@ pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
 /// - RiskRule that triggers ReducePosition when exceeded
 ///
 /// Examples:
-/// ```mbt test
-/// let rule = stop_loss_rule("sh.600000", 0.10)  // 10% stop loss
+/// ```mbt check
+/// test {
+///   let rule = stop_loss_rule("sh.600000", 0.10) // 10% stop loss
+/// }
 /// ```
 pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
   RiskRule::{
@@ -184,8 +192,10 @@ pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
 /// - RiskRule that triggers ReducePosition when exceeded
 ///
 /// Examples:
-/// ```mbt test
-/// let rule = single_stock_limit_rule(0.20)  // 20% max single stock
+/// ```mbt check
+/// test {
+///   let rule = single_stock_limit_rule(0.20) // 20% max single stock
+/// }
 /// ```
 pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
@@ -226,8 +236,10 @@ pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
 /// - RiskRule that suggests ReducePosition(0.5) when profit target reached
 ///
 /// Examples:
-/// ```mbt test
-/// let rule = take_profit_rule(0.10)  // Take profit at 10% gain
+/// ```mbt check
+/// test {
+///   let rule = take_profit_rule(0.10) // Take profit at 10% gain
+/// }
 /// ```
 pub fn take_profit_rule(min_profit_pct : Float) -> RiskRule {
   RiskRule::{
@@ -266,13 +278,15 @@ pub fn take_profit_rule(min_profit_pct : Float) -> RiskRule {
 /// - Array[RiskRule] ready to be added to a RiskEngine
 ///
 /// Examples:
-/// ```mbt test
+/// ```mbt check
+/// test {
 /// test "default rules usage" {
 ///   let rules = default_rules()
 ///   let engine = create_risk_engine()
 ///   for rule in rules {
 ///     engine.add_rule(rule)
 ///   }
+/// }
 /// }
 /// ```
 pub fn default_rules() -> Array[RiskRule] {

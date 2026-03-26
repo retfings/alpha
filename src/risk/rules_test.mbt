@@ -8,7 +8,10 @@ test "RiskResult and RiskAction basic operations" {
   assert_true(allow_result.message == "Test passed")
 
   // Test Reject action
-  let reject_result = @risk.risk_result_fail("Test failed", @risk.risk_action_reject())
+  let reject_result = @risk.risk_result_fail(
+    "Test failed",
+    @risk.risk_action_reject(),
+  )
   assert_true(!reject_result.passed)
 
   // Test ReducePosition action
@@ -18,17 +21,18 @@ test "RiskResult and RiskAction basic operations" {
   )
   assert_true(!reduce_result.passed)
   match reduce_result.action {
-    RiskAction::ReducePosition(pct) => {
-      assert_true(pct == 0.1)
-    }
-    _ => { fail("Expected ReducePosition action") }
+    RiskAction::ReducePosition(pct) => assert_true(pct == 0.1)
+    _ => fail("Expected ReducePosition action")
   }
 
   // Test StopTrading action
-  let stop_result = @risk.risk_result_fail("Stop trading", @risk.risk_action_stop_trading())
+  let stop_result = @risk.risk_result_fail(
+    "Stop trading",
+    @risk.risk_action_stop_trading(),
+  )
   match stop_result.action {
-    RiskAction::StopTrading => { assert_true(true) }
-    _ => { fail("Expected StopTrading action") }
+    RiskAction::StopTrading => assert_true(true)
+    _ => fail("Expected StopTrading action")
   }
 }
 
@@ -65,11 +69,10 @@ test "position_limit_rule" {
   let result2 = (rule.check_fn)(0.0, 0.90, 0.0)
   assert_true(!result2.passed)
   match result2.action {
-    RiskAction::ReducePosition(pct) => {
+    RiskAction::ReducePosition(pct) =>
       // pct should be 0.90 - 0.80 = 0.10
       assert_true(pct > 0.09 && pct < 0.11)
-    }
-    _ => { fail("Expected ReducePosition action") }
+    _ => fail("Expected ReducePosition action")
   }
 }
 
@@ -104,8 +107,8 @@ test "stop_loss_rule" {
   let result2 = (rule.check_fn)(0.0, 0.0, -0.10)
   assert_true(!result2.passed)
   match result2.action {
-    RiskAction::ReducePosition(_) => { assert_true(true) }
-    _ => { fail("Expected ReducePosition action") }
+    RiskAction::ReducePosition(_) => assert_true(true)
+    _ => fail("Expected ReducePosition action")
   }
 }
 
@@ -123,11 +126,10 @@ test "single_stock_limit_rule" {
   let result2 = (rule.check_fn)(0.0, 0.40, 0.0)
   assert_true(!result2.passed)
   match result2.action {
-    RiskAction::ReducePosition(pct) => {
+    RiskAction::ReducePosition(pct) =>
       // pct should be 0.40 - 0.30 = 0.10
       assert_true(pct > 0.09 && pct < 0.11)
-    }
-    _ => { fail("Expected ReducePosition action") }
+    _ => fail("Expected ReducePosition action")
   }
 }
 
@@ -146,10 +148,8 @@ test "take_profit_rule" {
   let result2 = (rule.check_fn)(0.0, 0.0, -0.07)
   assert_true(result2.passed)
   match result2.action {
-    RiskAction::ReducePosition(pct) => {
-      assert_true(pct == 0.5)
-    }
-    _ => { fail("Expected ReducePosition action") }
+    RiskAction::ReducePosition(pct) => assert_true(pct == 0.5)
+    _ => fail("Expected ReducePosition action")
   }
 }
 
@@ -252,8 +252,8 @@ test "RiskEngine with default rules" {
   let result3 = engine3.check(-0.05, 0.98, -0.02)
   assert_true(!result3.passed)
   match result3.action {
-    RiskAction::ReducePosition(_) => { assert_true(true) }
-    _ => { fail("Expected ReducePosition action") }
+    RiskAction::ReducePosition(_) => assert_true(true)
+    _ => fail("Expected ReducePosition action")
   }
 
   // Test 4: Daily loss limit failure

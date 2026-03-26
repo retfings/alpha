@@ -15,7 +15,14 @@ test "create_momentum_strategy - custom thresholds" {
   assert_true(strategy.rsi_period == 21)
   assert_true(strategy.overbought_threshold == 80.0)
   assert_true(strategy.oversold_threshold == 20.0)
-  json_inspect((strategy.name, strategy.rsi_period, strategy.overbought_threshold, strategy.oversold_threshold))
+  json_inspect(
+    (
+      strategy.name,
+      strategy.rsi_period,
+      strategy.overbought_threshold,
+      strategy.oversold_threshold,
+    ),
+  )
 }
 
 ///|
@@ -42,7 +49,9 @@ test "MomentumStrategy::on_init - no-op" {
 ///|
 test "MomentumStrategy::on_bar - insufficient history returns Hold" {
   let strategy = create_momentum_strategy(14, 70.0, 30.0)
-  let kline = @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -63,7 +72,9 @@ test "MomentumStrategy::on_bar - insufficient history returns Hold" {
 ///|
 test "MomentumStrategy::on_bar - oversold scenario (Buy signal)" {
   let strategy = create_momentum_strategy(14, 70.0, 30.0)
-  let kline = @data.KLine::daily("sh.600000", "2023-01-15", 8.0, 8.2, 7.5, 7.8, 2000000.0, 15600000.0, 0.10)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-15", 8.0, 8.2, 7.5, 7.8, 2000000.0, 15600000.0, 0.10,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -89,7 +100,9 @@ test "MomentumStrategy::on_bar - oversold scenario (Buy signal)" {
 ///|
 test "MomentumStrategy::on_bar - overbought scenario (Sell signal)" {
   let strategy = create_momentum_strategy(14, 70.0, 30.0)
-  let kline = @data.KLine::daily("sh.600000", "2023-01-15", 22.0, 23.0, 21.8, 22.5, 3000000.0, 67500000.0, 0.15)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-15", 22.0, 23.0, 21.8, 22.5, 3000000.0, 67500000.0, 0.15,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -153,7 +166,9 @@ test "MomentumStrategy::get_current_rsi - value check" {
 ///|
 test "MomentumStrategy - snapshot of signals with various scenarios" {
   let strategy = create_momentum_strategy(14, 70.0, 30.0)
-  let base_kline = @data.KLine::daily("sh.600000", "2023-01-15", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05)
+  let base_kline = @data.KLine::daily(
+    "sh.600000", "2023-01-15", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05,
+  )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,

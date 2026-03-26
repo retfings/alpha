@@ -9,14 +9,12 @@ test "parse_csv_content - basic csv" {
   match result {
     Ok(klines) => {
       assert_true(klines.length() == 2)
-      // Verify first kline
       assert_true(klines[0].date == "2023-01-01")
       assert_true(klines[0].close > 10.7 && klines[0].close < 10.9)
-      // Verify second kline
       assert_true(klines[1].date == "2023-01-02")
       assert_true(klines[1].close > 10.9 && klines[1].close < 11.1)
     }
-    Err(_) => { fail("Expected Ok result") }
+    Err(_) => fail("Expected Ok result")
   }
 }
 
@@ -24,10 +22,8 @@ test "parse_csv_content - basic csv" {
 test "parse_csv_content - empty content" {
   let result = parse_csv_content("")
   match result {
-    Err(msg) => {
-      assert_true(msg.contains("Empty"))
-    }
-    Ok(_) => { fail("Expected Err result") }
+    Err(msg) => assert_true(msg.contains("Empty"))
+    Ok(_) => fail("Expected Err result")
   }
 }
 
@@ -36,10 +32,8 @@ test "parse_csv_content - header only" {
   let content = "date,open,high,low,close,volume,amount,turn"
   let result = parse_csv_content(content)
   match result {
-    Ok(klines) => {
-      assert_true(klines.length() == 0)
-    }
-    Err(_) => { fail("Expected Ok result with empty array") }
+    Ok(klines) => assert_true(klines.length() == 0)
+    Err(_) => fail("Expected Ok result with empty array")
   }
 }
 
@@ -50,11 +44,8 @@ test "parse_csv_content - partial data lines" {
     "invalid,line,here"
   let result = parse_csv_content(content)
   match result {
-    Ok(klines) => {
-      // Should have 1 valid kline, invalid line is skipped
-      assert_true(klines.length() == 1)
-    }
-    Err(_) => { fail("Expected Ok result") }
+    Ok(klines) => assert_true(klines.length() == 1)
+    Err(_) => fail("Expected Ok result")
   }
 }
 
@@ -63,10 +54,8 @@ test "extract_stock_code_from_filename - valid filename with path" {
   let filename = "data/sh_600000_2023-01-01_2023-12-31.csv"
   let result = extract_stock_code_from_filename(filename)
   match result {
-    Some(code) => {
-      assert_true(code == "sh.600000")
-    }
-    None => { fail("Expected Some code") }
+    Some(code) => assert_true(code == "sh.600000")
+    None => fail("Expected Some code")
   }
 }
 
@@ -75,10 +64,8 @@ test "extract_stock_code_from_filename - sz stock" {
   let filename = "data/sz_000001_2023-01-01_2023-12-31.csv"
   let result = extract_stock_code_from_filename(filename)
   match result {
-    Some(code) => {
-      assert_true(code == "sz.000001")
-    }
-    None => { fail("Expected Some code") }
+    Some(code) => assert_true(code == "sz.000001")
+    None => fail("Expected Some code")
   }
 }
 
@@ -87,10 +74,8 @@ test "extract_stock_code_from_filename - filename without path" {
   let filename = "sh_600000_2023-01-01_2023-12-31.csv"
   let result = extract_stock_code_from_filename(filename)
   match result {
-    Some(code) => {
-      assert_true(code == "sh.600000")
-    }
-    None => { fail("Expected Some code") }
+    Some(code) => assert_true(code == "sh.600000")
+    None => fail("Expected Some code")
   }
 }
 
@@ -111,10 +96,8 @@ test "extract_stock_code_from_filename - empty filename" {
 test "load_klines_from_csv - returns error for C FFI requirement" {
   let result = load_klines_from_csv("data/test.csv")
   match result {
-    Err(msg) => {
-      assert_true(msg.contains("C FFI"))
-    }
-    Ok(_) => { fail("Expected Err result") }
+    Err(msg) => assert_true(msg.contains("C FFI"))
+    Ok(_) => fail("Expected Err result")
   }
 }
 
@@ -127,10 +110,12 @@ test "parse_csv_content - snapshot test with multiple rows" {
   let result = parse_csv_content(content)
   match result {
     Ok(klines) => {
-      // json_inspect disabled - KLine struct doesn't support record syntax
-      ignore(klines)
+      assert_true(klines.length() == 3)
+      assert_true(klines[0].date == "2023-01-01")
+      assert_true(klines[1].date == "2023-01-02")
+      assert_true(klines[2].date == "2023-01-03")
     }
-    Err(_) => { fail("Expected Ok, got error") }
+    Err(_) => fail("Expected Ok, got error")
   }
 }
 
@@ -142,22 +127,25 @@ test "parse_csv_content - snapshot with various price ranges" {
     "2023-01-03,1000.0,1050.0,990.0,1025.0,50000,51250000,0.05"
   let result = parse_csv_content(content)
   match result {
-    Ok(klines) => {
-      // json_inspect disabled - KLine struct doesn't support record syntax
-      ignore(klines)
-    }
-    Err(_) => { fail("Expected Ok, got error") }
+    Ok(klines) => assert_true(klines.length() == 3)
+    Err(_) => fail("Expected Ok, got error")
   }
 }
 
 ///|
 test "kline_to_csv_line - roundtrip test" {
-  let kline = KLine::daily("sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05)
+  let kline = KLine::daily(
+    "sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05,
+  )
   let csv_line = kline_to_csv_line(kline)
-  json_inspect(csv_line, content="2023-01-01,10.5,11,10.199999809265137,10.800000190734863,1000000,10500000,0.05000000074505806")
+  json_inspect(
+    csv_line,
+    content="2023-01-01,10.5,11,10.199999809265137,10.800000190734863,1000000,10500000,0.05000000074505806",
+  )
 
-  // Verify roundtrip
-  let reparsed = parse_csv_content("date,open,high,low,close,volume,amount,turn\n" + csv_line)
+  let reparsed = parse_csv_content(
+    "date,open,high,low,close,volume,amount,turn\n" + csv_line,
+  )
   match reparsed {
     Ok(reparsed_klines) => {
       assert_true(reparsed_klines.length() == 1)
@@ -166,14 +154,18 @@ test "kline_to_csv_line - roundtrip test" {
       assert_true(reparsed_klines[0].low == kline.low)
       assert_true(reparsed_klines[0].close == kline.close)
     }
-    Err(_) => { fail("Roundtrip failed") }
+    Err(_) => fail("Roundtrip failed")
   }
 }
 
 ///|
 test "KLine struct - json inspection" {
-  let kline = KLine::daily("sz.000001", "2023-06-15", 25.5, 26.8, 25.2, 26.5, 5000000.0, 132500000.0, 0.12)
-  json_inspect(kline)
+  let kline = KLine::daily(
+    "sz.000001", "2023-06-15", 25.5, 26.8, 25.2, 26.5, 5000000.0, 132500000.0, 0.12,
+  )
+  assert_true(kline.code == "sz.000001")
+  assert_true(kline.date == "2023-06-15")
+  assert_true(kline.close > 26.0 && kline.close < 27.0)
 }
 
 ///|

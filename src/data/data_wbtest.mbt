@@ -167,7 +167,6 @@ test "parse_kline_line - snapshot test" {
   let line = "2023-01-01,10.5,11.0,10.2,10.8,1000000,10500000,0.05"
   match parse_kline_line(line) {
     Some(kline) =>
-      // Snapshot test disabled - KLine struct content doesn't work with json_inspect
       assert_true(kline.date == "2023-01-01")
     None => fail("Expected Some kline")
   }
@@ -176,9 +175,9 @@ test "parse_kline_line - snapshot test" {
 ///|
 test "parse_kline_line - edge cases snapshot" {
   let edge_cases = [
-    "2023-01-01,0,0,0,0,0,0,0", // All zeros
-     "2023-01-01,0.001,0.002,0.0005,0.0015,1,100,0.0001", // Tiny values
-     "2023-01-01,999999,1000000,999998,999999.5,999999999,999999999999,0.99", // Large values
+    "2023-01-01,0,0,0,0,0,0,0",
+    "2023-01-01,0.001,0.002,0.0005,0.0015,1,100,0.0001",
+    "2023-01-01,999999,1000000,999998,999999.5,999999999,999999999999,0.99",
   ]
   let results = edge_cases.map(fn(line) {
     match parse_kline_line(line) {

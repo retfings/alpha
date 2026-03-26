@@ -331,18 +331,27 @@ test "risk rule message content snapshot" {
   // Max drawdown message format
   let dd_rule = @risk.max_drawdown_rule(0.10)
   let dd_result = (dd_rule.check_fn)(-0.15, 0.0, 0.0)
-  inspect(dd_result.message.contains("Maximum drawdown exceeded"), content="true")
+  inspect(
+    dd_result.message.contains("Maximum drawdown exceeded"),
+    content="true",
+  )
   inspect(dd_result.message.contains("15.0"), content="true")
 
   // Position limit message format
   let pos_rule = @risk.position_limit_rule(0.80)
   let pos_result = (pos_rule.check_fn)(0.0, 0.95, 0.0)
-  inspect(pos_result.message.contains("Position limit exceeded"), content="true")
+  inspect(
+    pos_result.message.contains("Position limit exceeded"),
+    content="true",
+  )
   inspect(pos_result.message.contains("95"), content="true")
 
   // Daily loss message format
   let dl_rule = @risk.daily_loss_limit_rule(0.05)
   let dl_result = (dl_rule.check_fn)(0.0, 0.0, -0.07)
-  inspect(dl_result.message.contains("Daily loss limit exceeded"), content="true")
+  inspect(
+    dl_result.message.contains("Daily loss limit exceeded"),
+    content="true",
+  )
   inspect(dl_result.message.contains("7"), content="true")
 }

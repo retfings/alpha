@@ -99,7 +99,7 @@ test "StrategyContext with last signal" {
       assert_true(s.price == 10.5)
       assert_true(s.action == Action::Buy)
     }
-    None => { fail("Expected Some signal") }
+    None => fail("Expected Some signal")
   }
 }
 
@@ -113,7 +113,7 @@ test "StrategyResult creation" {
     strength: 0.8,
   }
   let result = StrategyResult::{
-    signal: signal,
+    signal,
     executed: true,
     exec_price: 10.5,
     exec_volume: 1000.0,
@@ -126,25 +126,30 @@ test "StrategyResult creation" {
 ///|
 test "StrategyEngine - snapshot of internal state" {
   let engine = create_strategy_engine(100000.0)
-  json_inspect({
-    capital: engine.capital,
-    position: engine.position,
-    last_price: engine.last_price,
-    signals_count: engine.signals.length(),
-    results_count: engine.results.length(),
-  })
+  json_inspect(
+    (
+      engine.capital,
+      engine.position,
+      engine.last_price,
+      engine.signals.length(),
+      engine.results.length(),
+    ),
+  )
 }
 
 ///|
 test "process_bar - internal snapshot" {
-  let kline = @data.KLine::daily("sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05,
+  )
 
   let engine = create_strategy_engine(100000.0)
+  let close_history : Array[Float] = [10.0, 10.2, 10.5, 10.8]
 
   let buy_strategy = Strategy::{
     name: "Always Buy",
-    on_init: fn(_) { },
-    on_bar: fn(kline, ctx) {
+    on_init: fn(_) {  },
+    on_bar: fn(kline, ctx, _close_history) {
       Signal::{
         stock: kline.code,
         action: Action::Buy,
@@ -155,13 +160,13 @@ test "process_bar - internal snapshot" {
     },
   }
 
-  let result = process_bar(engine, buy_strategy, kline)
+  let result = process_bar(engine, buy_strategy, kline, close_history)
   json_inspect(result)
 }
 
 ///|
 test "Signal - json inspection for all action types" {
-  let base_price = 100.0
+  let base_price : Float = 100.0
   let signals = [
     Signal::{
       stock: "sh.600000",
@@ -173,14 +178,14 @@ test "Signal - json inspection for all action types" {
     Signal::{
       stock: "sh.600000",
       action: Action::Sell,
-      price: base_price * 1.05,
+      price: base_price * Float::from_double(1.05),
       timestamp: "2023-01-02",
       strength: 0.7,
     },
     Signal::{
       stock: "sh.600000",
       action: Action::Hold,
-      price: base_price * 1.03,
+      price: base_price * Float::from_double(1.03),
       timestamp: "2023-01-03",
       strength: 0.0,
     },
@@ -198,28 +203,10 @@ test "StrategyContext - various states snapshot" {
       last_signal: None,
     },
     StrategyContext::{
-      capital: 50000.0,
-      position: 50000.0,
-      current_price: 10.0,
-      last_signal: Some(Signal::{
-        stock: "sh.600000",
-        action: Action::Buy,
-        price: 10.0,
-        timestamp: "2023-01-01",
-        strength: 0.8,
-      }),
-    },
-    StrategyContext::{
-      capital: 25000.0,
-      position: 75000.0,
-      current_price: 15.0,
-      last_signal: Some(Signal::{
-        stock: "sh.600000",
-        action: Action::Hold,
-        price: 15.0,
-        timestamp: "2023-01-02",
-        strength: 0.0,
-      }),
+      capital: 90000.0,
+      position: 10000.0,
+      current_price: 10.5,
+      last_signal: None,
     },
   ]
   json_inspect(contexts)

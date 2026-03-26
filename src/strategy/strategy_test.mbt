@@ -91,18 +91,22 @@ test "StrategyContext - snapshot tests" {
 
 ///|
 test "Action enum - json inspection" {
-  json_inspect((@strategy.Action::Buy, @strategy.Action::Sell, @strategy.Action::Hold))
+  json_inspect(
+    (@strategy.Action::Buy, @strategy.Action::Sell, @strategy.Action::Hold),
+  )
 }
 
 ///|
 test "process_bar - snapshot test" {
-  let kline = @data.KLine::daily("sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05)
+  let kline = @data.KLine::daily(
+    "sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05,
+  )
 
   let engine = @strategy.create_strategy_engine(100000.0)
 
   let hold_strategy = @strategy.Strategy::{
     name: "Hold Strategy",
-    on_init: fn(_) { },
+    on_init: fn(_) {  },
     on_bar: fn(kline, ctx, close_history) {
       @strategy.Signal::{
         stock: kline.code,
@@ -115,7 +119,9 @@ test "process_bar - snapshot test" {
   }
 
   let close_history : Array[Float] = [10.5, 10.6, 10.7, 10.8]
-  let result = @strategy.process_bar(engine, hold_strategy, kline, close_history)
+  let result = @strategy.process_bar(
+    engine, hold_strategy, kline, close_history,
+  )
   json_inspect(result)
 }
 

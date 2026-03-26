@@ -5,7 +5,7 @@
 ///|
 /// A single trade record
 /// Represents an executed trade in the backtest
-pub struct Trade {
+pub(all) struct Trade {
   /// Stock code traded
   stock : @data.StockCode
   /// Action taken (Buy/Sell)
@@ -23,7 +23,7 @@ pub struct Trade {
 ///|
 /// Equity point at a specific date
 /// Snapshot of portfolio state at a point in time
-pub struct EquityPoint {
+pub(all) struct EquityPoint {
   /// Date in YYYY-MM-DD format
   date : String
   /// Total portfolio equity
@@ -39,7 +39,7 @@ pub struct EquityPoint {
 ///|
 /// Backtest statistics
 /// Performance metrics calculated from backtest results
-pub struct BacktestStats {
+pub(all) struct BacktestStats {
   /// Total return as percentage (e.g., 0.15 for 15%)
   total_return : Float
   /// Annualized return as percentage
@@ -71,7 +71,7 @@ pub struct BacktestStats {
 ///|
 /// Complete backtest result
 /// Full results from running a backtest
-pub struct BacktestResult {
+pub(all) struct BacktestResult {
   /// Initial capital at start of backtest
   initial_capital : Float
   /// Final capital at end of backtest
@@ -95,7 +95,7 @@ pub struct BacktestResult {
 ///|
 /// Trade log for analysis
 /// Detailed log of trades with commentary
-pub struct TradeLog {
+pub(all) struct TradeLog {
   /// List of trade log entries
   entries : Array[TradeLogEntry]
 }
@@ -103,7 +103,7 @@ pub struct TradeLog {
 ///|
 /// Single trade log entry
 /// Detailed information about a single trade
-pub struct TradeLogEntry {
+pub(all) struct TradeLogEntry {
   /// Trade date
   date : String
   /// Stock code
