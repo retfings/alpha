@@ -1,10 +1,10 @@
 {
   "name": "username/alpha",
   "version": "0.1.0",
-  "readme": "README.mbt.md",
+  "readme": "README.md",
   "repository": "",
   "license": "Apache-2.0",
-  "keywords": [],
-  "description": "",
+  "keywords": ["quantitative", "trading", "backtest", "moonbit"],
+  "description": "A type-safe quantitative trading backtest framework built with MoonBit",
   "preferred-target": "native"
 }
