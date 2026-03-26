@@ -4,6 +4,7 @@ Download stock data using baostock API.
 Saves data to CSV files in the data/ directory.
 """
 
+import csv
 import os
 import sys
 from datetime import datetime, timedelta
@@ -108,7 +109,11 @@ def download_stock_data(
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, f"{stock_code.replace('.', '_')}_{start_date}_{end_date}.csv")
 
-    rs.export_to_csv(output_file)
+    with open(output_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(rs.fields)
+        while rs.next():
+            writer.writerow(rs.get_row_data())
     print(f"Data saved to: {output_file}")
 
     # Logout
@@ -173,7 +178,11 @@ def download_stocks_from_list(
         # 文件名包含复权信息
         adjust_suffix = "" if adjustflag == "2" else f"_qfq{adjustflag}"
         output_file = os.path.join(output_dir, f"{stock_code.replace('.', '_')}_{start_date}_{end_date}{adjust_suffix}.csv")
-        rs.export_to_csv(output_file)
+        with open(output_file, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(rs.fields)
+            while rs.next():
+                writer.writerow(rs.get_row_data())
         success_count += 1
 
         if show_progress:
