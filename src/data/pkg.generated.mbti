@@ -1,0 +1,117 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/src/data"
+
+// Values
+pub fn annualize_volatility(Float, Int) -> Float
+
+pub fn apply_backward_adjustment(Array[KLine], Float) -> Array[KLine]
+
+pub fn apply_forward_adjustment(Array[KLine], Float) -> Array[KLine]
+
+pub fn calculate_log_returns(Array[KLine]) -> Array[Float]
+
+pub fn calculate_returns(Array[KLine]) -> Array[Float]
+
+pub fn calculate_rolling_volatility(Array[Float], Int) -> Array[Float]
+
+pub fn create_adjust_factor(String, Float, Float) -> AdjustFactor
+
+pub fn extract_stock_code_from_filename(String) -> String?
+
+pub fn filter_invalid_klines(Array[KLine]) -> Array[KLine]
+
+pub fn kline_to_csv_line(KLine) -> String
+
+pub fn load_klines_from_csv(String) -> Result[Array[KLine], String]
+
+pub fn normalize_price_series(Array[KLine]) -> Array[Float]
+
+pub fn normalize_to_date(Array[KLine], String, Array[AdjustFactor]) -> Array[KLine]
+
+pub fn normalize_volume(Array[KLine], Int) -> Array[Float]
+
+pub fn parse_csv_content(String) -> Result[Array[KLine], String]
+
+pub fn resample_klines(Array[KLine], Frequency) -> Array[KLine]
+
+pub fn sort_klines_by_date(Array[KLine]) -> Array[KLine]
+
+pub fn trim_klines_to_range(Array[KLine], String, String) -> Array[KLine]
+
+pub fn validate_kline(KLine) -> Bool
+
+// Errors
+
+// Types and methods
+pub struct AdjustFactor {
+  date : String
+  ratio : Float
+  dividend : Float
+  rights_ratio : Float
+  rights_price : Float
+}
+pub impl Show for AdjustFactor
+
+pub enum AdjustType {
+  None
+  Forward
+  Backward
+}
+pub impl Eq for AdjustType
+pub impl Show for AdjustType
+
+pub struct AdjustedKLine {
+  code : String
+  date : String
+  open : Float
+  high : Float
+  low : Float
+  close : Float
+  volume : Float
+  amount : Float
+  adjust_factor : Float
+}
+
+pub enum Frequency {
+  Daily
+  Weekly
+  Monthly
+  Minute5
+  Minute15
+  Minute30
+  Minute60
+}
+
+pub struct KLine {
+  code : String
+  date : String
+  time : String?
+  open : Float
+  high : Float
+  low : Float
+  close : Float
+  volume : Float
+  amount : Float
+  turn : Float
+}
+pub fn KLine::create(String, String, Float, Float, Float, Float, Float, Float, Float, time? : String) -> Self
+pub fn KLine::daily(String, String, Float, Float, Float, Float, Float, Float, Float) -> Self
+pub impl Eq for KLine
+pub impl Show for KLine
+pub impl ToJson for KLine
+
+pub struct OHLCV {
+  open : Float
+  high : Float
+  low : Float
+  close : Float
+  volume : Float
+}
+
+// Type aliases
+pub type StockCode = String
+
+pub type TimeSeries[T] = Array[(Int64, T)]
+
+// Traits
+
