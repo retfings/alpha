@@ -1,3 +1,4 @@
 import {
   "username/alpha/src/data" @data,
+  "moonbitlang/core/json",
 }

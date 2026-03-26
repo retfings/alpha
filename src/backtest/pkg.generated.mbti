@@ -9,11 +9,21 @@ import {
 }
 
 // Values
+pub fn action_to_string(@strategy.Action) -> String
+
 pub fn create_backtest_engine(@strategy.BacktestConfig) -> BacktestEngine
 
 pub fn create_trade_log() -> TradeLog
 
+pub fn default_report_config() -> ReportConfig
+
+pub fn generate_report(BacktestResult, ReportConfig) -> String
+
+pub fn print_report(BacktestResult, format? : ReportFormat) -> Unit
+
 pub fn run_backtest(BacktestEngine, Array[@data.KLine], @strategy.Strategy) -> BacktestResult
+
+pub fn save_report_to_file(BacktestResult, String, format? : ReportFormat) -> Result[Unit, String]
 
 // Errors
 
@@ -64,6 +74,21 @@ pub struct EquityPoint {
   drawdown : Float
   position : Float
   cash : Float
+}
+
+pub(all) struct ReportConfig {
+  title : String
+  author : String
+  date : String
+  format : ReportFormat
+  include_equity_curve : Bool
+  include_trades : Bool
+  include_stats : Bool
+}
+
+pub(all) enum ReportFormat {
+  Html
+  Text
 }
 
 pub struct Trade {

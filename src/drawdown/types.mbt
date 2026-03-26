@@ -13,7 +13,7 @@ pub enum DrawdownLevel {
   Significant
   /// 30%+: Severe drawdown
   Severe
-}
+} derive(Show)
 
 ///|
 /// Classify drawdown severity

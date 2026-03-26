@@ -186,7 +186,7 @@ pub struct DrawdownStats {
   current_drawdown : Float
   avg_drawdown : Float
   drawdown_count : Int
-}
+} derive(ToJson, Show)
 
 ///|
 /// Get comprehensive drawdown statistics

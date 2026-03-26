@@ -4,4 +4,6 @@ import {
   "username/alpha/src/strategy" @strategy,
   "username/alpha/src/risk" @risk,
   "username/alpha/src/drawdown" @drawdown,
+  "username/alpha/src/indicator" @indicator,
+  "moonbitlang/core/json",
 }

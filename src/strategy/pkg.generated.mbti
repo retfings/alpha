@@ -25,7 +25,7 @@ pub(all) enum Action {
 pub impl Eq for Action
 pub impl Show for Action
 
-pub struct BacktestConfig {
+pub(all) struct BacktestConfig {
   start_date : String
   end_date : String
   initial_capital : Float

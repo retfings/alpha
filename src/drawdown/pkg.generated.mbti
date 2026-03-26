@@ -52,6 +52,7 @@ pub enum DrawdownLevel {
   Significant
   Severe
 }
+pub impl Show for DrawdownLevel
 
 pub struct DrawdownMonitor {
   mut peak_value : Float
@@ -76,6 +77,8 @@ pub struct DrawdownStats {
   avg_drawdown : Float
   drawdown_count : Int
 }
+pub impl Show for DrawdownStats
+pub impl ToJson for DrawdownStats
 
 // Type aliases
 pub type DrawdownSeries = Array[Float]

@@ -47,7 +47,7 @@ pub struct StrategyInfo {
 
 ///|
 /// Backtest configuration
-pub struct BacktestConfig {
+pub(all) struct BacktestConfig {
   start_date : String
   end_date : String
   initial_capital : Float
