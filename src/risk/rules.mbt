@@ -1,8 +1,27 @@
 /// Built-in risk rules
+///
+/// Predefined risk rules for common risk management scenarios:
+/// - Maximum drawdown limits
+/// - Position size limits
+/// - Daily loss limits
+/// - Stop loss and take profit rules
 
 ///|
 /// Maximum drawdown rule
-/// Stops trading if drawdown exceeds threshold
+///
+/// Stops trading if portfolio drawdown exceeds the specified threshold.
+/// This is a critical risk control that prevents catastrophic losses.
+///
+/// Parameters:
+/// - max_pct: Maximum allowed drawdown (e.g., 0.20 for 20%)
+///
+/// Returns:
+/// - RiskRule that triggers StopTrading when exceeded
+///
+/// Examples:
+/// ```mbt test
+/// let rule = max_drawdown_rule(0.20)  // 20% max drawdown
+/// ```
 pub fn max_drawdown_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
     name: "Max Drawdown Rule",
@@ -29,7 +48,20 @@ pub fn max_drawdown_rule(max_pct : Float) -> RiskRule {
 
 ///|
 /// Position limit rule
-/// Limits maximum position ratio
+///
+/// Limits the maximum position ratio (position value / total portfolio value).
+/// Helps prevent over-concentration in any single position or the market.
+///
+/// Parameters:
+/// - max_pct: Maximum allowed position ratio (e.g., 0.95 for 95%)
+///
+/// Returns:
+/// - RiskRule that triggers ReducePosition when exceeded
+///
+/// Examples:
+/// ```mbt test
+/// let rule = position_limit_rule(0.95)  // 95% max position
+/// ```
 pub fn position_limit_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
     name: "Position Limit Rule",
@@ -56,6 +88,20 @@ pub fn position_limit_rule(max_pct : Float) -> RiskRule {
 
 ///|
 /// Stop loss rule (daily loss limit)
+///
+/// Stops trading if the daily loss exceeds the specified threshold.
+/// This is a circuit breaker that prevents emotional trading during bad days.
+///
+/// Parameters:
+/// - max_pct: Maximum allowed daily loss (e.g., 0.05 for 5%)
+///
+/// Returns:
+/// - RiskRule that triggers StopTrading when exceeded
+///
+/// Examples:
+/// ```mbt test
+/// let rule = daily_loss_limit_rule(0.05)  // 5% daily loss limit
+/// ```
 pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
     name: "Daily Loss Limit Rule",
@@ -82,7 +128,22 @@ pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
 
 ///|
 /// Stop loss rule for individual positions
-/// Triggers when a position loses more than the threshold
+///
+/// Triggers when a position loses more than the specified threshold.
+/// Note: This is a simplified version that uses daily_loss as a proxy.
+/// A full implementation would track per-position P&L.
+///
+/// Parameters:
+/// - stock: Stock code this rule applies to
+/// - max_loss_pct: Maximum allowed loss percentage (e.g., 0.10 for 10%)
+///
+/// Returns:
+/// - RiskRule that triggers ReducePosition when exceeded
+///
+/// Examples:
+/// ```mbt test
+/// let rule = stop_loss_rule("sh.600000", 0.10)  // 10% stop loss
+/// ```
 pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
   RiskRule::{
     name: "Stop Loss Rule (" + stock + ")",
@@ -111,7 +172,21 @@ pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
 
 ///|
 /// Single stock position limit rule
-/// Limits exposure to any single stock
+///
+/// Limits exposure to any single stock to prevent concentration risk.
+/// Note: This is a simplified version that checks total position ratio.
+/// A full implementation would check per-stock exposure.
+///
+/// Parameters:
+/// - max_pct: Maximum allowed single stock exposure (e.g., 0.20 for 20%)
+///
+/// Returns:
+/// - RiskRule that triggers ReducePosition when exceeded
+///
+/// Examples:
+/// ```mbt test
+/// let rule = single_stock_limit_rule(0.20)  // 20% max single stock
+/// ```
 pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
     name: "Single Stock Limit Rule",
@@ -140,6 +215,20 @@ pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
 
 ///|
 /// Take profit rule (optional profit-taking trigger)
+///
+/// Suggests taking profits when daily profit reaches a specified threshold.
+/// This rule doesn't block trades but suggests partial profit-taking.
+///
+/// Parameters:
+/// - min_profit_pct: Minimum profit to trigger take-profit (e.g., 0.10 for 10%)
+///
+/// Returns:
+/// - RiskRule that suggests ReducePosition(0.5) when profit target reached
+///
+/// Examples:
+/// ```mbt test
+/// let rule = take_profit_rule(0.10)  // Take profit at 10% gain
+/// ```
 pub fn take_profit_rule(min_profit_pct : Float) -> RiskRule {
   RiskRule::{
     name: "Take Profit Rule",
@@ -167,6 +256,25 @@ pub fn take_profit_rule(min_profit_pct : Float) -> RiskRule {
 
 ///|
 /// Create default risk rules with common thresholds
+///
+/// Returns an array of commonly used risk rules with standard thresholds:
+/// - Max drawdown: 20%
+/// - Position limit: 95%
+/// - Daily loss limit: 5%
+///
+/// Returns:
+/// - Array[RiskRule] ready to be added to a RiskEngine
+///
+/// Examples:
+/// ```mbt test
+/// test "default rules usage" {
+///   let rules = default_rules()
+///   let engine = create_risk_engine()
+///   for rule in rules {
+///     engine.add_rule(rule)
+///   }
+/// }
+/// ```
 pub fn default_rules() -> Array[RiskRule] {
   [
     max_drawdown_rule(0.20), // 20% max drawdown

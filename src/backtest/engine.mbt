@@ -1,21 +1,48 @@
 /// Backtest engine
+///
+/// Core engine for running strategy backtests on historical data.
 
 ///|
 /// Backtest engine state
+/// Manages the backtest execution and records results
 pub struct BacktestEngine {
+  /// Backtest configuration
   config : @strategy.BacktestConfig
+  /// Portfolio being managed
   portfolio : @portfolio.Portfolio
+  /// Risk engine for trade validation
   risk_engine : @risk.RiskEngine
+  /// List of executed trades
   trades : Array[Trade]
+  /// Equity curve (daily snapshots)
   equity_curve : Array[EquityPoint]
+  /// Current date in backtest
   current_date : String
+  /// Current equity value
   current_equity : Float
+  /// Peak equity value seen
   peak_equity : Float
+  /// Maximum drawdown seen
   max_drawdown : Float
 }
 
 ///|
 /// Create a new backtest engine
+///
+/// Parameters:
+/// - config: Backtest configuration
+///
+/// Returns:
+/// - Initialized BacktestEngine with:
+///   - New portfolio with initial capital
+///   - Risk engine with default rules
+///   - Empty trade list and equity curve
+///
+/// Examples:
+/// ```mbt check
+/// let config = @strategy.default_backtest_config()
+/// let engine = create_backtest_engine(config)
+/// ```
 pub fn create_backtest_engine(
   config : @strategy.BacktestConfig,
 ) -> BacktestEngine {
@@ -43,6 +70,30 @@ pub fn create_backtest_engine(
 
 ///|
 /// Run backtest on given data
+///
+/// Parameters:
+/// - engine: BacktestEngine to use
+/// - klines: Array of historical K-line data
+/// - strategy: Strategy to backtest
+///
+/// Returns:
+/// - BacktestResult with full results and statistics
+///
+/// Behavior:
+/// - Iterates through klines chronologically
+/// - Gets strategy signals for each bar
+/// - Checks risk rules before executing
+/// - Records equity curve and trades
+/// - Calculates final statistics
+///
+/// Examples:
+/// ```mbt check
+/// let config = @strategy.default_backtest_config()
+/// let engine = create_backtest_engine(config)
+/// let strategy = @strategy.builtins.create_ma_cross_strategy(10, 30)
+/// // let klines = ... load data ...
+/// // let result = run_backtest(engine, klines, strategy)
+/// ```
 pub fn run_backtest(
   engine : BacktestEngine,
   klines : Array[@data.KLine],
@@ -75,7 +126,7 @@ pub fn run_backtest(
     }
 
     // Get strategy signal
-    let signal = (strategy.on_bar)(kline, ctx)
+    let signal = (strategy.on_bar)(kline, ctx, close_history)
 
     // Check risk rules
     let current_dd = @drawdown.calculate_current_drawdown(
