@@ -101,3 +101,43 @@ int32_t moonbit_mkdir_p(const char *path) {
 
   return 0;
 }
+
+// Get environment variable value
+MOONBIT_FFI_EXPORT
+moonbit_bytes_t moonbit_getenv(const char *name) {
+  const char *value = getenv(name);
+  if (value == NULL) {
+    return NULL;
+  }
+
+  size_t len = strlen(value);
+  moonbit_bytes_t bytes = moonbit_make_bytes(len, 0);
+  memcpy(bytes, value, len);
+  return bytes;
+}
+
+// Delete file
+MOONBIT_FFI_EXPORT
+int32_t moonbit_remove_file(const char *path) {
+  return remove(path) == 0 ? 0 : -1;
+}
+
+// Get file size
+MOONBIT_FFI_EXPORT
+int64_t moonbit_get_file_size(const char *path) {
+  struct stat st;
+  if (stat(path, &st) != 0) {
+    return -1;
+  }
+  return (int64_t)st.st_size;
+}
+
+// Get file modified time (Unix timestamp)
+MOONBIT_FFI_EXPORT
+int64_t moonbit_get_file_mtime(const char *path) {
+  struct stat st;
+  if (stat(path, &st) != 0) {
+    return -1;
+  }
+  return (int64_t)st.st_mtime;
+}

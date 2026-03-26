@@ -1,4 +1,11 @@
 /// Portfolio and position management
+///
+/// Design note: This module uses imperative mutable style with `mut` fields.
+/// Methods like `buy`/`sell` modify `self` in-place and return `Bool` for success.
+/// This is intentional for performance and simplicity in the backtest engine.
+///
+/// TODO: Consider functional alternative returning `(Portfolio, Bool)` for better
+/// testability and immutability if needed in the future.
 
 ///|
 /// Position in a single stock

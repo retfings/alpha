@@ -635,3 +635,129 @@ test "Portfolio comprehensive P&L tracking scenario snapshot" {
   inspect(portfolio.has_position("sh.600036"), content="true")
   inspect(portfolio.has_position("sh.999999"), content="false")
 }
+
+///|
+/// Edge case: Buy with zero quantity
+test "Portfolio buy zero quantity snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  let success = portfolio.buy("sh.600000", 0.0, 10.0)
+  // Zero quantity costs 0, so it succeeds and creates position with 0 quantity
+  inspect(success, content="true")
+  inspect(portfolio.positions.length(), content="1")
+  inspect(portfolio.cash, content="100000")
+  inspect(portfolio.positions[0].quantity, content="0")
+}
+
+///|
+/// Edge case: Buy with zero price (free shares)
+test "Portfolio buy zero price snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  let success = portfolio.buy("sh.600000", 100.0, 0.0)
+  inspect(success, content="true")
+  inspect(portfolio.positions.length(), content="1")
+  inspect(portfolio.cash, content="100000")
+  inspect(portfolio.positions[0].avg_cost, content="0")
+}
+
+///|
+/// Edge case: Sell zero quantity
+test "Portfolio sell zero quantity snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 100.0, 10.0))
+  let success = portfolio.sell("sh.600000", 0.0, 12.0)
+  // Selling 0 quantity succeeds but doesn't change cash
+  inspect(success, content="true")
+  inspect(portfolio.positions[0].quantity, content="100")
+  inspect(portfolio.cash, content="99000")
+}
+
+///|
+/// Edge case: Sell zero price
+test "Portfolio sell zero price snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  ignore(portfolio.buy("sh.600000", 100.0, 10.0))
+  let success = portfolio.sell("sh.600000", 50.0, 0.0)
+  // Selling at zero price gives no cash
+  inspect(success, content="true")
+  inspect(portfolio.positions[0].quantity, content="50")
+  inspect(portfolio.cash, content="99000")
+}
+
+///|
+/// Edge case: Multiple buys and sells on same stock
+test "Portfolio complex position management snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+
+  // Buy in tranches
+  ignore(portfolio.buy("sh.600000", 100.0, 10.0))  // 100 @ 10
+  ignore(portfolio.buy("sh.600000", 200.0, 12.0))  // 200 @ 12
+  ignore(portfolio.buy("sh.600000", 100.0, 11.0))  // 100 @ 11
+
+  // Total: 400 shares, avg cost = (1000+2400+1100)/400 = 11.25
+  inspect(portfolio.positions[0].quantity, content="400")
+  inspect(portfolio.positions[0].avg_cost > Float::from_double(11.2), content="true")
+  inspect(portfolio.positions[0].avg_cost < Float::from_double(11.3), content="true")
+
+  // Sell partial
+  ignore(portfolio.sell("sh.600000", 150.0, 13.0))
+  inspect(portfolio.positions[0].quantity, content="250")
+  // Avg cost should remain unchanged after sell
+  inspect(portfolio.positions[0].avg_cost > Float::from_double(11.2), content="true")
+
+  // Sell remaining
+  ignore(portfolio.sell("sh.600000", 250.0, 14.0))
+  inspect(portfolio.positions.length(), content="0")
+}
+
+///|
+/// Edge case: Portfolio with single position - full lifecycle
+test "Portfolio single position full lifecycle snapshot" {
+  let portfolio = @portfolio.create_portfolio(50000.0)
+
+  // Buy
+  ignore(portfolio.buy("sh.600000", 500.0, 10.0))
+  inspect(portfolio.cash, content="45000")
+  inspect(portfolio.position_count(), content="1")
+
+  // Update price up
+  let get_price_up = fn(code) -> Float {
+    if code == "sh.600000" { Float::from_double(12.0) } else { Float::from_double(0.0) }
+  }
+  portfolio.update_prices(get_price_up)
+  let pnl_up = portfolio.get_position_pnl("sh.600000")
+  inspect(pnl_up > Float::from_double(999.0), content="true")
+
+  // Update price down
+  let get_price_down = fn(code) -> Float {
+    if code == "sh.600000" { Float::from_double(8.0) } else { Float::from_double(0.0) }
+  }
+  portfolio.update_prices(get_price_down)
+  let pnl_down = portfolio.get_position_pnl("sh.600000")
+  inspect(pnl_down < Float::from_double(-999.0), content="true")
+
+  // Close position at loss
+  ignore(portfolio.sell("sh.600000", 500.0, 8.0))
+  inspect(portfolio.position_count(), content="0")
+  inspect(portfolio.cash, content="49000")
+  inspect(portfolio.total_pnl(), content="-1000")
+}
+
+///|
+/// Edge case: Portfolio daily P&L with empty positions
+test "Portfolio daily pnl empty positions snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  let prev_values = Map::new()
+  let current_prices = Map::new()
+  let daily_pnl = portfolio.calculate_daily_pnl(prev_values, current_prices)
+  inspect(daily_pnl, content="0")
+}
+
+///|
+/// Edge case: get_position_pnl with non-existent position
+test "Portfolio get_position_pnl non-existent position snapshot" {
+  let portfolio = @portfolio.create_portfolio(100000.0)
+  let pnl = portfolio.get_position_pnl("sh.600000")
+  inspect(pnl, content="0")
+  let pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
+  inspect(pnl_pct, content="0")
+}
