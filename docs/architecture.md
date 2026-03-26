@@ -370,10 +370,24 @@ GET  /api/portfolio/drawdown     # 计算组合回撤
    - 1-2 个内置策略示例
    - 回测报告生成
 
-3. **Phase 3 - 风控系统**
-   - 风控规则引擎
-   - 止损/止盈规则
-   - 仓位限制规则
+3. **Phase 3 - 风控系统** （已完成）
+   - 风控规则引擎 (`src/risk/types.mbt`)
+     - `RiskEngine` - 风控引擎状态管理
+     - `RiskRule` - 规则定义（名称、优先级、检查函数）
+     - `RiskResult` - 规则评估结果
+     - `RiskAction` - 规则执行动作（Allow/Reject/ReducePosition/StopTrading）
+   - 内置风控规则 (`src/risk/rules.mbt`)
+     - `max_drawdown_rule` - 最大回撤规则（触发停止交易）
+     - `position_limit_rule` - 仓位限制规则（触发减仓）
+     - `daily_loss_limit_rule` - 日损限制规则（触发停止交易）
+     - `stop_loss_rule` - 止损规则（触发减仓）
+     - `single_stock_limit_rule` - 单股限制规则（触发减仓）
+     - `take_profit_rule` - 止盈规则（触发部分减仓）
+   - 与回测引擎集成 (`src/backtest/engine.mbt`)
+     - 回测过程中实时检查风控规则
+     - 根据风控结果决定是否执行交易信号
+   - 测试覆盖 (`src/risk/rules_test.mbt`)
+     - 14 个单元测试覆盖所有规则与引擎功能
 
 4. **Phase 4 - HTTP 服务器**
    - 简单 HTTP API 服务器

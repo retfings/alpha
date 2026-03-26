@@ -7,6 +7,24 @@ pub enum RiskAction {
   Reject
   ReducePosition(Float)
   StopTrading
+} derive(Show, Eq)
+
+///|
+/// Helper functions for creating RiskAction values (for tests)
+pub fn risk_action_allow() -> RiskAction { RiskAction::Allow }
+pub fn risk_action_reject() -> RiskAction { RiskAction::Reject }
+pub fn risk_action_stop_trading() -> RiskAction { RiskAction::StopTrading }
+pub fn risk_action_reduce_position(pct : Float) -> RiskAction {
+  RiskAction::ReducePosition(pct)
+}
+
+///|
+/// Helper functions for creating RiskResult values (for tests)
+pub fn risk_result_pass(message : String) -> RiskResult {
+  RiskResult::{ passed: true, message, action: RiskAction::Allow }
+}
+pub fn risk_result_fail(message : String, action : RiskAction) -> RiskResult {
+  RiskResult::{ passed: false, message, action }
 }
 
 ///|
