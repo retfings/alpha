@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Post-commit hook: Log file changes to docs/changelogs.md
+
+# Get the latest commit info
+COMMIT_HASH=$(git rev-parse --short HEAD)
+COMMIT_MSG=$(git log -1 --pretty=%s)
+COMMIT_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+AUTHOR=$(git log -1 --pretty=%an)
+
+# Get changed files in this commit
+CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null)
+
+# Skip if no files changed (e.g., empty commit)
+if [ -z "$CHANGED_FILES" ]; then
+    exit 0
+fi
+
+# Ensure docs directory exists
+mkdir -p docs
+
+# Create changelogs.md if it doesn't exist
+CHANGELOG_FILE="docs/changelogs.md"
+if [ ! -f "$CHANGELOG_FILE" ]; then
+    echo "# Change Log" > "$CHANGELOG_FILE"
+    echo "" >> "$CHANGELOG_FILE"
+    echo "Automated log of file changes from git commits."
+    echo "" >> "$CHANGELOG_FILE"
+fi
+
+# Build the log entry
+LOG_ENTRY="## [$COMMIT_DATE] $COMMIT_HASH\n\n"
+LOG_ENTRY+="**Author:** $AUTHOR\n\n"
+LOG_ENTRY+="**Commit:** $COMMIT_MSG\n\n"
+LOG_ENTRY+="**Changed files:**\n"
+
+while IFS= read -r file; do
+    if [ -n "$file" ]; then
+        LOG_ENTRY+="- \`$file\`\n"
+    fi
+done <<< "$CHANGED_FILES"
+
+LOG_ENTRY+="\n---\n\n"
+
+# Prepend the new entry after the header (line 1-5)
+# This keeps the most recent changes at the top
+TEMP_FILE=$(mktemp)
+
+# Read existing content, skip if file is empty
+EXISTING_CONTENT=$(cat "$CHANGELOG_FILE" 2>/dev/null || echo "")
+
+if [ -z "$EXISTING_CONTENT" ] || grep -q "^# Change Log$" "$CHANGELOG_FILE"; then
+    # File exists with header, insert after header section
+    head -n 5 "$CHANGELOG_FILE" > "$TEMP_FILE"
+    echo -e "$LOG_ENTRY" >> "$TEMP_FILE"
+    tail -n +6 "$CHANGELOG_FILE" >> "$TEMP_FILE" 2>/dev/null || true
+else
+    # File exists without standard header, prepend anyway
+    echo -e "$LOG_ENTRY" > "$TEMP_FILE"
+    cat "$CHANGELOG_FILE" >> "$TEMP_FILE"
+fi
+
+mv "$TEMP_FILE" "$CHANGELOG_FILE"
+
+echo "[post-commit] Logged commit $COMMIT_HASH to $CHANGELOG_FILE"

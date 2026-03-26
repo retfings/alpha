@@ -38,10 +38,16 @@ MoonBit packages are per-directory with `moon.pkg` declaring imports. All `.mbt`
 
 ## Git Hooks
 
-Pre-commit hook runs `moon check` automatically. Configure with:
+Configure with:
 ```bash
 git config core.hooksPath .githooks
 ```
+
+**Important:** Run the above command to enable hooks.
+
+Available hooks:
+- **pre-commit**: Runs `moon check` automatically before each commit
+- **post-commit**: Logs file changes to `docs/changelogs.md` after each commit
 
 ## Skills
 
