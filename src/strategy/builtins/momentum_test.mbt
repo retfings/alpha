@@ -161,7 +161,7 @@ test "MomentumStrategy - snapshot of signals with various scenarios" {
     last_signal: None,
   }
 
-  let scenarios = [
+  let scenarios : Array[(String, Array[Float])] = [
     (
       "declining",
       [

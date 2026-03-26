@@ -123,7 +123,7 @@ test "MaCrossStrategy::on_bar - snapshot of signal with various histories" {
     last_signal: None,
   }
 
-  let scenarios = [
+  let scenarios : Array[(String, Array[Float])] = [
     ("uptrend", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]),
     ("downtrend", [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]),
     ("sideways", [5.0, 5.1, 4.9, 5.0, 5.2, 4.8, 5.0, 5.1, 4.9, 5.0]),
