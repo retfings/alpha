@@ -113,8 +113,8 @@ test "stop_loss_rule" {
 }
 
 ///|
-test "single_stock_limit_rule" {
-  let rule = @risk.single_stock_limit_rule(0.30) // 30% threshold
+test "total_exposure_limit_rule" {
+  let rule = @risk.total_exposure_limit_rule(0.30) // 30% threshold
   assert_true(rule.name.contains("Total Exposure"))
   assert_true(rule.priority == 5)
 
@@ -264,4 +264,114 @@ test "RiskEngine with default rules" {
   let result4 = engine4.check(-0.05, 0.50, -0.08)
   assert_true(!result4.passed)
   assert_true(result4.action == @risk.risk_action_stop_trading())
+}
+
+///|
+test "and_rules combinator" {
+  // Both rules pass
+  let rule1 = @risk.max_drawdown_rule(0.20)
+  let rule2 = @risk.position_limit_rule(0.90)
+  let combined = @risk.and_rules(rule1, rule2, "Combined Drawdown and Position")
+
+  // Both conditions pass
+  let result1 = (combined.check_fn)(-0.10, 0.50, 0.0)
+  assert_true(result1.passed)
+  assert_true(result1.action == @risk.risk_action_allow())
+
+  // First rule fails (drawdown exceeded)
+  let result2 = (combined.check_fn)(-0.25, 0.50, 0.0)
+  assert_true(!result2.passed)
+  assert_true(result2.action == @risk.risk_action_stop_trading())
+
+  // Second rule fails (position exceeded)
+  let result3 = (combined.check_fn)(-0.10, 0.95, 0.0)
+  assert_true(!result3.passed)
+  match result3.action {
+    RiskAction::ReducePosition(_) => assert_true(true)
+    _ => fail("Expected ReducePosition action")
+  }
+}
+
+///|
+test "or_rules combinator" {
+  // At least one rule must pass
+  let rule1 = @risk.max_drawdown_rule(0.10)
+  let rule2 = @risk.position_limit_rule(0.95)
+  let combined = @risk.or_rules(rule1, rule2, "Drawdown OR Position")
+
+  // Both pass -> overall passes
+  let result1 = (combined.check_fn)(-0.05, 0.50, 0.0)
+  assert_true(result1.passed)
+
+  // First fails (drawdown -0.15 <= -0.10), second passes (position 0.50 <= 0.95) -> overall passes
+  let result2 = (combined.check_fn)(-0.15, 0.50, 0.0)
+  assert_true(result2.passed)
+
+  // First passes, second fails -> overall passes
+  let result3 = (combined.check_fn)(-0.05, 0.98, 0.0)
+  assert_true(result3.passed)
+
+  // Both fail -> overall fails
+  let result4 = (combined.check_fn)(-0.15, 0.98, 0.0)
+  assert_true(!result4.passed)
+}
+
+///|
+test "not_rule combinator" {
+  let rule = @risk.max_drawdown_rule(0.20)
+  let negated = @risk.not_rule(rule, "Not In Max Drawdown")
+
+  // Original rule passes -> negated fails
+  let result1 = (negated.check_fn)(-0.10, 0.0, 0.0)
+  assert_true(!result1.passed)
+
+  // Original rule fails -> negated passes
+  let result2 = (negated.check_fn)(-0.25, 0.0, 0.0)
+  assert_true(result2.passed)
+  assert_true(result2.action == @risk.risk_action_allow())
+}
+
+///|
+test "sequential_rules combinator" {
+  let rules = [
+    @risk.max_drawdown_rule(0.20),
+    @risk.position_limit_rule(0.90),
+    @risk.daily_loss_limit_rule(0.05),
+  ]
+  let combined = @risk.sequential_rules(rules, "Sequential Risk Check")
+
+  assert_true(combined.name == "Sequential Risk Check")
+  // Priority should be minimum of all rules (1)
+  assert_true(combined.priority == 1)
+
+  // All rules pass
+  let result1 = (combined.check_fn)(-0.10, 0.50, -0.02)
+  assert_true(result1.passed)
+  assert_true(result1.message.contains("All 3 rules passed"))
+
+  // First rule fails (drawdown)
+  let result2 = (combined.check_fn)(-0.25, 0.50, -0.02)
+  assert_true(!result2.passed)
+  assert_true(result2.action == @risk.risk_action_stop_trading())
+
+  // First passes, second fails (position)
+  let result3 = (combined.check_fn)(-0.10, 0.95, -0.02)
+  assert_true(!result3.passed)
+  match result3.action {
+    RiskAction::ReducePosition(_) => assert_true(true)
+    _ => fail("Expected ReducePosition action")
+  }
+
+  // First two pass, third fails (daily loss)
+  let result4 = (combined.check_fn)(-0.10, 0.50, -0.08)
+  assert_true(!result4.passed)
+  assert_true(result4.action == @risk.risk_action_stop_trading())
+}
+
+///|
+test "sequential_rules with empty rules array" {
+  let combined = @risk.sequential_rules([], "Empty Check")
+  let result = (combined.check_fn)(0.0, 0.0, 0.0)
+  assert_true(result.passed)
+  assert_true(result.message == "All 0 rules passed")
 }

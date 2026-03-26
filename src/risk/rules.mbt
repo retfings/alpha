@@ -478,3 +478,179 @@ pub fn default_rules() -> Array[RiskRule] {
     daily_loss_limit_rule(0.05), // 5% daily loss limit
   ]
 }
+
+///|
+/// Rule Combinators
+///
+/// Combinators for composing complex risk rules from simpler ones.
+/// This enables flexible risk management strategies through rule composition.
+
+///|
+/// Combine two rules with AND logic
+///
+/// Both rules must pass for the combined rule to pass.
+/// If either rule fails, returns the result of the failing rule.
+/// If both fail, returns the first failure.
+///
+/// Parameters:
+/// - rule1: First rule to check
+/// - rule2: Second rule to check
+/// - name: Name for the combined rule
+///
+/// Returns:
+/// - A new RiskRule that requires both rules to pass
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let combined = and_rules(
+///   max_drawdown_rule(0.20),
+///   daily_loss_limit_rule(0.05),
+///   "Drawdown AND Daily Loss Check",
+/// )
+/// ```
+pub fn and_rules(rule1 : RiskRule, rule2 : RiskRule, name : String) -> RiskRule {
+  RiskRule::{
+    name,
+    priority: Int::min(rule1.priority, rule2.priority),
+    check_fn: fn(dd, pos_ratio, daily_loss) {
+      let result1 = (rule1.check_fn)(dd, pos_ratio, daily_loss)
+      if !result1.passed {
+        return result1
+      }
+      let result2 = (rule2.check_fn)(dd, pos_ratio, daily_loss)
+      result2
+    },
+  }
+}
+
+///|
+/// Combine two rules with OR logic
+///
+/// At least one rule must pass for the combined rule to pass.
+/// If both rules fail, returns the first failure.
+///
+/// Parameters:
+/// - rule1: First rule to check
+/// - rule2: Second rule to check
+/// - name: Name for the combined rule
+///
+/// Returns:
+/// - A new RiskRule that passes if either rule passes
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let combined = or_rules(
+///   max_drawdown_rule(0.25),
+///   daily_loss_limit_rule(0.10),
+///   "Drawdown OR Daily Loss Check",
+/// )
+/// ```
+pub fn or_rules(rule1 : RiskRule, rule2 : RiskRule, name : String) -> RiskRule {
+  RiskRule::{
+    name,
+    priority: Int::min(rule1.priority, rule2.priority),
+    check_fn: fn(dd, pos_ratio, daily_loss) {
+      let result1 = (rule1.check_fn)(dd, pos_ratio, daily_loss)
+      if result1.passed {
+        return result1
+      }
+      (rule2.check_fn)(dd, pos_ratio, daily_loss)
+    },
+  }
+}
+
+///|
+/// Negate a rule with NOT logic
+///
+/// Inverts the pass/fail result of the wrapped rule.
+/// Useful for creating exception rules or inverse conditions.
+///
+/// Parameters:
+/// - rule: Rule to negate
+/// - name: Name for the negated rule
+///
+/// Returns:
+/// - A new RiskRule with inverted logic
+///
+/// Examples:
+/// ```mbt check-disabled
+/// // Allow trading only when NOT in max drawdown
+/// let exception_rule = not_rule(max_drawdown_rule(0.20), "Not In Max Drawdown")
+/// ```
+pub fn not_rule(rule : RiskRule, name : String) -> RiskRule {
+  RiskRule::{
+    name,
+    priority: rule.priority,
+    check_fn: fn(dd, pos_ratio, daily_loss) {
+      let result = (rule.check_fn)(dd, pos_ratio, daily_loss)
+      let negated_action = if !result.passed {
+        RiskAction::Allow
+      } else {
+        match result.action {
+          RiskAction::Allow => RiskAction::Reject
+          _ => result.action
+        }
+      }
+      RiskResult::{
+        passed: !result.passed,
+        message: if result.passed {
+          "Negated: " + result.message
+        } else {
+          result.message
+        },
+        action: negated_action,
+      }
+    },
+  }
+}
+
+///|
+/// Execute multiple rules sequentially
+///
+/// Runs rules in order and returns the first failing result.
+/// If all rules pass, returns a combined success.
+///
+/// Parameters:
+/// - rules: Array of rules to execute in sequence
+/// - name: Name for the sequential rule
+///
+/// Returns:
+/// - A new RiskRule that executes all rules in sequence
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let combined = sequential_rules(
+///   [
+///     max_drawdown_rule(0.20),
+///     position_limit_rule(0.95),
+///     daily_loss_limit_rule(0.05),
+///   ],
+///   "Comprehensive Risk Check",
+/// )
+/// ```
+pub fn sequential_rules(rules : Array[RiskRule], name : String) -> RiskRule {
+  let mut min_priority = 999
+  for rule in rules {
+    min_priority = Int::min(min_priority, rule.priority)
+  }
+  RiskRule::{
+    name,
+    priority: min_priority,
+    check_fn: fn(dd, pos_ratio, daily_loss) {
+      for rule in rules {
+        let result = (rule.check_fn)(dd, pos_ratio, daily_loss)
+        if !result.passed {
+          return result
+        }
+      }
+      RiskResult::{
+        passed: true,
+        message: "All " + Int::to_string(rules.length()) + " rules passed",
+        action: RiskAction::Allow,
+      }
+    },
+  }
+}
+
+///|
+/// Rule Combinators (continued)
