@@ -29,7 +29,24 @@ pub(all) struct StrategyContext {
 
 ///|
 /// Strategy type as a record of functions
-/// This is an alternative to using traits
+///
+/// Design decision: We use record-of-functions instead of traits.
+/// See docs/strategy-design.md for detailed rationale.
+///
+/// Summary:
+/// - Simpler and more explicit than traits
+/// - Better for testing (can create inline mock strategies)
+/// - Fits the functional nature of strategy execution
+/// - No immediate need for trait-based polymorphism
+///
+/// Usage:
+/// ```mbt nocheck
+/// let strategy = Strategy::{
+///   name: "My Strategy",
+///   on_init: fn(ctx) { println("Initializing...") },
+///   on_bar: fn(kline, ctx, history) { Signal::hold(...) }
+/// }
+/// ```
 pub(all) struct Strategy {
   name : String
   on_init : (StrategyContext) -> Unit
