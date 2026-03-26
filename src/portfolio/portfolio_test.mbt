@@ -460,7 +460,7 @@ test "Portfolio get_position found snapshot" {
       inspect(pos.quantity, content="500")
       inspect(pos.avg_cost, content="10")
     }
-    None => fail("Position should exist"),
+    None => fail("Position should exist")
   }
 }
 

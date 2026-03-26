@@ -355,3 +355,109 @@ test "risk rule message content snapshot" {
   )
   inspect(dl_result.message.contains("7"), content="true")
 }
+
+///|
+test "max_drawdown_rule - various thresholds snapshot" {
+  let rule5 = @risk.max_drawdown_rule(0.05)
+  let rule15 = @risk.max_drawdown_rule(0.15)
+  let rule25 = @risk.max_drawdown_rule(0.25)
+
+  // Test same drawdown against different thresholds
+  let dd = -0.10
+  inspect((rule5.check_fn)(dd, 0.0, 0.0).passed, content="false")
+  inspect((rule15.check_fn)(dd, 0.0, 0.0).passed, content="true")
+  inspect((rule25.check_fn)(dd, 0.0, 0.0).passed, content="true")
+}
+
+///|
+test "position_limit_rule - various thresholds snapshot" {
+  let rule50 = @risk.position_limit_rule(0.50)
+  let rule75 = @risk.position_limit_rule(0.75)
+  let rule100 = @risk.position_limit_rule(1.0)
+
+  // Test same position against different thresholds
+  let pos = 0.60
+  inspect((rule50.check_fn)(0.0, pos, 0.0).passed, content="false")
+  inspect((rule75.check_fn)(0.0, pos, 0.0).passed, content="true")
+  inspect((rule100.check_fn)(0.0, pos, 0.0).passed, content="true")
+}
+
+///|
+test "daily_loss_limit_rule - various thresholds snapshot" {
+  let rule3 = @risk.daily_loss_limit_rule(0.03)
+  let rule7 = @risk.daily_loss_limit_rule(0.07)
+
+  // Test same loss against different thresholds
+  let loss = -0.05
+  inspect((rule3.check_fn)(0.0, 0.0, loss).passed, content="false")
+  inspect((rule7.check_fn)(0.0, 0.0, loss).passed, content="true")
+}
+
+///|
+test "take_profit_rule - action is ReducePosition snapshot" {
+  let rule = @risk.take_profit_rule(0.10)
+  // 15% profit should trigger take profit
+  let result = (rule.check_fn)(0.0, 0.0, -0.15)
+  inspect(result.passed, content="true")  // Take profit is a suggestion, not a block
+  inspect(result.action, content="ReducePosition(0.5)")
+}
+
+///|
+test "RiskAction Show instances snapshot" {
+  let allow = @risk.risk_action_allow()
+  let reject = @risk.risk_action_reject()
+  let stop = @risk.risk_action_stop_trading()
+  let reduce = @risk.risk_action_reduce_position(0.25)
+
+  assert_true(allow.to_string().contains("Allow"))
+  assert_true(reject.to_string().contains("Reject"))
+  assert_true(stop.to_string().contains("StopTrading"))
+  assert_true(reduce.to_string().contains("ReducePosition"))
+}
+
+///|
+test "RiskEngine violations accumulation snapshot" {
+  let engine = @risk.create_risk_engine()
+  engine.add_rule(@risk.max_drawdown_rule(0.10))
+  engine.add_rule(@risk.position_limit_rule(0.50))
+
+  // First violation
+  ignore(engine.check(-0.15, 0.30, 0.0))
+  inspect(engine.violations.length(), content="1")
+
+  // Engine is stopped, so second check adds another violation
+  ignore(engine.check(-0.05, 0.60, 0.0))
+  inspect(engine.violations.length(), content="2")
+
+  // Check violation messages
+  inspect(engine.violations[0].contains("Max Drawdown"), content="true")
+  inspect(engine.violations[1].contains("Trading stopped"), content="true")
+}
+
+///|
+test "RiskEngine rule priority order snapshot" {
+  let engine = @risk.create_risk_engine()
+  // Add rules in reverse priority order
+  engine.add_rule(@risk.daily_loss_limit_rule(0.05))  // priority 3
+  engine.add_rule(@risk.position_limit_rule(0.80))  // priority 2
+  engine.add_rule(@risk.max_drawdown_rule(0.10))  // priority 1
+
+  // Trigger multiple violations - should stop at first (highest priority)
+  let result = engine.check(-0.15, 0.90, -0.10)
+  inspect(result.passed, content="false")
+  // Should fail on max_drawdown_rule (priority 1) first
+  inspect(engine.violations[0].contains("Max Drawdown"), content="true")
+}
+
+///|
+test "RiskResult pass and fail helpers snapshot" {
+  let pass_result = @risk.risk_result_pass("All good")
+  inspect(pass_result.passed, content="true")
+  inspect(pass_result.message, content="All good")
+  inspect(pass_result.action, content="Allow")
+
+  let fail_result = @risk.risk_result_fail("Problem", @risk.risk_action_reject())
+  inspect(fail_result.passed, content="false")
+  inspect(fail_result.message, content="Problem")
+  inspect(fail_result.action, content="Reject")
+}

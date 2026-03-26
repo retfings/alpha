@@ -223,3 +223,140 @@ pub fn get_drawdown_stats(values : Array[Float]) -> DrawdownStats {
     drawdown_count: negative_drawdowns.length(),
   }
 }
+
+///|
+/// Find top N drawdowns from a value series
+///
+/// Identifies and returns the N largest (most severe) drawdown periods.
+///
+/// Parameters:
+/// - values: Array of portfolio values in chronological order
+/// - dates: Array of corresponding dates
+/// - n: Number of top drawdowns to return
+///
+/// Returns:
+/// - Array of DrawdownInfo sorted by severity (most severe first)
+///
+/// Examples:
+/// ```mbt check
+/// test "find_top_drawdowns example" {
+///   let values = [100.0, 110.0, 100.0, 120.0, 100.0, 130.0]
+///   let dates = ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05", "2023-01-06"]
+///   let top = find_top_drawdowns(values, dates, 2)
+///   assert_true(top.length() == 2)
+///   // First drawdown should be more severe
+///   assert_true(top[0].drawdown <= top[1].drawdown)
+/// }
+/// ```
+pub fn find_top_drawdowns(
+  values : Array[Float],
+  dates : Array[String],
+  n : Int,
+) -> Array[DrawdownInfo] {
+  if values.length() < 2 || values.length() != dates.length() || n <= 0 {
+    return []
+  }
+
+  // Find all drawdown periods
+  let drawdowns : Array[DrawdownInfo] = []
+  let len = values.length()
+  let mut i = 0
+  let mut peak_index = 0
+  let mut peak_value = values[0]
+
+  while i < len {
+    let value = values[i]
+    if value > peak_value {
+      // Found new peak, check if previous drawdown is significant
+      if i > peak_index + 1 {
+        // Calculate drawdown from peak to trough
+        let mut trough_index = peak_index + 1
+        let mut trough_value = values[peak_index + 1]
+        let mut j = peak_index + 1
+        while j < i {
+          if values[j] < trough_value {
+            trough_value = values[j]
+            trough_index = j
+          }
+          j = j + 1
+        }
+        let dd = (trough_value - peak_value) / peak_value
+        if dd < -0.01 {
+          // Only record if > 1% drawdown
+          drawdowns.push(DrawdownInfo::{
+            peak: peak_value,
+            trough: trough_value,
+            peak_date: dates[peak_index],
+            trough_date: dates[trough_index],
+            drawdown: dd,
+            duration: trough_index - peak_index,
+            recovered: value >= peak_value,
+          })
+        }
+      }
+      peak_value = value
+      peak_index = i
+    }
+    i = i + 1
+  }
+
+  // Check final drawdown period
+  if len > peak_index + 1 {
+    let mut trough_index = peak_index + 1
+    let mut trough_value = values[peak_index + 1]
+    let mut j = peak_index + 1
+    while j < len {
+      if values[j] < trough_value {
+        trough_value = values[j]
+        trough_index = j
+      }
+      j = j + 1
+    }
+    let dd = (trough_value - peak_value) / peak_value
+    if dd < -0.01 {
+      drawdowns.push(DrawdownInfo::{
+        peak: peak_value,
+        trough: trough_value,
+        peak_date: dates[peak_index],
+        trough_date: dates[trough_index],
+        drawdown: dd,
+        duration: trough_index - peak_index,
+        recovered: values[len - 1] >= peak_value,
+      })
+    }
+  }
+
+  // Sort by drawdown severity (most severe first) using bubble sort
+  let result : Array[DrawdownInfo] = []
+  for dd in drawdowns {
+    result.push(dd)
+  }
+  let result_len = result.length()
+  let mut ii = 0
+  while ii < result_len - 1 {
+    let mut jj = 0
+    while jj < result_len - ii - 1 {
+      if result[jj].drawdown > result[jj + 1].drawdown {
+        let temp = result[jj]
+        result[jj] = result[jj + 1]
+        result[jj + 1] = temp
+      }
+      jj = jj + 1
+    }
+    ii = ii + 1
+  }
+
+  // Return top n
+  if result.length() <= n {
+    result
+  } else {
+    // Manually extract first n elements
+    let top_n : Array[DrawdownInfo] = []
+    let mut idx = 0
+    while idx < n {
+      top_n.push(result[idx])
+      idx = idx + 1
+    }
+    top_n
+  }
+}
