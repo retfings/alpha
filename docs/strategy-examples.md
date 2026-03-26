@@ -2,23 +2,74 @@
 
 This document provides example strategies demonstrating how to use the MoonBit Drawdown Framework.
 
+## Table of Contents
+
+- [Strategy Structure](#strategy-structure)
+- [Example 1: Moving Average Crossover](#example-1-moving-average-crossover-strategy)
+- [Example 2: RSI Momentum](#example-2-rsi-momentum-strategy)
+- [Example 3: Mean Reversion](#example-3-mean-reversion-strategy)
+- [Example 4: Multi-Strategy Composite](#example-4-multi-strategy-composite)
+- [Strategy Development Guidelines](#strategy-development-guidelines)
+
 ## Strategy Structure
 
-All strategies follow a common structure:
+All strategies follow a common structure using the `Strategy` record type:
 
 ```moonbit
-pub fn create_strategy() -> @strategy.Strategy {
-  Strategy::{
-    name: "Strategy Name",
-    on_init: fn(ctx) { /* initialization */ },
-    on_bar: fn(kline, ctx) { /* signal generation */ },
-  }
+pub struct Strategy {
+  name : String
+  on_init : (StrategyContext) -> Unit
+  on_bar : (@data.KLine, StrategyContext, Array[Float]) -> Signal
 }
 ```
+
+### Strategy Context
+
+The `StrategyContext` provides access to portfolio state:
+
+```moonbit
+pub struct StrategyContext {
+  capital : Float       // Available capital
+  position : Float      // Current position value
+  current_price : Float // Current market price
+  last_signal : Signal? // Previous signal (if any)
+}
+```
+
+### Signal Generation
+
+Strategies return `Signal` objects:
+
+```moonbit
+pub struct Signal {
+  stock : StockCode
+  action : Action  // Buy, Sell, or Hold
+  price : Float
+  timestamp : String
+  strength : Float // 0.0 - 1.0
+}
+```
+
+Signal helper functions:
+- `Signal::buy(stock, price, timestamp, strength)` - Create buy signal
+- `Signal::sell(stock, price, timestamp, strength)` - Create sell signal
+- `Signal::hold(stock, price, timestamp)` - Create hold signal
+
+---
 
 ## Example 1: Moving Average Crossover Strategy
 
 A classic trend-following strategy that generates signals when a fast moving average crosses a slow moving average.
+
+### Strategy Logic
+
+- **Buy Signal**: Fast MA crosses above Slow MA (bullish crossover)
+- **Sell Signal**: Fast MA crosses below Slow MA (bearish crossover)
+- **Hold**: No crossover detected
+
+### Implementation
+
+The built-in MA Crossover strategy is available in `src/strategy/builtins/ma_cross.mbt`:
 
 ```moonbit
 /// Moving Average Crossover Strategy
@@ -27,59 +78,30 @@ A classic trend-following strategy that generates signals when a fast moving ave
 /// Sell when fast MA crosses below slow MA
 
 pub fn create_ma_cross_strategy(
-  fast_period : Int,
-  slow_period : Int,
-) -> @strategy.Strategy {
-
-  // Store historical signals
-  let mut prev_fast_ma = 0.0
-  let mut prev_slow_ma = 0.0
-
-  Strategy::{
-    name: "MA Crossover (\\{fast_period}/\\{slow_period})",
-    on_init: fn(ctx) {
-      // Initialize strategy state
-      prev_fast_ma = 0.0
-      prev_slow_ma = 0.0
-    },
-    on_bar: fn(kline, ctx) {
-      // Calculate moving averages (simplified - use indicator library in production)
-      let fast_ma = kline.close  // Replace with actual MA calculation
-      let slow_ma = kline.close  // Replace with actual MA calculation
-
-      // Detect crossover
-      let signal_action = if prev_fast_ma <= prev_slow_ma && fast_ma > slow_ma {
-        // Bullish crossover - BUY
-        @strategy.Action::Buy
-      } else if prev_fast_ma >= prev_slow_ma && fast_ma < slow_ma {
-        // Bearish crossover - SELL
-        @strategy.Action::Sell
-      } else {
-        // No crossover - HOLD
-        @strategy.Action::Hold
-      }
-
-      // Update previous values
-      prev_fast_ma = fast_ma
-      prev_slow_ma = slow_ma
-
-      // Generate signal
-      Signal::{
-        stock: kline.code,
-        action: signal_action,
-        price: kline.close,
-        timestamp: kline.date,
-        strength: 0.8,  // Fixed strength for this example
-      }
-    },
+  fast_period : Int,    // e.g., 5 for short-term
+  slow_period : Int,    // e.g., 20 for long-term
+) -> MaCrossStrategy {
+  MaCrossStrategy::{
+    fast_period,
+    slow_period,
+    name: "MA Crossover (" + fast_period.to_string() + "/" + slow_period.to_string() + ")",
   }
 }
-
-// Usage:
-// let strategy = create_ma_cross_strategy(5, 20)  // 5-day and 20-day MA
 ```
 
-### Running the MA Crossover Strategy
+### Usage Example
+
+```moonbit
+// Create strategy with 10-day and 30-day moving averages
+let strategy = @strategy.builtins.create_ma_cross_strategy(10, 30)
+
+// Run backtest
+let config = @strategy.default_backtest_config()
+let engine = @backtest.create_backtest_engine(config)
+let result = @backtest.run_backtest(engine, klines, strategy)
+```
+
+### Running from CLI
 
 ```bash
 moon run cmd/main backtest \
@@ -89,82 +111,65 @@ moon run cmd/main backtest \
   --end 2023-12-31
 ```
 
-## Example 2: Momentum Strategy
+### Tips
 
-A momentum-based strategy that buys stocks with strong recent performance and sells when momentum weakens.
+- **Parameter Selection**: Shorter periods (5-10) generate more signals but may produce false positives. Longer periods (20-50) are more reliable but slower to react.
+- **Risk Management**: Always pair with risk rules like `max_drawdown_rule(0.20)` to limit losses.
+- **Data Requirements**: Ensure at least `slow_period` bars of data for accurate calculations.
+
+---
+
+## Example 2: RSI Momentum Strategy
+
+A momentum-based strategy using the Relative Strength Index (RSI) to identify overbought and oversold conditions.
+
+### Strategy Logic
+
+- **Buy Signal**: RSI drops below oversold threshold (typically 30)
+- **Sell Signal**: RSI rises above overbought threshold (typically 70)
+- **Hold**: RSI in neutral zone
+
+### Implementation
+
+The built-in Momentum strategy is available in `src/strategy/builtins/momentum.mbt`:
 
 ```moonbit
-/// Momentum Strategy
+/// RSI Momentum Strategy
 ///
-/// Buy when price momentum exceeds threshold
-/// Sell when momentum falls below threshold
+/// Buy when RSI indicates oversold conditions
+/// Sell when RSI indicates overbought conditions
 
 pub fn create_momentum_strategy(
-  lookback_period : Int,
-  entry_threshold : Float,
-  exit_threshold : Float,
-) -> @strategy.Strategy {
-
-  let mut momentum_value = 0.0
-  let mut in_position = false
-
-  Strategy::{
-    name: "Momentum (\\{lookback_period}d)",
-    on_init: fn(ctx) {
-      momentum_value = 0.0
-      in_position = false
-    },
-    on_bar: fn(kline, ctx) {
-      // Calculate momentum (rate of change)
-      // momentum = (current_price - price_n_days_ago) / price_n_days_ago
-      momentum_value = calculate_momentum(kline, lookback_period)
-
-      // Determine action based on momentum
-      let signal_action = if momentum_value >= entry_threshold && !in_position {
-        // Strong momentum - BUY
-        in_position = true
-        @strategy.Action::Buy
-      } else if momentum_value <= exit_threshold && in_position {
-        // Momentum weakened - SELL
-        in_position = false
-        @strategy.Action::Sell
-      } else {
-        // Hold current position
-        @strategy.Action::Hold
-      }
-
-      Signal::{
-        stock: kline.code,
-        action: signal_action,
-        price: kline.close,
-        timestamp: kline.date,
-        strength: normalize_momentum_strength(momentum_value),
-      }
-    },
+  rsi_period : Int,           // Typically 14
+  overbought_threshold : Float, // Typically 70.0
+  oversold_threshold : Float,   // Typically 30.0
+) -> MomentumStrategy {
+  MomentumStrategy::{
+    rsi_period,
+    overbought_threshold,
+    oversold_threshold,
+    name: "RSI Momentum (" + rsi_period.to_string() + ")",
   }
 }
-
-// Helper function: Calculate momentum
-fn calculate_momentum(kline : @data.KLine, period : Int) -> Float {
-  // In production, access historical data from context
-  // This is a placeholder
-  0.0
-}
-
-// Helper function: Normalize momentum to 0-1 strength
-fn normalize_momentum_strength(momentum : Float) -> Float {
-  let abs_momentum = Float::abs(momentum)
-  if abs_momentum > 1.0 { 1.0 } else { abs_momentum }
-}
-
-// Usage:
-// let strategy = create_momentum_strategy(20, 0.05, -0.03)
-// - 20-day lookback
-// - Enter when momentum > 5%
-// - Exit when momentum < -3%
 ```
 
-### Running the Momentum Strategy
+### Usage Example
+
+```moonbit
+// Create strategy with standard 14-day RSI
+let strategy = @strategy.builtins.create_momentum_strategy(
+  14,       // RSI period
+  70.0,     // Overbought threshold
+  30.0,     // Oversold threshold
+)
+
+// Run backtest
+let config = @strategy.default_backtest_config()
+let engine = @backtest.create_backtest_engine(config)
+let result = @backtest.run_backtest(engine, klines, strategy)
+```
+
+### Running from CLI
 
 ```bash
 moon run cmd/main backtest \
@@ -173,6 +178,22 @@ moon run cmd/main backtest \
   --start 2023-01-01 \
   --end 2023-12-31
 ```
+
+### RSI Interpretation
+
+| RSI Range | Condition | Action |
+|-----------|-----------|--------|
+| 0-30      | Oversold  | Consider buying |
+| 30-70     | Neutral   | Hold |
+| 70-100    | Overbought| Consider selling |
+
+### Tips
+
+- **Parameter Tuning**: Lower thresholds (20/80) produce fewer but stronger signals. Higher thresholds (35/65) produce more signals but may be less reliable.
+- **Divergence**: Look for price making new highs while RSI fails to confirm - this can signal trend weakness.
+- **Trend Context**: RSI works best in ranging markets. In strong trends, RSI can remain overbought/oversold for extended periods.
+
+---
 
 ## Example 3: Mean Reversion Strategy
 

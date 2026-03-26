@@ -191,3 +191,137 @@ test "extract_stock_code_from_filename - various formats" {
     ["/path/to/sh_600001_2023.csv", ["sh.600001"], ["sh.600001"]],
   ])
 }
+
+///|
+test "parse_float - integer parsing" {
+  inspect(parse_float("100"), content="Some(100)")
+  inspect(parse_float("0"), content="Some(0)")
+  inspect(parse_float("-50"), content="Some(-50)")
+}
+
+///|
+test "parse_float - decimal parsing" {
+  let result1 = parse_float("10.5")
+  match result1 {
+    Some(v) => assert_true(v > 10.4 && v < 10.6)
+    None => fail("Expected Some")
+  }
+  let result2 = parse_float("0.05")
+  match result2 {
+    Some(v) => assert_true(v > 0.04 && v < 0.06)
+    None => fail("Expected Some")
+  }
+}
+
+///|
+test "parse_float - invalid input" {
+  inspect(parse_float(""), content="None")
+  inspect(parse_float("abc"), content="None")
+  inspect(parse_float("10.5.5"), content="Some(10.5)")
+  inspect(parse_float("10a"), content="None")
+}
+
+///|
+test "KLine::daily - constructor" {
+  let kline = KLine::daily(
+    "sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05,
+  )
+  assert_true(kline.code == "sh.600000")
+  assert_true(kline.date == "2023-01-01")
+  assert_true(kline.time == None)
+  assert_true(kline.open == 10.5)
+  assert_true(kline.high == 11.0)
+  assert_true(kline.low == 10.2)
+  assert_true(kline.close == 10.8)
+  assert_true(kline.volume == 1000000.0)
+  assert_true(kline.amount == 10500000.0)
+  assert_true(kline.turn == 0.05)
+}
+
+///|
+test "KLine equality" {
+  let kline1 = KLine::daily(
+    "sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05,
+  )
+  let kline2 = KLine::daily(
+    "sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05,
+  )
+  let kline3 = KLine::daily(
+    "sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.9, 1000000.0, 10500000.0, 0.05,
+  )
+  assert_true(kline1 == kline2)
+  assert_true(kline1 != kline3)
+}
+
+///|
+test "parse_csv_content - whitespace handling" {
+  let content = "date,open,high,low,close,volume,amount,turn\n" +
+    "2023-01-01,10.5,11.0,10.2,10.8,1000000,10500000,0.05\n"
+  let result = parse_csv_content(content)
+  match result {
+    Ok(klines) => assert_true(klines.length() == 1)
+    Err(_) => fail("Expected Ok")
+  }
+}
+
+///|
+test "parse_csv_content - many rows snapshot" {
+  let content = "date,open,high,low,close,volume,amount,turn\n" +
+    "2023-01-01,10.0,10.5,9.5,10.2,1000000,10200000,0.05\n" +
+    "2023-01-02,10.2,10.8,10.0,10.5,1100000,11550000,0.055\n" +
+    "2023-01-03,10.5,11.0,10.3,10.8,1200000,12960000,0.06\n" +
+    "2023-01-04,10.8,11.2,10.5,11.0,1300000,14300000,0.065\n" +
+    "2023-01-05,11.0,11.5,10.8,11.3,1400000,15820000,0.07"
+  let result = parse_csv_content(content)
+  match result {
+    Ok(klines) => {
+      assert_true(klines.length() == 5)
+      assert_true(klines[0].close == 10.2)
+      assert_true(klines[4].close == 11.3)
+    }
+    Err(_) => fail("Expected Ok")
+  }
+}
+
+///|
+test "kline_to_csv_line - snapshot" {
+  let kline = KLine::daily(
+    "sz.000001", "2023-06-15", 25.5, 26.8, 25.2, 26.5, 5000000.0, 132500000.0, 0.12,
+  )
+  let csv_line = kline_to_csv_line(kline)
+  json_inspect(
+    csv_line,
+    content="2023-06-15,25.5,26.8,25.2,26.5,5000000,132500000,0.12",
+  )
+}
+
+///|
+test "parse_csv_content - large volume values" {
+  let content = "date,open,high,low,close,volume,amount,turn\n" +
+    "2023-01-01,50.0,52.0,49.0,51.0,100000000,5100000000,0.15"
+  let result = parse_csv_content(content)
+  match result {
+    Ok(klines) => {
+      assert_true(klines.length() == 1)
+      assert_true(klines[0].volume == 100000000.0)
+      assert_true(klines[0].amount == 5100000000.0)
+    }
+    Err(_) => fail("Expected Ok")
+  }
+}
+
+///|
+test "extract_stock_code_from_filename - edge cases snapshot" {
+  let cases : Array[String] = [
+    "sh_600000_2023.csv", "sz_000001_20230101_20231231.csv", "bj_830000_2023.csv",
+    "data/raw/sh_600000_2023.csv", "/home/user/data/sz_000001_2023.csv",
+  ]
+  let results = cases.map(fn(f) { (f, extract_stock_code_from_filename(f)) })
+  json_inspect(results, content=[
+    ["sh_600000_2023.csv", ["sh.600000"]],
+    ["sz_000001_20230101_20231231.csv", ["sz.000001"]],
+    ["bj_830000_2023.csv", ["bj.830000"]],
+    ["data/raw/sh_600000_2023.csv", ["sh.600000"]],
+    ["/home/user/data/sz_000001_2023.csv", ["sz.000001"]],
+  ])
+}

@@ -672,7 +672,237 @@ pub fn default_report_config() -> ReportConfig
 
 ### A
 - Action (type)
-- atr()
+- atr() - Calculate Average True Range
+- avg_trade_duration (field)
+- amount (field)
+- action (field)
+- add() - Add entry to trade log
+- add_rule() - Add risk rule to engine
+- annual_return (field)
+- author (field)
+- action_to_string() - Convert action to string
+- avg_loss (field)
+- avg_win (field)
+
+### B
+- BacktestConfig (type)
+- BacktestEngine (type)
+- BacktestResult (type)
+- BacktestStats (type)
+- bollinger_bands() - Calculate Bollinger Bands
+- buy() - Buy stock or add to position
+
+### C
+- calculate_current_drawdown() - Calculate current drawdown from peak
+- calculate_drawdown_series() - Calculate drawdown at each point
+- calculate_max_drawdown() - Calculate maximum drawdown
+- calculate_max_drawdown_detailed() - Calculate max drawdown with details
+- calculate_stats_with_state() - Calculate backtest statistics
+- check() - Evaluate risk rules
+- check_drawdown_alert() - Check drawdown against thresholds
+- classify_drawdown() - Classify drawdown severity
+- close (field)
+- code (field)
+- commission (field)
+- commission_rate (field)
+- commentary (field)
+- config (field)
+- create_backtest_engine() - Create backtest engine
+- create_ma_cross_strategy() - Create MA crossover strategy
+- create_monitor() - Create drawdown monitor
+- create_momentum_strategy() - Create momentum strategy
+- create_portfolio() - Create new portfolio
+- create_risk_engine() - Create risk engine
+- create_strategy() - Create strategy
+- create_trade_log() - Create empty trade log
+- current_date (field)
+- current_drawdown (field)
+- current_equity (field)
+- current_price (field)
+
+### D
+- daily_loss_limit_rule() - Daily loss limit risk rule
+- date (field)
+- default_alert_config() - Default alert configuration
+- default_backtest_config() - Default backtest configuration
+- default_report_config() - Default report configuration
+- default_rules() - Default risk rules
+- drawdown (field)
+- DrawdownAlert (type)
+- DrawdownInfo (type)
+- DrawdownLevel (type)
+- DrawdownMonitor (type)
+- drawdown_count (field)
+
+### E
+- ema() - Calculate Exponential Moving Average
+- end_date (field)
+- entries (field)
+- equity (field)
+- EquityPoint (type)
+- execute_signal() - Execute trading signal
+- executed (field)
+- exec_price (field)
+- exec_volume (field)
+- extract_stock_code_from_filename() - Extract stock code from filename
+
+### F
+- fast_period (field)
+- final_capital (field)
+- format() - Report format
+- format_pct() - Format percentage
+- Frequency (type)
+
+### G
+- generate_report() - Generate backtest report
+- generate_result_with_state() - Generate backtest result
+- get_alert_level() - Get alert level
+- get_drawdown() - Get current drawdown
+- get_drawdown_stats() - Get drawdown statistics
+- get_engine_stats() - Get engine statistics
+- get_info() - Get drawdown info
+- get_portfolio_value() - Get portfolio value
+- get_total_return() - Get total return
+- get_trade_count() - Get trade count
+
+### H
+- high (field)
+
+### I
+- include_equity_curve (field)
+- include_stats (field)
+- include_trades (field)
+- initial_capital (field)
+- is_alert_triggered() - Check if alert triggered
+- is_overbought() - Check if overbought
+- is_oversold() - Check if oversold
+
+### K
+- kline_to_csv_line() - Convert KLine to CSV
+- KLine (type)
+
+### L
+- last_alert_level (field)
+- last_price (field)
+- last_signal (field)
+- losing_trades (field)
+- low (field)
+
+### M
+- macd() - Calculate MACD indicator
+- ma_cross.mbt - MA Crossover Strategy
+- max_drawdown (field)
+- max_drawdown_rule() - Max drawdown risk rule
+- momentum.mbt - Momentum Strategy
+- max_threshold (field)
+
+### N
+- name (field)
+
+### O
+- OHLCV (type)
+- on_bar (field)
+- on_init (field)
+- open (field)
+- oversold_threshold (field)
+- overbought_threshold (field)
+
+### P
+- parse_csv_content() - Parse CSV content to KLines
+- peak (field)
+- peak_date (field)
+- peak_equity (field)
+- peak_value (field)
+- period (field)
+- position (field)
+- position_limit_rule() - Position limit risk rule
+- position_ratio (field)
+- position_value (field)
+- positions (field)
+- Portfolio (type)
+- Position (type)
+- print_report() - Print report to stdout
+- process_bar() - Process bar through strategy
+- profit_factor (field)
+- pnl() - Calculate position P&L
+- pnl_pct() - Calculate position P&L percentage
+
+### Q
+- quantity (field)
+
+### R
+- ReportConfig (type)
+- ReportFormat (type)
+- risk_action_allow() - Create Allow action
+- risk_action_reduce_position() - Create ReducePosition action
+- risk_action_reject() - Create Reject action
+- risk_action_stop_trading() - Create StopTrading action
+- risk_result_fail() - Create failing RiskResult
+- risk_result_pass() - Create passing RiskResult
+- RiskAction (type)
+- RiskEngine (type)
+- RiskResult (type)
+- RiskRule (type)
+- rsi() - Calculate Relative Strength Index
+- run_backtest() - Run backtest on data
+- rules (field)
+
+### S
+- sell() - Sell stock or reduce position
+- sharpe_ratio (field)
+- Signal (type)
+- single_stock_limit_rule() - Single stock position limit rule
+- slippage (field)
+- sma() - Calculate Simple Moving Average
+- sortino_ratio (field)
+- start_date (field)
+- stats (field)
+- std_dev (field)
+- stop_loss_rule() - Stop loss risk rule
+- stopped (field)
+- Strategy (type)
+- StrategyContext (type)
+- StrategyEngine (type)
+- StrategyInfo (type)
+- StrategyResult (type)
+- stock (field)
+- StockCode (type)
+- strength (field)
+
+### T
+- take_profit_rule() - Take profit risk rule
+- text (field)
+- time (field)
+- timestamp (field)
+- title (field)
+- total_capital (field)
+- total_pnl() - Get total portfolio P&L
+- total_pnl_pct() - Get total portfolio P&L percentage
+- total_position_value (field)
+- total_return (field)
+- total_trades (field)
+- total_value() - Get total portfolio value
+- Trade (type)
+- TradeLog (type)
+- TradeLogEntry (type)
+- trades (field)
+- trough (field)
+- trough_date (field)
+
+### U
+- update() - Update monitor with new value
+- update_prices() - Update position prices
+- upper_band (field)
+
+### V
+- value() - Calculate position value
+- violations (field)
+- volume (field)
+
+### W
+- warning_threshold (field)
+- win_rate (field)
+- winning_trades (field)
 
 ### B
 - BacktestConfig (type)
