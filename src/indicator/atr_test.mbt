@@ -4,66 +4,21 @@
 test "atr calculates correct values" {
   // Create test K-line data with known ranges
   let klines = [
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-01",
-      time: None,
-      open: 100.0,
-      high: 105.0,
-      low: 95.0,
-      close: 102.0,
-      volume: 1000.0,
-      amount: 100000.0,
-      turn: 0.01,
-    },
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-02",
-      time: None,
-      open: 102.0,
-      high: 108.0,
-      low: 100.0,
-      close: 106.0,
-      volume: 1200.0,
-      amount: 120000.0,
-      turn: 0.012,
-    },
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-03",
-      time: None,
-      open: 106.0,
-      high: 110.0,
-      low: 104.0,
-      close: 108.0,
-      volume: 1100.0,
-      amount: 110000.0,
-      turn: 0.011,
-    },
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-04",
-      time: None,
-      open: 108.0,
-      high: 112.0,
-      low: 106.0,
-      close: 110.0,
-      volume: 1300.0,
-      amount: 130000.0,
-      turn: 0.013,
-    },
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-05",
-      time: None,
-      open: 110.0,
-      high: 115.0,
-      low: 108.0,
-      close: 112.0,
-      volume: 1400.0,
-      amount: 140000.0,
-      turn: 0.014,
-    },
+    @data.KLine::daily(
+      "test", "2024-01-01", 100.0, 105.0, 95.0, 102.0, 1000.0, 100000.0, 0.01,
+    ),
+    @data.KLine::daily(
+      "test", "2024-01-02", 102.0, 108.0, 100.0, 106.0, 1200.0, 120000.0, 0.012,
+    ),
+    @data.KLine::daily(
+      "test", "2024-01-03", 106.0, 110.0, 104.0, 108.0, 1100.0, 110000.0, 0.011,
+    ),
+    @data.KLine::daily(
+      "test", "2024-01-04", 108.0, 112.0, 106.0, 110.0, 1300.0, 130000.0, 0.013,
+    ),
+    @data.KLine::daily(
+      "test", "2024-01-05", 110.0, 115.0, 108.0, 112.0, 1400.0, 140000.0, 0.014,
+    ),
   ]
 
   let atr_values = @indicator.atr(klines, 3)
@@ -82,18 +37,9 @@ test "atr calculates correct values" {
 ///|
 test "atr returns zeros for insufficient data" {
   let klines = [
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-01",
-      time: None,
-      open: 100.0,
-      high: 105.0,
-      low: 95.0,
-      close: 102.0,
-      volume: 1000.0,
-      amount: 100000.0,
-      turn: 0.01,
-    },
+    @data.KLine::daily(
+      "test", "2024-01-01", 100.0, 105.0, 95.0, 102.0, 1000.0, 100000.0, 0.01,
+    ),
   ]
 
   let atr_values = @indicator.atr(klines, 5)
@@ -106,30 +52,12 @@ test "atr returns zeros for insufficient data" {
 ///|
 test "true_range calculates correctly" {
   let klines = [
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-01",
-      time: None,
-      open: 100.0,
-      high: 110.0,
-      low: 90.0,
-      close: 105.0,
-      volume: 1000.0,
-      amount: 100000.0,
-      turn: 0.01,
-    },
-    @data.KLine::{
-      code: "test",
-      date: "2024-01-02",
-      time: None,
-      open: 105.0,
-      high: 115.0,
-      low: 100.0,
-      close: 112.0,
-      volume: 1200.0,
-      amount: 120000.0,
-      turn: 0.012,
-    },
+    @data.KLine::daily(
+      "test", "2024-01-01", 100.0, 110.0, 90.0, 105.0, 1000.0, 100000.0, 0.01,
+    ),
+    @data.KLine::daily(
+      "test", "2024-01-02", 105.0, 115.0, 100.0, 112.0, 1200.0, 120000.0, 0.012,
+    ),
   ]
 
   let tr_values = @indicator.true_range(klines)
