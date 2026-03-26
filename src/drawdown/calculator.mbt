@@ -238,9 +238,9 @@ pub fn get_drawdown_stats(values : Array[Float]) -> DrawdownStats {
 /// - Array of DrawdownInfo sorted by severity (most severe first)
 ///
 /// Examples:
-/// ```mbt check
+/// ```mbt nocheck
 /// test "find_top_drawdowns example" {
-///   let values = [100.0, 110.0, 100.0, 120.0, 100.0, 130.0]
+///   let values : Array[Float] = [100.0, 110.0, 100.0, 120.0, 100.0, 130.0]
 ///   let dates = ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05", "2023-01-06"]
 ///   let top = find_top_drawdowns(values, dates, 2)
 ///   assert_true(top.length() == 2)

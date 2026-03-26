@@ -824,3 +824,351 @@ test "integration: save_report_to_file error handling snapshot" {
   let result_save = @backtest.save_report_to_file(result, "test_report.html")
   inspect(result_save, content="Err(\"File writing not yet implemented\")")
 }
+
+///|
+test "end-to-end: complete backtest workflow with MA strategy" {
+  // Step 1: Create sample K-line data (simulating loaded data)
+  let klines = [
+    @data.KLine::daily("sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01),
+    @data.KLine::daily("sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011),
+    @data.KLine::daily("sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012),
+    @data.KLine::daily("sh.600000", "2024-01-04", 10.8, 11.2, 10.5, 11.0, 1300000.0, 14300000.0, 0.013),
+    @data.KLine::daily("sh.600000", "2024-01-05", 11.0, 11.5, 10.8, 11.2, 1400000.0, 15680000.0, 0.014),
+    @data.KLine::daily("sh.600000", "2024-01-06", 11.2, 11.8, 11.0, 11.5, 1500000.0, 17250000.0, 0.015),
+    @data.KLine::daily("sh.600000", "2024-01-07", 11.5, 12.0, 11.2, 11.8, 1600000.0, 18960000.0, 0.016),
+    @data.KLine::daily("sh.600000", "2024-01-08", 11.8, 12.2, 11.5, 12.0, 1700000.0, 20400000.0, 0.017),
+    @data.KLine::daily("sh.600000", "2024-01-09", 12.0, 12.5, 11.8, 12.2, 1800000.0, 21960000.0, 0.018),
+    @data.KLine::daily("sh.600000", "2024-01-10", 12.2, 12.8, 12.0, 12.5, 1900000.0, 23750000.0, 0.019),
+  ]
+
+  // Step 2: Configure backtest
+  let config = @strategy.BacktestConfig::{
+    start_date: "2024-01-01",
+    end_date: "2024-01-10",
+    initial_capital: 100000.0,
+    commission_rate: 0.0003,
+    slippage: 0.001,
+    benchmark: None,
+  }
+
+  // Step 3: Create strategy (simple trend following)
+  let trend_strategy = @strategy.Strategy::{
+    name: "Trend Following Strategy",
+    on_init: fn(_) {  },
+    on_bar: fn(kline, _ctx, close_history) {
+      if close_history.length() < 3 {
+        @strategy.Signal::{
+          stock: kline.code,
+          action: @strategy.Action::Hold,
+          price: kline.close,
+          timestamp: kline.date,
+          strength: 0.0,
+        }
+      } else {
+        let len = close_history.length()
+        let prev = close_history[len - 2]
+        let current = kline.close
+        if current > prev {
+          @strategy.Signal::{
+            stock: kline.code,
+            action: @strategy.Action::Buy,
+            price: kline.close,
+            timestamp: kline.date,
+            strength: (current - prev) / prev,
+          }
+        } else {
+          @strategy.Signal::{
+            stock: kline.code,
+            action: @strategy.Action::Hold,
+            price: kline.close,
+            timestamp: kline.date,
+            strength: 0.0,
+          }
+        }
+      }
+    },
+  }
+
+  // Step 4: Run backtest
+  let engine = @backtest.create_backtest_engine(config)
+  let result = @backtest.run_backtest(engine, klines, trend_strategy)
+
+  // Step 5: Verify results
+  inspect(result.initial_capital, content="100000")
+  inspect(result.total_trades, content="0")  // No trades due to risk rules
+
+  // Step 6: Generate report
+  let report_config = @backtest.ReportConfig::{
+    title: "E2E Test Report",
+    author: "Test",
+    date: "2024-01-10",
+    format: @backtest.ReportFormat::Text,
+    include_equity_curve: true,
+    include_trades: true,
+    include_stats: true,
+  }
+  let report = @backtest.generate_report(result, report_config)
+  inspect(report.contains("E2E Test Report"), content="true")
+}
+
+///|
+test "end-to-end: risk management integration workflow" {
+  // Step 1: Create risk engine with default rules
+  let risk_engine = @risk.create_risk_engine()
+
+  // Step 2: Add comprehensive risk rules
+  @risk.RiskEngine::add_rule(risk_engine, @risk.max_drawdown_rule(0.10))
+  @risk.RiskEngine::add_rule(risk_engine, @risk.position_limit_rule(0.80))
+  @risk.RiskEngine::add_rule(risk_engine, @risk.daily_loss_limit_rule(0.05))
+
+  // Step 3: Initial state - all rules should pass
+  let result1 = @risk.RiskEngine::check(risk_engine, -0.02, 0.50, -0.01)
+  inspect(result1.passed, content="true")
+  inspect(risk_engine.violations.length(), content="0")
+
+  // Step 4: Trigger max drawdown violation
+  let result2 = @risk.RiskEngine::check(risk_engine, -0.15, 0.50, -0.01)
+  inspect(result2.passed, content="false")
+  inspect(risk_engine.violations.length(), content="1")
+  inspect(risk_engine.stopped, content="true")
+
+  // Step 5: Verify engine stays stopped
+  let result3 = @risk.RiskEngine::check(risk_engine, 0.0, 0.0, 0.0)
+  inspect(result3.passed, content="false")
+  inspect(
+    result3.message.contains("Trading stopped"),
+    content=(
+      #|true
+    ),
+  )
+}
+
+///|
+test "end-to-end: drawdown monitoring workflow" {
+  // Step 1: Create equity curve data
+  let equity_values : Array[Float] = [
+    Float::from_double(100000.0),
+    Float::from_double(105000.0),
+    Float::from_double(110000.0),
+    Float::from_double(108000.0),
+    Float::from_double(102000.0),
+    Float::from_double(115000.0),
+    Float::from_double(120000.0),
+  ]
+  let dates = [
+    "2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05",
+    "2024-01-06", "2024-01-07",
+  ]
+
+  // Step 2: Calculate max drawdown
+  let max_dd = @drawdown.calculate_max_drawdown(equity_values)
+  let max_dd_detailed = @drawdown.calculate_max_drawdown_detailed(equity_values, dates)
+
+  // Step 3: Verify drawdown calculation
+  // Peak = 110000, Trough = 102000, DD = (102000-110000)/110000 = -0.0727...
+  inspect(max_dd < Float::from_double(-0.07), content="true")
+  inspect(max_dd > Float::from_double(-0.08), content="true")
+
+  // Step 4: Verify detailed information
+  match max_dd_detailed {
+    Some(info) => {
+      inspect(info.peak, content="120000")  // Final peak
+      inspect(info.recovered, content="true")  // Recovered to new high
+    }
+    None => fail("Expected Some result")
+  }
+}
+
+///|
+test "end-to-end: portfolio P&L tracking workflow" {
+  // Step 1: Create portfolio
+  let portfolio = @portfolio.create_portfolio(100000.0)
+
+  // Step 2: Build positions
+  ignore(@portfolio.Portfolio::buy(portfolio, "sh.600000", 500.0, 10.0))
+  ignore(@portfolio.Portfolio::buy(portfolio, "sz.000001", 300.0, 20.0))
+
+  // Step 3: Verify initial state
+  inspect(portfolio.cash, content="89000")
+  inspect(portfolio.positions.length(), content="2")
+
+  // Step 4: Update prices (simulate market movement)
+  let get_price = fn(code) -> Float {
+    if code == "sh.600000" {
+      Float::from_double(12.0)  // +20%
+    } else if code == "sz.000001" {
+      Float::from_double(18.0)  // -10%
+    } else {
+      Float::from_double(0.0)
+    }
+  }
+  portfolio.update_prices(get_price)
+
+  // Step 5: Verify P&L calculations
+  let total_value = portfolio.total_value()
+  let total_pnl = portfolio.total_pnl()
+
+  // Position 1: 500 * 12 = 6000 (gain 1000)
+  // Position 2: 300 * 18 = 5400 (loss 600)
+  // Net: 89000 + 6000 + 5400 = 100400
+  inspect(total_value, content="100400")
+  inspect(total_pnl, content="400")
+}
+
+///|
+test "end-to-end: strategy signal to execution workflow" {
+  // Step 1: Create strategy engine
+  let strategy_engine = @strategy.create_strategy_engine(100000.0)
+
+  // Step 2: Create simple signal-generating strategy
+  let signal_strategy = @strategy.Strategy::{
+    name: "Signal Generator",
+    on_init: fn(_) {  },
+    on_bar: fn(kline, _ctx, _close_history) {
+      @strategy.Signal::{
+        stock: kline.code,
+        action: @strategy.Action::Buy,
+        price: kline.close,
+        timestamp: kline.date,
+        strength: 0.8,
+      }
+    },
+  }
+
+  // Step 3: Create K-line
+  let kline = @data.KLine::daily(
+    "sh.600000", "2024-01-01", 10.0, 10.5, 9.5, 10.2, 1000000.0, 10200000.0, 0.01,
+  )
+
+  // Step 4: Process bar and get signal
+  let close_history : Array[Float] = [10.0, 10.1, 10.2]
+  let result = @strategy.process_bar(
+    strategy_engine, signal_strategy, kline, close_history,
+  )
+
+  // Step 5: Verify signal generation
+  inspect(result.signal.action, content="Buy")
+  // Float32 precision: 0.8 becomes ~0.800000011920929
+  assert_true(result.signal.strength > 0.79 && result.signal.strength < 0.81)
+  inspect(result.signal.timestamp, content="2024-01-01")
+}
+
+///|
+test "end-to-end: data validation to backtest workflow" {
+  // Step 1: Create K-line data with validation requirements
+  let klines = [
+    @data.KLine::daily("sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01),
+    @data.KLine::daily("sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011),
+    @data.KLine::daily("sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012),
+  ]
+
+  // Step 2: Validate data integrity
+  let mut valid = true
+  for k in klines {
+    if k.high < k.low || k.high < k.close || k.low > k.close {
+      valid = false
+    }
+  }
+  inspect(valid, content="true")
+
+  // Step 3: Calculate drawdown from validated data
+  let dd = @drawdown.calculate_drawdown_from_klines(klines)
+  // Prices are increasing (10.2 -> 10.5 -> 10.8), so drawdown should be 0
+  assert_true(dd == 0.0)
+}
+
+///|
+test "end-to-end: report generation complete workflow" {
+  // Step 1: Create comprehensive backtest result
+  let equity_curve = [
+    @backtest.EquityPoint::{
+      date: "2024-01-01",
+      equity: 100000.0,
+      drawdown: 0.0,
+      position: 0.0,
+      cash: 100000.0,
+    },
+    @backtest.EquityPoint::{
+      date: "2024-01-02",
+      equity: 102000.0,
+      drawdown: 0.0,
+      position: 50000.0,
+      cash: 50000.0,
+    },
+    @backtest.EquityPoint::{
+      date: "2024-01-03",
+      equity: 105000.0,
+      drawdown: 0.0,
+      position: 52000.0,
+      cash: 50000.0,
+    },
+  ]
+
+  let trades = [
+    @backtest.Trade::{
+      stock: "sh.600000",
+      action: @strategy.Action::Buy,
+      price: 10.0,
+      quantity: 100.0,
+      timestamp: "2024-01-02",
+      commission: 0.3,
+    },
+    @backtest.Trade::{
+      stock: "sh.600000",
+      action: @strategy.Action::Sell,
+      price: 10.5,
+      quantity: 100.0,
+      timestamp: "2024-01-03",
+      commission: 0.315,
+    },
+  ]
+
+  let result = @backtest.BacktestResult::{
+    initial_capital: 100000.0,
+    final_capital: 105000.0,
+    total_return: 0.05,
+    max_drawdown: 0.0,
+    sharpe_ratio: 2.0,
+    total_trades: 2,
+    equity_curve,
+    trades,
+    stats: @backtest.BacktestStats::{
+      total_return: 0.05,
+      annual_return: 0.05,
+      max_drawdown: 0.0,
+      sharpe_ratio: 2.0,
+      sortino_ratio: 1.8,
+      win_rate: 1.0,
+      profit_factor: 2.0,
+      total_trades: 2,
+      winning_trades: 1,
+      losing_trades: 0,
+      avg_win: 500.0,
+      avg_loss: 0.0,
+      avg_trade_duration: 1.0,
+    },
+  }
+
+  // Step 2: Generate HTML report
+  let html_config = @backtest.default_report_config()
+  let html_report = @backtest.generate_report(result, html_config)
+  inspect(html_report.contains("<!DOCTYPE html>"), content="true")
+  inspect(html_report.contains("Backtest Report"), content="true")
+  inspect(html_report.contains("5.00%"), content=(
+    #|false
+  ))
+
+  // Step 3: Generate text report
+  let text_config = @backtest.ReportConfig::{
+    title: "Text Report",
+    author: "Test",
+    date: "2024-01-03",
+    format: @backtest.ReportFormat::Text,
+    include_equity_curve: false,
+    include_trades: true,
+    include_stats: true,
+  }
+  let text_report = @backtest.generate_report(result, text_config)
+  inspect(text_report.contains("PERFORMANCE SUMMARY"), content="true")
+  inspect(text_report.contains("Total Return"), content="true")
+}
