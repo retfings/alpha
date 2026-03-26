@@ -14,7 +14,7 @@ import baostock as bs
 
 def get_all_stock_codes() -> list[str]:
     """
-    Get all A-share stock codes by enumerating valid code ranges.
+    Get all A-share stock codes using official BaoStock API.
 
     Returns:
         List of stock codes in format 'sh.xxx' or 'sz.xxx'
@@ -25,41 +25,26 @@ def get_all_stock_codes() -> list[str]:
         print(f"Login failed: {lg.error_msg}")
         return []
 
+    print("Querying all A-share stocks from BaoStock...")
+
+    # Use query_stock_basic() without code parameter to get all stocks
+    # This is more reliable than query_all_stock() which often returns empty data
+    rs = bs.query_stock_basic()
+
     all_codes = []
-
-    def scan_range(prefix: str, start: int, end: int, step: int = 100) -> list[str]:
-        """Scan a range of stock codes."""
-        codes = []
-        for batch_start in range(start, end + 1, step):
-            batch_end = min(batch_start + step - 1, end)
-            for i in range(batch_start, batch_end + 1):
-                code = f"{prefix}.{i:06d}"
-                rs = bs.query_stock_basic(code=code)
-                if rs.error_code == "0":
-                    while rs.next():
-                        row = rs.get_row_data()
-                        if row and row[0]:
-                            codes.append(row[0])
-                            break
-        return codes
-
-    print("Scanning Shanghai main board (600000-605999)...")
-    all_codes.extend(scan_range("sh", 600000, 605999))
-    print(f"  Found {len(all_codes)} stocks so far")
-
-    print("Scanning Shanghai STAR market (688000-688999)...")
-    all_codes.extend(scan_range("sh", 688000, 688999))
-    print(f"  Found {len(all_codes)} stocks so far")
-
-    print("Scanning Shenzhen main board (000001-002999)...")
-    all_codes.extend(scan_range("sz", 1, 2999))
-    print(f"  Found {len(all_codes)} stocks so far")
-
-    print("Scanning Shenzhen SME/GEM (300001-301999)...")
-    all_codes.extend(scan_range("sz", 300001, 301999))
-    print(f"  Found {len(all_codes)} stocks so far")
+    if rs.error_code == "0":
+        while rs.next():
+            row = rs.get_row_data()
+            if row and row[0]:
+                code = row[0]  # code field
+                stock_type = row[4] if len(row) > 4 else ""  # type field: 1=stock, 2=index
+                
+                # Filter for A-share stocks (sh. or sz. prefix, type=1)
+                if (code.startswith("sh.") or code.startswith("sz.")) and stock_type == "1":
+                    all_codes.append(code)
 
     bs.logout()
+    print(f"Found {len(all_codes)} A-share stocks.")
     return all_codes
 
 
@@ -202,12 +187,12 @@ def main() -> None:
         "-s",
         nargs="+",
         default=None,
-        help="Stock codes (e.g., sh.600000 sz.000001). Skip if --all is used.",
+        help="Stock codes (e.g., sh.600000 sz.000001). Ignored when --all is used.",
     )
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Download all A-share stocks",
+        help="Download all A-share stocks (can be combined with --start, --end, -o, -f, -a, -q)",
     )
     parser.add_argument(
         "--start",

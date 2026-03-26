@@ -17,6 +17,24 @@ pip install baostock
 python script/download_data.py
 ```
 
+### 下载全部 A 股
+
+```bash
+# 下载全部 A 股股票近 3 年的日线数据（前复权）
+python script/download_data.py --all
+
+# 下载全部 A 股股票，指定日期范围
+python script/download_data.py --all --start 2023-01-01 --end 2023-12-31
+
+# 下载全部 A 股股票，指定输出目录和复权类型
+python script/download_data.py --all -o ./my_data/ -a 1
+
+# 下载全部 A 股股票，使用 5 分钟级别数据
+python script/download_data.py --all -f 5 -q
+```
+
+> `--all` 可以结合 `--start`, `--end`, `-o`, `-f`, `-a`, `-q` 等参数使用。
+
 ### 下载单只股票
 
 ```bash
@@ -43,7 +61,7 @@ python script/download_data.py --stocks sh.600000 --frequency 5
 | 参数 | 简写 | 说明 | 默认值 |
 |------|------|------|--------|
 | `--stocks` | `-s` | 股票代码列表 | `sh.600000 sz.000001` |
-| `--all` | | 下载全部 A 股股票 | 不启用 |
+| `--all` | | 下载全部 A 股股票（可与 `--start`, `--end`, `-o`, `-f`, `-a`, `-q` 组合使用） | 不启用 |
 | `--start` | | 开始日期 (YYYY-MM-DD) | 3 年前 |
 | `--end` | | 结束日期 (YYYY-MM-DD) | 今天 |
 | `--output` | `-o` | 输出目录 | `./data/` |
@@ -52,6 +70,33 @@ python script/download_data.py --stocks sh.600000 --frequency 5
 | `--quiet` | `-q` | 静默模式，不输出进度 | 不启用 |
 
 ## 示例
+
+### 下载全部 A 股，指定日期范围
+
+```bash
+# 下载全部 A 股 2023 年的数据
+python script/download_data.py --all --start 2023-01-01 --end 2023-12-31
+```
+
+### 下载全部 A 股，指定复权类型
+
+```bash
+# 下载全部 A 股，使用后复权
+python script/download_data.py --all -a 1
+
+# 下载全部 A 股，使用无复权
+python script/download_data.py --all -a 2
+```
+
+### 下载全部 A 股，使用不同频率
+
+```bash
+# 下载全部 A 股的周线数据
+python script/download_data.py --all -f w
+
+# 下载全部 A 股的 5 分钟级别数据（静默模式）
+python script/download_data.py --all -f 5 -q
+```
 
 ### 下载指定日期范围的数据
 
@@ -145,3 +190,4 @@ CSV 包含以下字段：
 4. 大量下载时请注意控制请求频率
 5. 5 分钟级别数据仅支持交易日内数据，非交易时间无数据
 6. 前复权数据更适合技术分析和回测（默认使用前复权）
+7. `--all` 选项使用 BaoStock 官方 API 获取全部 A 股，无需手动扫描代码段
