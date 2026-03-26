@@ -54,15 +54,6 @@ pub(all) struct Strategy {
 }
 
 ///|
-/// Strategy metadata
-pub struct StrategyInfo {
-  name : String
-  description : String
-  author : String
-  version : String
-}
-
-///|
 /// Backtest configuration
 pub(all) struct BacktestConfig {
   start_date : String
