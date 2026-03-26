@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/server"
+
+// Values
+pub fn handle_request(String) -> HttpResponse
+
+pub fn start_server(Int) -> Unit
+
+// Errors
+
+// Types and methods
+pub struct HttpResponse {
+  status_code : Int
+  body : String
+}
+
+// Type aliases
+
+// Traits
+

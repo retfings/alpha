@@ -94,8 +94,8 @@ test "stop_loss_rule snapshot" {
 }
 
 ///|
-test "single_stock_limit_rule snapshot" {
-  let rule = @risk.single_stock_limit_rule(0.30)
+test "total_exposure_limit_rule snapshot" {
+  let rule = @risk.total_exposure_limit_rule(0.30)
   inspect(rule.name, content="Total Exposure Limit Rule")
   inspect(rule.priority, content="5")
 

@@ -432,7 +432,7 @@ test "integration: Multi-stock portfolio with risk management" {
   // Step 4: Create risk engine with multiple rules
   let risk_engine = @risk.create_risk_engine()
   @risk.RiskEngine::add_rule(risk_engine, @risk.position_limit_rule(0.80))
-  @risk.RiskEngine::add_rule(risk_engine, @risk.single_stock_limit_rule(0.30))
+  @risk.RiskEngine::add_rule(risk_engine, @risk.total_exposure_limit_rule(0.30))
   @risk.RiskEngine::add_rule(risk_engine, @risk.max_drawdown_rule(0.10))
 
   // Step 5: Check risk compliance

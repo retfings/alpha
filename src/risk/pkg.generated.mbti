@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn and_rules(RiskRule, RiskRule, String) -> RiskRule
+
 pub fn check_portfolio_stop_loss(@portfolio.Portfolio, Float) -> (String, RiskResult)?
 
 pub fn check_position_stop_loss(String, Float, Float) -> RiskResult
@@ -19,6 +21,10 @@ pub fn daily_loss_limit_rule(Float) -> RiskRule
 pub fn default_rules() -> Array[RiskRule]
 
 pub fn max_drawdown_rule(Float) -> RiskRule
+
+pub fn not_rule(RiskRule, String) -> RiskRule
+
+pub fn or_rules(RiskRule, RiskRule, String) -> RiskRule
 
 pub fn position_limit_rule(Float) -> RiskRule
 
@@ -34,6 +40,9 @@ pub fn risk_result_fail(String, RiskAction) -> RiskResult
 
 pub fn risk_result_pass(String) -> RiskResult
 
+pub fn sequential_rules(Array[RiskRule], String) -> RiskRule
+
+#deprecated
 pub fn single_stock_limit_rule(Float) -> RiskRule
 
 pub fn stop_loss_rule(String, Float) -> RiskRule

@@ -4,6 +4,8 @@ package "username/alpha/src/ffi"
 // Values
 pub fn file_exists(String) -> Bool
 
+pub fn getenv(String) -> String?
+
 pub fn mkdir_p(String) -> Bool
 
 pub fn read_csv_file(String) -> String?

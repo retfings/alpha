@@ -24,6 +24,8 @@ pub fn rsi(Array[Float], Int) -> Array[Float]
 
 pub fn sma(Array[Float], Int) -> Array[Float]
 
+pub fn true_range(Array[@data.KLine]) -> Array[Float]
+
 pub fn williams_r(Array[@data.KLine], Int) -> Array[Float]
 
 // Errors

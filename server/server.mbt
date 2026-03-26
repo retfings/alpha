@@ -16,7 +16,7 @@ pub struct HttpResponse {
 ///|
 /// Create HTTP response
 fn make_response(status_code : Int, body : String) -> HttpResponse {
-  HttpResponse::{ status_code: status_code, body: body }
+  HttpResponse::{ status_code, body }
 }
 
 ///|
@@ -47,7 +47,8 @@ fn extract_stock_code(path : String) -> String? {
   while i < parts.length() {
     if parts[i] == "stocks" && i + 1 < parts.length() {
       let candidate = string_view_to_string(parts[i + 1])
-      if candidate.contains(".") || (candidate.length() > 0 && candidate[0] >= 'a' && candidate[0] <= 'z') {
+      if candidate.contains(".") ||
+        (candidate.length() > 0 && candidate[0] >= 'a' && candidate[0] <= 'z') {
         return Some(candidate)
       }
     }
@@ -77,7 +78,9 @@ fn extract_backtest_id(path : String) -> String? {
 /// Route request to appropriate handler
 fn route_request(path : String, http_method : String) -> HttpResponse {
   if path == "/api/health" {
-    return make_response(200, "{\"status\":\"ok\",\"service\":\"moonbit-drawdown\"}")
+    return make_response(
+      200, "{\"status\":\"ok\",\"service\":\"moonbit-drawdown\"}",
+    )
   }
 
   if path == "/api/stocks" && http_method == "GET" {
@@ -86,33 +89,35 @@ fn route_request(path : String, http_method : String) -> HttpResponse {
 
   if path.contains("/api/stocks/") && path.contains("/klines") {
     match extract_stock_code(path) {
-      Some(stock) => { return handle_get_klines(stock) }
-      None => { return make_response(400, "{\"error\":\"Invalid stock code\"}") }
+      Some(stock) => return handle_get_klines(stock)
+      None => return make_response(400, "{\"error\":\"Invalid stock code\"}")
     }
   }
 
   if path.has_prefix("/api/stocks/") && !path.contains("/klines") {
     match extract_stock_code(path) {
-      Some(stock) => { return handle_get_stock(stock) }
-      None => { return make_response(400, "{\"error\":\"Invalid stock code\"}") }
+      Some(stock) => return handle_get_stock(stock)
+      None => return make_response(400, "{\"error\":\"Invalid stock code\"}")
     }
   }
 
   if path == "/api/backtest" && http_method == "POST" {
-    return make_response(200, "{\"status\":\"started\",\"backtest_id\":\"bt_001\"}")
+    return make_response(
+      200, "{\"status\":\"started\",\"backtest_id\":\"bt_001\"}",
+    )
   }
 
   if path.contains("/api/backtest/") && path.contains("/result") {
     match extract_backtest_id(path) {
-      Some(id) => { return handle_get_backtest_result(id) }
-      None => { return make_response(400, "{\"error\":\"Invalid backtest ID\"}") }
+      Some(id) => return handle_get_backtest_result(id)
+      None => return make_response(400, "{\"error\":\"Invalid backtest ID\"}")
     }
   }
 
   if path.has_prefix("/api/drawdown/") {
     match extract_stock_code(path) {
-      Some(stock) => { return handle_get_drawdown(stock) }
-      None => { return make_response(400, "{\"error\":\"Invalid stock code\"}") }
+      Some(stock) => return handle_get_drawdown(stock)
+      None => return make_response(400, "{\"error\":\"Invalid stock code\"}")
     }
   }
 
@@ -126,37 +131,53 @@ fn route_request(path : String, http_method : String) -> HttpResponse {
 ///|
 /// Handler: List available stocks
 fn handle_list_stocks() -> HttpResponse {
-  make_response(200, "{\"stocks\":[{\"code\":\"sh.600000\",\"name\":\"Ping An Bank\"}],\"total\":1}")
+  make_response(
+    200, "{\"stocks\":[{\"code\":\"sh.600000\",\"name\":\"Ping An Bank\"}],\"total\":1}",
+  )
 }
 
 ///|
 /// Handler: Get stock info
 fn handle_get_stock(stock : String) -> HttpResponse {
-  make_response(200, "{\"stock\":{\"code\":\"\{stock}\",\"name\":\"Sample Stock\"}}")
+  make_response(
+    200,
+    "{\"stock\":{\"code\":\"\{stock}\",\"name\":\"Sample Stock\"}}",
+  )
 }
 
 ///|
 /// Handler: Get klines for stock
 fn handle_get_klines(stock : String) -> HttpResponse {
-  make_response(200, "{\"stock\":\"\{stock}\",\"klines\":[{\"date\":\"2024-01-02\",\"close\":10.8}],\"count\":1}")
+  make_response(
+    200,
+    "{\"stock\":\"\{stock}\",\"klines\":[{\"date\":\"2024-01-02\",\"close\":10.8}],\"count\":1}",
+  )
 }
 
 ///|
 /// Handler: Get backtest result
 fn handle_get_backtest_result(id : String) -> HttpResponse {
-  make_response(200, "{\"backtest_id\":\"\{id}\",\"status\":\"completed\",\"result\":{\"total_return\":0.1245,\"max_drawdown\":-0.0832}}")
+  make_response(
+    200,
+    "{\"backtest_id\":\"\{id}\",\"status\":\"completed\",\"result\":{\"total_return\":0.1245,\"max_drawdown\":-0.0832}}",
+  )
 }
 
 ///|
 /// Handler: Get drawdown for stock
 fn handle_get_drawdown(stock : String) -> HttpResponse {
-  make_response(200, "{\"stock\":\"\{stock}\",\"drawdown\":{\"current\":-0.0245,\"max\":-0.1523}}")
+  make_response(
+    200,
+    "{\"stock\":\"\{stock}\",\"drawdown\":{\"current\":-0.0245,\"max\":-0.1523}}",
+  )
 }
 
 ///|
 /// Handler: Get portfolio drawdown
 fn handle_portfolio_drawdown() -> HttpResponse {
-  make_response(200, "{\"portfolio\":{\"total_drawdown\":-0.0532,\"max_stock_drawdown\":-0.1523}}")
+  make_response(
+    200, "{\"portfolio\":{\"total_drawdown\":-0.0532,\"max_stock_drawdown\":-0.1523}}",
+  )
 }
 
 ///|
@@ -166,8 +187,14 @@ pub fn handle_request(request : String) -> HttpResponse {
   let lines = request.split("\n").to_array()
   let http_method = if lines.length() > 0 {
     let parts = lines[0].split(" ").to_array()
-    if parts.length() > 0 { string_view_to_string(parts[0]) } else { "GET" }
-  } else { "GET" }
+    if parts.length() > 0 {
+      string_view_to_string(parts[0])
+    } else {
+      "GET"
+    }
+  } else {
+    "GET"
+  }
 
   route_request(path, http_method)
 }
