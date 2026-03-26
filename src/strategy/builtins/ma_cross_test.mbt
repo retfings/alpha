@@ -46,18 +46,7 @@ test "MaCrossStrategy::on_init - no-op" {
 ///|
 test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
   let strategy = create_ma_cross_strategy(5, 20)
-  let kline = @data.KLine::{
-    code: "sh.600000",
-    date: "2023-01-01",
-    time: None,
-    open: 10.0,
-    high: 10.5,
-    low: 9.8,
-    close: 10.2,
-    volume: 1000000.0,
-    amount: 10200000.0,
-    turn: 0.05,
-  }
+  let kline = @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05)
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -78,18 +67,7 @@ test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
 ///|
 test "MaCrossStrategy::on_bar - golden cross detection" {
   let strategy = create_ma_cross_strategy(3, 5)
-  let kline = @data.KLine::{
-    code: "sh.600000",
-    date: "2023-01-10",
-    time: None,
-    open: 12.0,
-    high: 12.5,
-    low: 11.8,
-    close: 12.3,
-    volume: 1000000.0,
-    amount: 12300000.0,
-    turn: 0.05,
-  }
+  let kline = @data.KLine::daily("sh.600000", "2023-01-10", 12.0, 12.5, 11.8, 12.3, 1000000.0, 12300000.0, 0.05)
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -119,18 +97,7 @@ test "MaCrossStrategy::on_bar - golden cross detection" {
 ///|
 test "MaCrossStrategy::on_bar - death cross detection" {
   let strategy = create_ma_cross_strategy(3, 5)
-  let kline = @data.KLine::{
-    code: "sh.600000",
-    date: "2023-01-10",
-    time: None,
-    open: 8.0,
-    high: 8.2,
-    low: 7.5,
-    close: 7.8,
-    volume: 1000000.0,
-    amount: 7800000.0,
-    turn: 0.05,
-  }
+  let kline = @data.KLine::daily("sh.600000", "2023-01-10", 8.0, 8.2, 7.5, 7.8, 1000000.0, 7800000.0, 0.05)
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,
@@ -160,18 +127,7 @@ test "MaCrossStrategy::on_bar - death cross detection" {
 ///|
 test "MaCrossStrategy::on_bar - snapshot of signal with various histories" {
   let strategy = create_ma_cross_strategy(3, 5)
-  let base_kline = @data.KLine::{
-    code: "sh.600000",
-    date: "2023-01-10",
-    time: None,
-    open: 10.0,
-    high: 10.5,
-    low: 9.8,
-    close: 10.2,
-    volume: 1000000.0,
-    amount: 10200000.0,
-    turn: 0.05,
-  }
+  let base_kline = @data.KLine::daily("sh.600000", "2023-01-10", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.05)
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
     position: 0.0,

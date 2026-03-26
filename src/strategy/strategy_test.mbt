@@ -32,7 +32,7 @@ test "StrategyResult - snapshot test" {
     exec_price: 10.5,
     exec_volume: 1000.0,
   }
-  @json.inspect(result)
+  json_inspect(result)
 }
 
 ///|
@@ -100,25 +100,13 @@ test "Action enum - json inspection" {
 
 ///|
 test "process_bar - snapshot test" {
-  let kline = @data.KLine::{
-    code: "sh.600000",
-    date: "2023-01-01",
-    time: None,
-    open: 10.5,
-    high: 11.0,
-    low: 10.2,
-    close: 10.8,
-    volume: 1000000.0,
-    amount: 10500000.0,
-    turn: 0.05,
-  }
+  let kline = @data.KLine::daily("sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05)
 
   let engine = @strategy.create_strategy_engine(100000.0)
 
-  // Create a simple strategy that always holds
   let hold_strategy = @strategy.Strategy::{
     name: "Hold Strategy",
-    on_init: fn(_) {  },
+    on_init: fn(_) { },
     on_bar: fn(kline, ctx) {
       @strategy.Signal::{
         stock: kline.code,

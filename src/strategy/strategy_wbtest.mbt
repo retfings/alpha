@@ -137,22 +137,10 @@ test "StrategyEngine - snapshot of internal state" {
 
 ///|
 test "process_bar - internal snapshot" {
-  let kline = @data.KLine::{
-    code: "sh.600000",
-    date: "2023-01-01",
-    time: None,
-    open: 10.5,
-    high: 11.0,
-    low: 10.2,
-    close: 10.8,
-    volume: 1000000.0,
-    amount: 10500000.0,
-    turn: 0.05,
-  }
+  let kline = @data.KLine::daily("sh.600000", "2023-01-01", 10.5, 11.0, 10.2, 10.8, 1000000.0, 10500000.0, 0.05)
 
   let engine = create_strategy_engine(100000.0)
 
-  // Create a simple buy strategy
   let buy_strategy = Strategy::{
     name: "Always Buy",
     on_init: fn(_) { },
