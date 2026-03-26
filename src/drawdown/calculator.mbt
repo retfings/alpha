@@ -17,7 +17,7 @@ pub struct DrawdownInfo {
   duration : Int
   /// Whether recovered
   recovered : Bool
-}
+} derive(ToJson, Show, Eq)
 
 ///|
 /// Drawdown series (drawdown at each point in time)
