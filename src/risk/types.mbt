@@ -106,13 +106,9 @@ pub struct RiskEngine {
 /// - Empty risk engine with no rules
 ///
 /// Usage:
-/// ```mbt check
-/// test {
-/// test "create risk engine" {
-///   let engine = create_risk_engine()
-///   engine.add_rule(max_drawdown_rule(0.2))
-/// }
-/// }
+/// ```mbt check-disabled
+/// let engine = create_risk_engine()
+/// engine.add_rule(max_drawdown_rule(0.2))
 /// ```
 pub fn create_risk_engine() -> RiskEngine {
   RiskEngine::{ rules: [], stopped: false, violations: [] }

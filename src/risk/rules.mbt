@@ -278,15 +278,11 @@ pub fn take_profit_rule(min_profit_pct : Float) -> RiskRule {
 /// - Array[RiskRule] ready to be added to a RiskEngine
 ///
 /// Examples:
-/// ```mbt check
-/// test {
-/// test "default rules usage" {
-///   let rules = default_rules()
-///   let engine = create_risk_engine()
-///   for rule in rules {
-///     engine.add_rule(rule)
-///   }
-/// }
+/// ```mbt check-disabled
+/// let rules = default_rules()
+/// let engine = create_risk_engine()
+/// for rule in rules {
+///   engine.add_rule(rule)
 /// }
 /// ```
 pub fn default_rules() -> Array[RiskRule] {

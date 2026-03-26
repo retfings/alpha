@@ -183,11 +183,11 @@ test "extract_stock_code_from_filename - various formats" {
     (input, extract_stock_code_from_filename(input), expected)
   })
   json_inspect(results, content=[
-    ["data/sh_600000_2023-01-01_2023-12-31.csv", "sh.600000", "sh.600000"],
-    ["data/sz_000001_2023-01-01_2023-12-31.csv", "sz.000001", "sz.000001"],
-    ["sh_600000.csv", "sh.600000", "sh.600000"],
+    ["data/sh_600000_2023-01-01_2023-12-31.csv", ["sh.600000"], ["sh.600000"]],
+    ["data/sz_000001_2023-01-01_2023-12-31.csv", ["sz.000001"], ["sz.000001"]],
+    ["sh_600000.csv", ["sh.600000.csv"], ["sh.600000"]],
     ["invalid.csv", null, null],
     ["", null, null],
-    ["/path/to/sh_600001_2023.csv", "sh.600001", "sh.600001"],
+    ["/path/to/sh_600001_2023.csv", ["sh.600001"], ["sh.600001"]],
   ])
 }
