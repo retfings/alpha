@@ -145,6 +145,27 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
 
 ///|
 /// Handler: List available stocks
+///
+/// Returns a list of all available stocks in the system.
+///
+/// **Request:**
+/// - Method: GET
+/// - Path: /api/stocks
+/// - Headers: None required
+///
+/// **Response:**
+/// - Status 200: JSON array of stocks with code, name, and total count
+///
+/// **Example Response:**
+/// ```json
+/// {
+///   "stocks": [{"code": "sh.600000", "name": "Ping An Bank"}],
+///   "total": 1
+/// }
+/// ```
+///
+/// **Error Responses:**
+/// - None currently defined
 fn handle_list_stocks() -> HttpResponse {
   make_response(
     200, "{\"stocks\":[{\"code\":\"sh.600000\",\"name\":\"Ping An Bank\"}],\"total\":1}",
@@ -153,6 +174,29 @@ fn handle_list_stocks() -> HttpResponse {
 
 ///|
 /// Handler: Get stock info
+///
+/// Returns detailed information for a specific stock.
+///
+/// **Request:**
+/// - Method: GET
+/// - Path: /api/stocks/{code}
+/// - Parameters: code - Stock code (e.g., "sh.600000")
+///
+/// **Response:**
+/// - Status 200: JSON object with stock details
+///
+/// **Example Response:**
+/// ```json
+/// {
+///   "stock": {
+///     "code": "sh.600000",
+///     "name": "Sample Stock"
+///   }
+/// }
+/// ```
+///
+/// **Error Responses:**
+/// - Status 400: Invalid stock code format
 fn handle_get_stock(stock : String) -> HttpResponse {
   make_response(
     200,
@@ -162,6 +206,28 @@ fn handle_get_stock(stock : String) -> HttpResponse {
 
 ///|
 /// Handler: Get klines for stock
+///
+/// Returns K-line (candlestick) data for a specific stock.
+///
+/// **Request:**
+/// - Method: GET
+/// - Path: /api/stocks/{code}/klines
+/// - Parameters: code - Stock code (e.g., "sh.600000")
+///
+/// **Response:**
+/// - Status 200: JSON object with stock code, klines array, and count
+///
+/// **Example Response:**
+/// ```json
+/// {
+///   "stock": "sh.600000",
+///   "klines": [{"date": "2024-01-02", "close": 10.8}],
+///   "count": 1
+/// }
+/// ```
+///
+/// **Error Responses:**
+/// - Status 400: Invalid stock code format
 fn handle_get_klines(stock : String) -> HttpResponse {
   make_response(
     200,
@@ -171,6 +237,32 @@ fn handle_get_klines(stock : String) -> HttpResponse {
 
 ///|
 /// Handler: Get backtest result
+///
+/// Returns the result of a previously executed backtest.
+///
+/// **Request:**
+/// - Method: GET
+/// - Path: /api/backtest/{id}/result
+/// - Parameters: id - Backtest ID (e.g., "bt_001")
+///
+/// **Response:**
+/// - Status 200: JSON object with backtest_id, status, and result metrics
+///
+/// **Example Response:**
+/// ```json
+/// {
+///   "backtest_id": "bt_001",
+///   "status": "completed",
+///   "result": {
+///     "total_return": 0.1245,
+///     "max_drawdown": -0.0832
+///   }
+/// }
+/// ```
+///
+/// **Error Responses:**
+/// - Status 400: Invalid backtest ID format
+/// - Status 404: Backtest not found
 fn handle_get_backtest_result(id : String) -> HttpResponse {
   make_response(
     200,
@@ -180,6 +272,30 @@ fn handle_get_backtest_result(id : String) -> HttpResponse {
 
 ///|
 /// Handler: Get drawdown for stock
+///
+/// Returns drawdown analysis for a specific stock.
+///
+/// **Request:**
+/// - Method: GET
+/// - Path: /api/drawdown/{code}
+/// - Parameters: code - Stock code (e.g., "sh.600000")
+///
+/// **Response:**
+/// - Status 200: JSON object with stock code and drawdown metrics
+///
+/// **Example Response:**
+/// ```json
+/// {
+///   "stock": "sh.600000",
+///   "drawdown": {
+///     "current": -0.0245,
+///     "max": -0.1523
+///   }
+/// }
+/// ```
+///
+/// **Error Responses:**
+/// - Status 400: Invalid stock code format
 fn handle_get_drawdown(stock : String) -> HttpResponse {
   make_response(
     200,
@@ -189,6 +305,29 @@ fn handle_get_drawdown(stock : String) -> HttpResponse {
 
 ///|
 /// Handler: Get portfolio drawdown
+///
+/// Returns drawdown analysis for the entire portfolio.
+///
+/// **Request:**
+/// - Method: GET
+/// - Path: /api/portfolio/drawdown
+/// - Headers: None required
+///
+/// **Response:**
+/// - Status 200: JSON object with portfolio-level drawdown metrics
+///
+/// **Example Response:**
+/// ```json
+/// {
+///   "portfolio": {
+///     "total_drawdown": -0.0532,
+///     "max_stock_drawdown": -0.1523
+///   }
+/// }
+/// ```
+///
+/// **Error Responses:**
+/// - None currently defined
 fn handle_portfolio_drawdown() -> HttpResponse {
   make_response(
     200, "{\"portfolio\":{\"total_drawdown\":-0.0532,\"max_stock_drawdown\":-0.1523}}",

@@ -26,6 +26,7 @@ fn _parse_args(args : Array[String]) -> Command {
     "monitor" => _parse_monitor_args(args)
     "report" => _parse_report_args(args)
     "list-strategies" => Command::ListStrategies
+    "serve" => _parse_serve_args(args)
     _ => Command::Help
   }
 }
