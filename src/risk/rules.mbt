@@ -149,8 +149,11 @@ pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
 /// ```mbt check-disabled
 /// let portfolio = @portfolio.create_portfolio(100000.0)
 /// // ... add positions ...
+///
 /// let position_pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
+///
 /// let rule = stop_loss_rule("sh.600000", 0.10)
+///
 /// let result = rule.check_fn(0.0, 0.0, position_pnl_pct)
 /// ```
 pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
@@ -195,7 +198,9 @@ pub fn stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule {
 /// Examples:
 /// ```mbt check-disabled
 /// let portfolio = @portfolio.create_portfolio(100000.0)
+///
 /// let position_pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
+///
 /// let result = check_position_stop_loss("sh.600000", 0.10, position_pnl_pct)
 /// ```
 pub fn check_position_stop_loss(
@@ -206,7 +211,9 @@ pub fn check_position_stop_loss(
   if position_pnl_pct <= -max_loss_pct {
     RiskResult::{
       passed: false,
-      message: "Stop loss triggered for " + stock + ": " +
+      message: "Stop loss triggered for " +
+      stock +
+      ": " +
       Float::to_string(position_pnl_pct * 100.0) +
       "%",
       action: RiskAction::ReducePosition(max_loss_pct),
@@ -250,30 +257,34 @@ pub fn check_portfolio_stop_loss(
   for pos in portfolio.positions {
     let pnl_pct = pos.pnl_pct()
     if pnl_pct <= -max_loss_pct {
-      return Some((
-        pos.stock,
-        RiskResult::{
-          passed: false,
-          message: "Stop loss triggered: " +
-          Float::to_string(pnl_pct * 100.0) +
-          "%",
-          action: RiskAction::ReducePosition(max_loss_pct),
-        },
-      ))
+      return Some(
+        (
+          pos.stock,
+          RiskResult::{
+            passed: false,
+            message: "Stop loss triggered: " +
+            Float::to_string(pnl_pct * 100.0) +
+            "%",
+            action: RiskAction::ReducePosition(max_loss_pct),
+          },
+        ),
+      )
     }
   }
   None
 }
 
 ///|
-/// Single stock position limit rule
+/// Total position exposure limit rule
 ///
-/// Limits exposure to any single stock to prevent concentration risk.
-/// Note: This is a simplified version that checks total position ratio.
-/// A full implementation would check per-stock exposure.
+/// Limits the total position exposure (sum of all positions / total portfolio value).
+/// This is a portfolio-level exposure check, not per-stock.
+///
+/// For single-stock exposure checks, use `check_single_stock_exposure` instead,
+/// which requires direct access to the portfolio.
 ///
 /// Parameters:
-/// - max_pct: Maximum allowed single stock exposure (e.g., 0.20 for 20%)
+/// - max_pct: Maximum allowed total position exposure (e.g., 0.95 for 95%)
 ///
 /// Returns:
 /// - RiskRule that triggers ReducePosition when exceeded
@@ -281,20 +292,18 @@ pub fn check_portfolio_stop_loss(
 /// Examples:
 /// ```mbt check
 /// test {
-///   let rule = single_stock_limit_rule(0.20) // 20% max single stock
+///   let rule = total_exposure_limit_rule(0.95) // 95% max exposure
 /// }
 /// ```
-pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
+pub fn total_exposure_limit_rule(max_pct : Float) -> RiskRule {
   RiskRule::{
-    name: "Single Stock Limit Rule",
+    name: "Total Exposure Limit Rule",
     priority: 5,
     check_fn: fn(_, pos_ratio, _) {
-      // Note: This checks total position ratio
-      // Full implementation would check per-stock exposure
       if pos_ratio > max_pct {
         RiskResult::{
           passed: false,
-          message: "Single stock exposure exceeded: " +
+          message: "Total position exposure exceeded: " +
           Float::to_string(pos_ratio * 100.0) +
           "%",
           action: RiskAction::ReducePosition(pos_ratio - max_pct),
@@ -302,12 +311,91 @@ pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
       } else {
         RiskResult::{
           passed: true,
-          message: "Single stock exposure within limits",
+          message: "Total position exposure within limits",
           action: RiskAction::Allow,
         }
       }
     },
   }
+}
+
+///|
+/// Single stock position limit rule (DEPRECATED - use total_exposure_limit_rule)
+///
+/// This function is an alias for `total_exposure_limit_rule` for backwards compatibility.
+/// The name is misleading - it checks TOTAL position exposure, not per-stock exposure.
+///
+/// For proper single-stock exposure checks, use `check_single_stock_exposure` instead.
+///
+/// Parameters:
+/// - max_pct: Maximum allowed exposure (e.g., 0.20 for 20%)
+///
+/// Returns:
+/// - RiskRule (same as total_exposure_limit_rule)
+///
+/// Examples:
+/// ```mbt check
+/// test {
+///   let rule = single_stock_limit_rule(0.20) // 20% max exposure
+/// }
+/// ```
+pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
+  total_exposure_limit_rule(max_pct)
+}
+
+///|
+/// Check single stock exposure against a limit
+///
+/// This function directly checks if any single position exceeds the specified
+/// percentage of the total portfolio value.
+///
+/// Parameters:
+/// - portfolio: Portfolio to check
+/// - max_pct: Maximum allowed single stock exposure (e.g., 0.20 for 20%)
+///
+/// Returns:
+/// - Some(stock_code, RiskResult) if any position exceeds the limit
+/// - None if all positions are within limits
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = @portfolio.create_portfolio(100000.0)
+/// // ... add positions ...
+/// match check_single_stock_exposure(portfolio, 0.20) {
+///   Some((stock, result)) => inspect("Exceeded: " + stock)
+///   None => inspect("All positions within limits")
+/// }
+/// ```
+pub fn check_single_stock_exposure(
+  portfolio : @portfolio.Portfolio,
+  max_pct : Float,
+) -> (@data.StockCode, RiskResult)? {
+  let total_value = portfolio.total_value()
+  if total_value <= 0.0 {
+    return None
+  }
+
+  for pos in portfolio.positions {
+    let position_value = pos.value()
+    let exposure = position_value / total_value
+    if exposure > max_pct {
+      return Some(
+        (
+          pos.stock,
+          RiskResult::{
+            passed: false,
+            message: "Single stock exposure exceeded for " +
+            pos.stock +
+            ": " +
+            Float::to_string(exposure * 100.0) +
+            "%",
+            action: RiskAction::ReducePosition(exposure - max_pct),
+          },
+        ),
+      )
+    }
+  }
+  None
 }
 
 ///|

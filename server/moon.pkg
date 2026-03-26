@@ -1,8 +1,0 @@
-import {
-  "username/alpha/src/data" @data,
-  "username/alpha/src/drawdown" @drawdown,
-  "username/alpha/src/strategy" @strategy,
-  "username/alpha/src/risk" @risk,
-  "username/alpha/src/portfolio" @portfolio,
-  "username/alpha/src/backtest" @backtest,
-}

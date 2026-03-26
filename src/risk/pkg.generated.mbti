@@ -1,7 +1,17 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "username/alpha/src/risk"
 
+import {
+  "username/alpha/src/portfolio",
+}
+
 // Values
+pub fn check_portfolio_stop_loss(@portfolio.Portfolio, Float) -> (String, RiskResult)?
+
+pub fn check_position_stop_loss(String, Float, Float) -> RiskResult
+
+pub fn check_single_stock_exposure(@portfolio.Portfolio, Float) -> (String, RiskResult)?
+
 pub fn create_risk_engine() -> RiskEngine
 
 pub fn daily_loss_limit_rule(Float) -> RiskRule
@@ -29,6 +39,8 @@ pub fn single_stock_limit_rule(Float) -> RiskRule
 pub fn stop_loss_rule(String, Float) -> RiskRule
 
 pub fn take_profit_rule(Float) -> RiskRule
+
+pub fn total_exposure_limit_rule(Float) -> RiskRule
 
 // Errors
 

@@ -249,7 +249,7 @@ test "text report generation snapshot" {
     },
   }
 
-  let config = @backtest.default_report_config()
+  let _ = @backtest.default_report_config()
   let text_config = @backtest.ReportConfig::{
     title: "Test Report",
     author: "",
@@ -579,18 +579,28 @@ test "integration: BacktestEngine with risk engine integration snapshot" {
 test "integration: Full backtest run with hold strategy snapshot" {
   // Create sample K-line data
   let klines = [
-    @data.KLine::daily("sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01),
-    @data.KLine::daily("sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011),
-    @data.KLine::daily("sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012),
-    @data.KLine::daily("sh.600000", "2024-01-04", 10.8, 11.2, 10.5, 11.0, 1300000.0, 14300000.0, 0.013),
-    @data.KLine::daily("sh.600000", "2024-01-05", 11.0, 11.5, 10.8, 11.2, 1400000.0, 15680000.0, 0.014),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-04", 10.8, 11.2, 10.5, 11.0, 1300000.0, 14300000.0, 0.013,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-05", 11.0, 11.5, 10.8, 11.2, 1400000.0, 15680000.0, 0.014,
+    ),
   ]
 
   // Create a simple hold strategy
   let hold_strategy = @strategy.Strategy::{
     name: "Hold Strategy",
     on_init: fn(_) {  },
-    on_bar: fn(kline, ctx, close_history) {
+    on_bar: fn(kline, _, _) {
       @strategy.Signal::{
         stock: kline.code,
         action: @strategy.Action::Hold,
@@ -616,7 +626,7 @@ test "integration: Full backtest run with hold strategy snapshot" {
 test "integration: calculate_returns helper function snapshot" {
   // This tests the internal calculate_returns function indirectly
   // by verifying equity curve processing
-  let equities = [100000.0, 102000.0, 98000.0, 105000.0, 110000.0]
+  let _equities = [100000.0, 102000.0, 98000.0, 105000.0, 110000.0]
 
   // Manually calculate expected returns
   // Day 1: (102000 - 100000) / 100000 = 0.02
@@ -743,9 +753,12 @@ test "integration: BacktestResult with full equity curve snapshot" {
 
   inspect(report.contains("Integration Test Report"), content="true")
   inspect(report.contains("102000"), content="true")
-  inspect(report.contains("2.00%"), content=(
-    #|false
-  ))
+  inspect(
+    report.contains("2.00%"),
+    content=(
+      #|false
+    ),
+  )
 }
 
 ///|
@@ -829,16 +842,36 @@ test "integration: save_report_to_file error handling snapshot" {
 test "end-to-end: complete backtest workflow with MA strategy" {
   // Step 1: Create sample K-line data (simulating loaded data)
   let klines = [
-    @data.KLine::daily("sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01),
-    @data.KLine::daily("sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011),
-    @data.KLine::daily("sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012),
-    @data.KLine::daily("sh.600000", "2024-01-04", 10.8, 11.2, 10.5, 11.0, 1300000.0, 14300000.0, 0.013),
-    @data.KLine::daily("sh.600000", "2024-01-05", 11.0, 11.5, 10.8, 11.2, 1400000.0, 15680000.0, 0.014),
-    @data.KLine::daily("sh.600000", "2024-01-06", 11.2, 11.8, 11.0, 11.5, 1500000.0, 17250000.0, 0.015),
-    @data.KLine::daily("sh.600000", "2024-01-07", 11.5, 12.0, 11.2, 11.8, 1600000.0, 18960000.0, 0.016),
-    @data.KLine::daily("sh.600000", "2024-01-08", 11.8, 12.2, 11.5, 12.0, 1700000.0, 20400000.0, 0.017),
-    @data.KLine::daily("sh.600000", "2024-01-09", 12.0, 12.5, 11.8, 12.2, 1800000.0, 21960000.0, 0.018),
-    @data.KLine::daily("sh.600000", "2024-01-10", 12.2, 12.8, 12.0, 12.5, 1900000.0, 23750000.0, 0.019),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-04", 10.8, 11.2, 10.5, 11.0, 1300000.0, 14300000.0, 0.013,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-05", 11.0, 11.5, 10.8, 11.2, 1400000.0, 15680000.0, 0.014,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-06", 11.2, 11.8, 11.0, 11.5, 1500000.0, 17250000.0, 0.015,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-07", 11.5, 12.0, 11.2, 11.8, 1600000.0, 18960000.0, 0.016,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-08", 11.8, 12.2, 11.5, 12.0, 1700000.0, 20400000.0, 0.017,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-09", 12.0, 12.5, 11.8, 12.2, 1800000.0, 21960000.0, 0.018,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-10", 12.2, 12.8, 12.0, 12.5, 1900000.0, 23750000.0, 0.019,
+    ),
   ]
 
   // Step 2: Configure backtest
@@ -895,7 +928,7 @@ test "end-to-end: complete backtest workflow with MA strategy" {
 
   // Step 5: Verify results
   inspect(result.initial_capital, content="100000")
-  inspect(result.total_trades, content="0")  // No trades due to risk rules
+  inspect(result.total_trades, content="0") // No trades due to risk rules
 
   // Step 6: Generate report
   let report_config = @backtest.ReportConfig::{
@@ -956,13 +989,15 @@ test "end-to-end: drawdown monitoring workflow" {
     Float::from_double(120000.0),
   ]
   let dates = [
-    "2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05",
-    "2024-01-06", "2024-01-07",
+    "2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-06",
+    "2024-01-07",
   ]
 
   // Step 2: Calculate max drawdown
   let max_dd = @drawdown.calculate_max_drawdown(equity_values)
-  let max_dd_detailed = @drawdown.calculate_max_drawdown_detailed(equity_values, dates)
+  let max_dd_detailed = @drawdown.calculate_max_drawdown_detailed(
+    equity_values, dates,
+  )
 
   // Step 3: Verify drawdown calculation
   // Peak = 110000, Trough = 102000, DD = (102000-110000)/110000 = -0.0727...
@@ -972,8 +1007,8 @@ test "end-to-end: drawdown monitoring workflow" {
   // Step 4: Verify detailed information
   match max_dd_detailed {
     Some(info) => {
-      inspect(info.peak, content="120000")  // Final peak
-      inspect(info.recovered, content="true")  // Recovered to new high
+      inspect(info.peak, content="120000") // Final peak
+      inspect(info.recovered, content="true") // Recovered to new high
     }
     None => fail("Expected Some result")
   }
@@ -995,9 +1030,9 @@ test "end-to-end: portfolio P&L tracking workflow" {
   // Step 4: Update prices (simulate market movement)
   let get_price = fn(code) -> Float {
     if code == "sh.600000" {
-      Float::from_double(12.0)  // +20%
+      Float::from_double(12.0) // +20%
     } else if code == "sz.000001" {
-      Float::from_double(18.0)  // -10%
+      Float::from_double(18.0) // -10%
     } else {
       Float::from_double(0.0)
     }
@@ -1057,9 +1092,15 @@ test "end-to-end: strategy signal to execution workflow" {
 test "end-to-end: data validation to backtest workflow" {
   // Step 1: Create K-line data with validation requirements
   let klines = [
-    @data.KLine::daily("sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01),
-    @data.KLine::daily("sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011),
-    @data.KLine::daily("sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 10.0, 10.5, 9.8, 10.2, 1000000.0, 10200000.0, 0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 10.2, 10.8, 10.0, 10.5, 1100000.0, 11550000.0, 0.011,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 10.5, 11.0, 10.3, 10.8, 1200000.0, 12960000.0, 0.012,
+    ),
   ]
 
   // Step 2: Validate data integrity
@@ -1154,9 +1195,12 @@ test "end-to-end: report generation complete workflow" {
   let html_report = @backtest.generate_report(result, html_config)
   inspect(html_report.contains("<!DOCTYPE html>"), content="true")
   inspect(html_report.contains("Backtest Report"), content="true")
-  inspect(html_report.contains("5.00%"), content=(
-    #|false
-  ))
+  inspect(
+    html_report.contains("5.00%"),
+    content=(
+      #|false
+    ),
+  )
 
   // Step 3: Generate text report
   let text_config = @backtest.ReportConfig::{

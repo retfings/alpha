@@ -100,7 +100,9 @@ test "rsi - range check (0-100)" {
 
 ///|
 test "macd - basic calculation" {
-  let prices : Array[Float] = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0]
+  let prices : Array[Float] = [
+    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
+  ]
   let (macd_line, signal_line, histogram) = macd(prices, 3, 5, 2)
   assert_true(macd_line.length() == 9)
   assert_true(signal_line.length() == 9)
@@ -120,7 +122,9 @@ test "macd - insufficient data" {
 
 ///|
 test "bollinger_bands - basic calculation" {
-  let prices : Array[Float] = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0]
+  let prices : Array[Float] = [
+    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
+  ]
   let (upper, middle, lower) = bollinger_bands(prices, 5, 2.0)
   assert_true(upper.length() == 9)
   assert_true(middle.length() == 9)
@@ -135,7 +139,9 @@ test "bollinger_bands - band width increases with volatility" {
   // Low volatility
   let prices_low_vol : Array[Float] = [10.0, 10.1, 10.0, 10.1, 10.0, 10.1, 10.0]
   // High volatility
-  let prices_high_vol : Array[Float] = [10.0, 15.0, 10.0, 15.0, 10.0, 15.0, 10.0]
+  let prices_high_vol : Array[Float] = [
+    10.0, 15.0, 10.0, 15.0, 10.0, 15.0, 10.0,
+  ]
   let (upper1, _, lower1) = bollinger_bands(prices_low_vol, 5, 2.0)
   let (upper2, _, lower2) = bollinger_bands(prices_high_vol, 5, 2.0)
   // Band width for high vol should be larger
@@ -157,11 +163,21 @@ test "bollinger_bands - insufficient data" {
 ///|
 test "atr - basic calculation" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05,
+    ),
   ]
   let result = atr(klines, 3)
   assert_true(result.length() == 5)
@@ -175,8 +191,12 @@ test "atr - basic calculation" {
 ///|
 test "atr - insufficient data" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
   ]
   let result = atr(klines, 5)
   assert_true(result.length() == 2)
@@ -210,12 +230,18 @@ test "rsi - constant prices" {
   let result = rsi(prices, 3)
   // RSI with no price changes: when avg_loss is 0, RSI = 100
   // This is because there are no downward moves
-  assert_true(result[6] == 100.0 || result[6] == 0.0 || (result[6] > 40.0 && result[6] < 60.0))
+  assert_true(
+    result[6] == 100.0 ||
+    result[6] == 0.0 ||
+    (result[6] > 40.0 && result[6] < 60.0),
+  )
 }
 
 ///|
 test "macd - snapshot test" {
-  let prices : Array[Float] = [100.0, 102.0, 101.0, 103.0, 105.0, 104.0, 106.0, 108.0, 107.0, 110.0]
+  let prices : Array[Float] = [
+    100.0, 102.0, 101.0, 103.0, 105.0, 104.0, 106.0, 108.0, 107.0, 110.0,
+  ]
   let (macd_line, signal_line, histogram) = macd(prices, 3, 5, 2)
   // Just verify lengths and that we get some values
   assert_true(macd_line.length() == 10)
@@ -225,7 +251,9 @@ test "macd - snapshot test" {
 
 ///|
 test "bollinger_bands - snapshot test" {
-  let prices : Array[Float] = [50.0, 52.0, 48.0, 51.0, 53.0, 49.0, 52.0, 54.0, 50.0, 55.0]
+  let prices : Array[Float] = [
+    50.0, 52.0, 48.0, 51.0, 53.0, 49.0, 52.0, 54.0, 50.0, 55.0,
+  ]
   let (upper, middle, lower) = bollinger_bands(prices, 5, 2.0)
   assert_true(upper.length() == 10)
   assert_true(middle.length() == 10)
@@ -242,12 +270,24 @@ test "bollinger_bands - snapshot test" {
 ///|
 test "kdj - basic calculation" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-06", 12.5, 13.5, 12.0, 13.0, 1000000.0, 13000000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 12.5, 13.5, 12.0, 13.0, 1000000.0, 13000000.0, 0.05,
+    ),
   ]
   let (k_line, d_line, j_line) = kdj(klines, 3, 3, 3)
   assert_true(k_line.length() == 6)
@@ -260,8 +300,12 @@ test "kdj - basic calculation" {
 ///|
 test "kdj - insufficient data" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
   ]
   let (k_line, d_line, j_line) = kdj(klines, 5, 3, 3)
   assert_true(k_line.length() == 2)
@@ -273,11 +317,21 @@ test "kdj - insufficient data" {
 ///|
 test "cci - basic calculation" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05,
+    ),
   ]
   let result = cci(klines, 3)
   assert_true(result.length() == 5)
@@ -289,8 +343,12 @@ test "cci - basic calculation" {
 ///|
 test "cci - insufficient data" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
   ]
   let result = cci(klines, 5)
   assert_true(result.length() == 2)
@@ -301,11 +359,21 @@ test "cci - insufficient data" {
 ///|
 test "williams_r - basic calculation" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1000000.0, 12000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1000000.0, 12500000.0, 0.05,
+    ),
   ]
   let result = williams_r(klines, 3)
   assert_true(result.length() == 5)
@@ -319,8 +387,12 @@ test "williams_r - basic calculation" {
 ///|
 test "williams_r - insufficient data" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
   ]
   let result = williams_r(klines, 5)
   assert_true(result.length() == 2)
@@ -331,9 +403,15 @@ test "williams_r - insufficient data" {
 ///|
 test "obv - basic calculation" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.0, 1000000.0, 10000000.0, 0.05),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.0, 11.0, 9.5, 11.0, 2000000.0, 22000000.0, 0.05), // Up day
-    @data.KLine::daily("sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 10.5, 1500000.0, 15750000.0, 0.05), // Down day
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.0, 1000000.0, 10000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.0, 11.0, 9.5, 11.0, 2000000.0, 22000000.0, 0.05,
+    ), // Up day
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 10.5, 1500000.0, 15750000.0, 0.05,
+    ), // Down day
   ]
   let result = obv(klines)
   assert_true(result.length() == 3)
@@ -355,7 +433,9 @@ test "obv - empty klines" {
 ///|
 test "obv - single kline" {
   let klines = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.0, 1000000.0, 10000000.0, 0.05),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.0, 1000000.0, 10000000.0, 0.05,
+    ),
   ]
   let result = obv(klines)
   assert_true(result.length() == 1)

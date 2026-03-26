@@ -10,6 +10,7 @@ pub enum Command {
   Help
   Analyze(String, String)
   Backtest(String, String, String, String)
+  Monitor(String)
   Report(String)
   ListStrategies
 }

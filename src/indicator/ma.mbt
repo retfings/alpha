@@ -406,7 +406,8 @@ pub fn cci(klines : Array[@data.KLine], period : Int) -> Array[Float] {
       let typical_prices : Array[Float] = []
       let mut j = i - period + 1
       while j <= i {
-        let tp = (klines[j].high + klines[j].low + klines[j].close) / Float::from_double(3.0)
+        let tp = (klines[j].high + klines[j].low + klines[j].close) /
+          Float::from_double(3.0)
         typical_prices.push(tp)
         j = j + 1
       }
@@ -426,7 +427,8 @@ pub fn cci(klines : Array[@data.KLine], period : Int) -> Array[Float] {
       let mean_deviation = deviation_sum / Float::from_int(period)
 
       // Current typical price
-      let current_tp = (klines[i].high + klines[i].low + klines[i].close) / Float::from_double(3.0)
+      let current_tp = (klines[i].high + klines[i].low + klines[i].close) /
+        Float::from_double(3.0)
 
       // CCI = (TP - SMA) / (0.015 * Mean Deviation)
       if mean_deviation == zero {

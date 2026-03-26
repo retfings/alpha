@@ -174,7 +174,6 @@ test "Portfolio buy add to existing position snapshot" {
     portfolio.positions[0].avg_cost,
     content=(
       #|10.375
-
     ),
   )
 }
@@ -225,9 +224,12 @@ test "Portfolio sell full position snapshot" {
   let success = portfolio.sell("sh.600000", 500.0, 12.0)
   inspect(success, content="true")
   inspect(portfolio.positions.length(), content="0")
-  inspect(portfolio.cash, content=(
-    #|101000
-  ))
+  inspect(
+    portfolio.cash,
+    content=(
+      #|101000
+    ),
+  )
 }
 
 ///|
@@ -257,12 +259,18 @@ test "Portfolio P&L after profitable trade snapshot" {
 
   let pnl = portfolio.total_pnl()
   let pnl_pct = portfolio.total_pnl_pct()
-  inspect(pnl, content=(
-    #|1000
-  ))
-  inspect(pnl_pct, content=(
-    #|0.009999999776482582
-  ))
+  inspect(
+    pnl,
+    content=(
+      #|1000
+    ),
+  )
+  inspect(
+    pnl_pct,
+    content=(
+      #|0.009999999776482582
+    ),
+  )
 }
 
 ///|
@@ -342,12 +350,18 @@ test "Portfolio multiple positions complex scenario snapshot" {
 
   let final_value = portfolio.total_value()
   let final_pnl = portfolio.total_pnl()
-  inspect(final_value, content=(
-    #|202900
-  ))
-  inspect(final_pnl, content=(
-    #|2900
-  ))
+  inspect(
+    final_value,
+    content=(
+      #|202900
+    ),
+  )
+  inspect(
+    final_pnl,
+    content=(
+      #|2900
+    ),
+  )
 }
 
 ///|
@@ -553,20 +567,16 @@ test "Portfolio calculate_daily_pnl snapshot" {
   let portfolio = @portfolio.create_portfolio(100000.0)
   ignore(portfolio.buy("sh.600000", 500.0, 10.0))
 
-  let get_price = fn(code) -> Float {
-    if code == "sh.600000" {
-      Float::from_double(12.0)
-    } else {
-      Float::from_double(10.0)
-    }
-  }
-  portfolio.update_prices(get_price)
-
+  // Previous day position value: 500 * 10 = 5000
   let prev_values = Map::new()
+  prev_values.set("sh.600000", Float::from_double(5000.0))
+
+  // Current price: 12.0, current value: 500 * 12 = 6000
   let current_prices = Map::new()
+  current_prices.set("sh.600000", Float::from_double(12.0))
+
   let daily_pnl = portfolio.calculate_daily_pnl(prev_values, current_prices)
-  // Simplified implementation returns position P&L
-  // (12-10)*500 = 1000
+  // Daily P&L = current value - previous value = 6000 - 5000 = 1000
   inspect(daily_pnl > Float::from_double(999.0), content="true")
   inspect(daily_pnl < Float::from_double(1001.0), content="true")
 }

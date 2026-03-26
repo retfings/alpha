@@ -6,4 +6,5 @@ import {
   "username/alpha/src/drawdown" @drawdown,
   "username/alpha/src/indicator" @indicator,
   "moonbitlang/core/json",
+  "moonbitlang/core/math",
 }

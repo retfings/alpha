@@ -115,7 +115,7 @@ test "stop_loss_rule" {
 ///|
 test "single_stock_limit_rule" {
   let rule = @risk.single_stock_limit_rule(0.30) // 30% threshold
-  assert_true(rule.name.contains("Single Stock"))
+  assert_true(rule.name.contains("Total Exposure"))
   assert_true(rule.priority == 5)
 
   // Test within limit

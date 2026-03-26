@@ -96,7 +96,7 @@ test "stop_loss_rule snapshot" {
 ///|
 test "single_stock_limit_rule snapshot" {
   let rule = @risk.single_stock_limit_rule(0.30)
-  inspect(rule.name, content="Single Stock Limit Rule")
+  inspect(rule.name, content="Total Exposure Limit Rule")
   inspect(rule.priority, content="5")
 
   // Test within limit
@@ -364,9 +364,18 @@ test "max_drawdown_rule - various thresholds snapshot" {
 
   // Test same drawdown against different thresholds
   let dd : Float = -0.10
-  inspect((rule5.check_fn)(dd, (0.0 : Float), (0.0 : Float)).passed, content="false")
-  inspect((rule15.check_fn)(dd, (0.0 : Float), (0.0 : Float)).passed, content="true")
-  inspect((rule25.check_fn)(dd, (0.0 : Float), (0.0 : Float)).passed, content="true")
+  inspect(
+    (rule5.check_fn)(dd, (0.0 : Float), (0.0 : Float)).passed,
+    content="false",
+  )
+  inspect(
+    (rule15.check_fn)(dd, (0.0 : Float), (0.0 : Float)).passed,
+    content="true",
+  )
+  inspect(
+    (rule25.check_fn)(dd, (0.0 : Float), (0.0 : Float)).passed,
+    content="true",
+  )
 }
 
 ///|
@@ -377,9 +386,18 @@ test "position_limit_rule - various thresholds snapshot" {
 
   // Test same position against different thresholds
   let pos : Float = 0.60
-  inspect((rule50.check_fn)((0.0 : Float), pos, (0.0 : Float)).passed, content="false")
-  inspect((rule75.check_fn)((0.0 : Float), pos, (0.0 : Float)).passed, content="true")
-  inspect((rule100.check_fn)((0.0 : Float), pos, (0.0 : Float)).passed, content="true")
+  inspect(
+    (rule50.check_fn)((0.0 : Float), pos, (0.0 : Float)).passed,
+    content="false",
+  )
+  inspect(
+    (rule75.check_fn)((0.0 : Float), pos, (0.0 : Float)).passed,
+    content="true",
+  )
+  inspect(
+    (rule100.check_fn)((0.0 : Float), pos, (0.0 : Float)).passed,
+    content="true",
+  )
 }
 
 ///|
@@ -389,8 +407,14 @@ test "daily_loss_limit_rule - various thresholds snapshot" {
 
   // Test same loss against different thresholds
   let loss : Float = -0.05
-  inspect((rule3.check_fn)((0.0 : Float), (0.0 : Float), loss).passed, content="false")
-  inspect((rule7.check_fn)((0.0 : Float), (0.0 : Float), loss).passed, content="true")
+  inspect(
+    (rule3.check_fn)((0.0 : Float), (0.0 : Float), loss).passed,
+    content="false",
+  )
+  inspect(
+    (rule7.check_fn)((0.0 : Float), (0.0 : Float), loss).passed,
+    content="true",
+  )
 }
 
 ///|
@@ -398,7 +422,7 @@ test "take_profit_rule - action is ReducePosition snapshot" {
   let rule = @risk.take_profit_rule(0.10)
   // 15% profit should trigger take profit
   let result = (rule.check_fn)(0.0, 0.0, -0.15)
-  inspect(result.passed, content="true")  // Take profit is a suggestion, not a block
+  inspect(result.passed, content="true") // Take profit is a suggestion, not a block
   inspect(result.action, content="ReducePosition(0.5)")
 }
 
@@ -426,7 +450,7 @@ test "RiskEngine violations accumulation snapshot" {
 
   // Engine is stopped, second check returns stopped but doesn't add violation
   ignore(engine.check(0.0, 0.0, 0.0))
-  inspect(engine.violations.length(), content="1")  // Still 1, stopped checks don't add
+  inspect(engine.violations.length(), content="1") // Still 1, stopped checks don't add
 
   // Check violation message
   inspect(engine.violations[0].contains("Max Drawdown"), content="true")
@@ -436,9 +460,9 @@ test "RiskEngine violations accumulation snapshot" {
 test "RiskEngine rule evaluation order snapshot" {
   let engine = @risk.create_risk_engine()
   // Rules are evaluated in the order they are added (not by priority)
-  engine.add_rule(@risk.daily_loss_limit_rule(0.05))  // priority 3, evaluated first
-  engine.add_rule(@risk.position_limit_rule(0.80))  // priority 2, evaluated second
-  engine.add_rule(@risk.max_drawdown_rule(0.10))  // priority 1, evaluated third
+  engine.add_rule(@risk.daily_loss_limit_rule(0.05)) // priority 3, evaluated first
+  engine.add_rule(@risk.position_limit_rule(0.80)) // priority 2, evaluated second
+  engine.add_rule(@risk.max_drawdown_rule(0.10)) // priority 1, evaluated third
 
   // All conditions are bad, but first rule (daily_loss) should fail first
   let result = engine.check(-0.15, 0.90, -0.10)
@@ -455,7 +479,10 @@ test "RiskResult pass and fail helpers snapshot" {
   inspect(pass_result.message, content="All good")
   inspect(pass_result.action, content="Allow")
 
-  let fail_result = @risk.risk_result_fail("Problem", @risk.risk_action_reject())
+  let fail_result = @risk.risk_result_fail(
+    "Problem",
+    @risk.risk_action_reject(),
+  )
   inspect(fail_result.passed, content="false")
   inspect(fail_result.message, content="Problem")
   inspect(fail_result.action, content="Reject")

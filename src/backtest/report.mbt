@@ -245,12 +245,22 @@ pub fn print_report(
 }
 
 ///|
-/// Save report to file (placeholder)
+/// Save report to file
+///
+/// Parameters:
+/// - result: Backtest result to save
+/// - path: File path to save to
+/// - format: Report format (HTML or Text)
+///
+/// Returns:
+/// - Ok(()) on success
+/// - Err(String) with error message on failure
 pub fn save_report_to_file(
   result : BacktestResult,
   path : String,
   format? : ReportFormat = ReportFormat::Html,
 ) -> Result[Unit, String] {
+  // File writing not yet implemented - placeholder for future FFI
   ignore(result)
   ignore(path)
   ignore(format)

@@ -29,7 +29,9 @@ test "DrawdownMonitor::update - value decline triggers drawdown" {
   monitor.update(95000.0, "2023-01-02")
   assert_true(monitor.peak_value == 100000.0)
   assert_true(monitor.current_value == 95000.0)
-  assert_true(monitor.current_drawdown < -0.04 && monitor.current_drawdown > -0.06)
+  assert_true(
+    monitor.current_drawdown < -0.04 && monitor.current_drawdown > -0.06,
+  )
 }
 
 ///|
@@ -47,7 +49,7 @@ test "DrawdownMonitor::update - value increase updates peak" {
 test "DrawdownMonitor::update - warning alert triggered" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(88000.0, "2023-01-02")  // 12% drawdown
+  monitor.update(88000.0, "2023-01-02") // 12% drawdown
   assert_true(monitor.alert_triggered == true)
   assert_true(monitor.last_alert_level == "WARNING")
 }
@@ -56,7 +58,7 @@ test "DrawdownMonitor::update - warning alert triggered" {
 test "DrawdownMonitor::update - critical alert triggered" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(75000.0, "2023-01-02")  // 25% drawdown
+  monitor.update(75000.0, "2023-01-02") // 25% drawdown
   assert_true(monitor.alert_triggered == true)
   assert_true(monitor.last_alert_level == "CRITICAL")
 }
@@ -65,12 +67,12 @@ test "DrawdownMonitor::update - critical alert triggered" {
 test "DrawdownMonitor::update - alert status changes with recovery" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(88000.0, "2023-01-02")  // Warning triggered (12% drawdown)
+  monitor.update(88000.0, "2023-01-02") // Warning triggered (12% drawdown)
   assert_true(monitor.alert_triggered == true)
   assert_true(monitor.last_alert_level == "WARNING")
 
-  monitor.update(92000.0, "2023-01-03")  // 8% drawdown, above warning threshold (-0.08 > -0.1)
-  assert_true(monitor.alert_triggered == false)  // Alert cleared
+  monitor.update(92000.0, "2023-01-03") // 8% drawdown, above warning threshold (-0.08 > -0.1)
+  assert_true(monitor.alert_triggered == false) // Alert cleared
   assert_true(monitor.last_alert_level == "")
 }
 
@@ -78,8 +80,8 @@ test "DrawdownMonitor::update - alert status changes with recovery" {
 test "DrawdownMonitor::update - full recovery resets alert" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(88000.0, "2023-01-02")  // Warning triggered
-  monitor.update(105000.0, "2023-01-03")  // New peak
+  monitor.update(88000.0, "2023-01-02") // Warning triggered
+  monitor.update(105000.0, "2023-01-03") // New peak
   assert_true(monitor.alert_triggered == false)
   assert_true(monitor.last_alert_level == "")
   assert_true(monitor.peak_value == 105000.0)
@@ -153,7 +155,7 @@ test "DrawdownMonitor::get_alert_level - critical level" {
 test "DrawdownMonitor::reset - clears all state" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(75000.0, "2023-01-02")  // Critical alert
+  monitor.update(75000.0, "2023-01-02") // Critical alert
   monitor.reset()
   assert_true(monitor.peak_value == 0.0)
   assert_true(monitor.peak_date == "")
@@ -177,7 +179,7 @@ test "DrawdownMonitor::reset - allows fresh start" {
 test "DrawdownMonitor - boundary: exactly at warning threshold" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(90000.0, "2023-01-02")  // Exactly 10% drawdown
+  monitor.update(90000.0, "2023-01-02") // Exactly 10% drawdown
   assert_true(monitor.alert_triggered == true)
   assert_true(monitor.last_alert_level == "WARNING")
 }
@@ -186,7 +188,7 @@ test "DrawdownMonitor - boundary: exactly at warning threshold" {
 test "DrawdownMonitor - boundary: exactly at critical threshold" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(80000.0, "2023-01-02")  // Exactly 20% drawdown
+  monitor.update(80000.0, "2023-01-02") // Exactly 20% drawdown
   assert_true(monitor.alert_triggered == true)
   assert_true(monitor.last_alert_level == "CRITICAL")
 }
@@ -195,11 +197,11 @@ test "DrawdownMonitor - boundary: exactly at critical threshold" {
 test "DrawdownMonitor - gradual decline with multiple updates" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(98000.0, "2023-01-02")  // 2%
-  monitor.update(95000.0, "2023-01-03")  // 5%
-  monitor.update(92000.0, "2023-01-04")  // 8%
-  monitor.update(89000.0, "2023-01-05")  // 11% - warning
-  monitor.update(78000.0, "2023-01-06")  // 22% - critical
+  monitor.update(98000.0, "2023-01-02") // 2%
+  monitor.update(95000.0, "2023-01-03") // 5%
+  monitor.update(92000.0, "2023-01-04") // 8%
+  monitor.update(89000.0, "2023-01-05") // 11% - warning
+  monitor.update(78000.0, "2023-01-06") // 22% - critical
 
   assert_true(monitor.alert_triggered == true)
   assert_true(monitor.last_alert_level == "CRITICAL")
@@ -210,9 +212,9 @@ test "DrawdownMonitor - gradual decline with multiple updates" {
 test "DrawdownMonitor - volatile market with new peak" {
   let monitor = @drawdown.create_monitor(-0.1, -0.2)
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(95000.0, "2023-01-02")  // -5%
-  monitor.update(105000.0, "2023-01-03")  // New peak
-  monitor.update(100000.0, "2023-01-04")  // -4.76% from new peak
+  monitor.update(95000.0, "2023-01-02") // -5%
+  monitor.update(105000.0, "2023-01-03") // New peak
+  monitor.update(100000.0, "2023-01-04") // -4.76% from new peak
 
   assert_true(monitor.peak_value == 105000.0)
   assert_true(monitor.peak_date == "2023-01-03")
@@ -221,9 +223,9 @@ test "DrawdownMonitor - volatile market with new peak" {
 
 ///|
 test "DrawdownMonitor - custom thresholds" {
-  let monitor = @drawdown.create_monitor(-0.05, -0.15)  // Stricter thresholds
+  let monitor = @drawdown.create_monitor(-0.05, -0.15) // Stricter thresholds
   monitor.update(100000.0, "2023-01-01")
-  monitor.update(93000.0, "2023-01-02")  // 7% - should trigger warning with custom threshold
+  monitor.update(93000.0, "2023-01-02") // 7% - should trigger warning with custom threshold
 
   assert_true(monitor.alert_triggered == true)
   assert_true(monitor.last_alert_level == "WARNING")

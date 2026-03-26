@@ -242,10 +242,12 @@ test "default_alert_config - values" {
 
 ///|
 test "calculate_max_drawdown_detailed - basic case" {
-  let values : Array[Float] = [100.0, 110.0, 120.0, 110.0, 100.0, 90.0, 95.0, 100.0]
+  let values : Array[Float] = [
+    100.0, 110.0, 120.0, 110.0, 100.0, 90.0, 95.0, 100.0,
+  ]
   let dates : Array[String] = [
-    "2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04",
-    "2023-01-05", "2023-01-06", "2023-01-07", "2023-01-08",
+    "2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05", "2023-01-06",
+    "2023-01-07", "2023-01-08",
   ]
   let result = @drawdown.calculate_max_drawdown_detailed(values, dates)
   match result {
@@ -280,8 +282,7 @@ test "calculate_max_drawdown_detailed - empty arrays" {
 test "calculate_max_drawdown_detailed - recovered drawdown" {
   let values : Array[Float] = [100.0, 110.0, 120.0, 110.0, 100.0, 130.0]
   let dates : Array[String] = [
-    "2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05",
-    "2023-01-06",
+    "2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05", "2023-01-06",
   ]
   let result = @drawdown.calculate_max_drawdown_detailed(values, dates)
   match result {
@@ -289,8 +290,8 @@ test "calculate_max_drawdown_detailed - recovered drawdown" {
       // When final value exceeds all previous peaks, peak becomes the final value
       // and recovered is true
       assert_true(info.recovered == true)
-      assert_true(info.peak > 129.0 && info.peak < 131.0)  // Final value 130
-      assert_true(info.trough > 99.0 && info.trough < 101.0)  // Trough was 100
+      assert_true(info.peak > 129.0 && info.peak < 131.0) // Final value 130
+      assert_true(info.trough > 99.0 && info.trough < 101.0) // Trough was 100
     }
     None => fail("Expected Some result")
   }
@@ -299,10 +300,18 @@ test "calculate_max_drawdown_detailed - recovered drawdown" {
 ///|
 test "calculate_drawdown_from_klines - snapshot" {
   let klines : Array[@data.KLine] = [
-    @data.KLine::daily("sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.0, 1000.0, 10000.0, 0.01),
-    @data.KLine::daily("sh.600000", "2023-01-02", 10.0, 11.0, 10.0, 11.0, 1100.0, 12100.0, 0.011),
-    @data.KLine::daily("sh.600000", "2023-01-03", 11.0, 11.5, 10.5, 10.5, 1200.0, 12600.0, 0.012),
-    @data.KLine::daily("sh.600000", "2023-01-04", 10.5, 11.0, 9.0, 9.0, 1300.0, 11700.0, 0.013),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.0, 1000.0, 10000.0, 0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.0, 11.0, 10.0, 11.0, 1100.0, 12100.0, 0.011,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 11.5, 10.5, 10.5, 1200.0, 12600.0, 0.012,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.5, 11.0, 9.0, 9.0, 1300.0, 11700.0, 0.013,
+    ),
   ]
   let max_dd = @drawdown.calculate_drawdown_from_klines(klines)
   // Peak=11.0, Trough=9.0, DD = (9-11)/11 = -0.1818...

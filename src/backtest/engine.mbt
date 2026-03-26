@@ -151,7 +151,11 @@ pub fn run_backtest(
 
           if quantity > 0.0 {
             // Execute buy through portfolio
-            let success = engine.portfolio.buy(kline.code, quantity, kline.close)
+            let success = engine.portfolio.buy(
+              kline.code,
+              quantity,
+              kline.close,
+            )
             if success {
               let cost = quantity * kline.close
               let commission = cost * engine.config.commission_rate
@@ -177,7 +181,11 @@ pub fn run_backtest(
               quantity_sold = pos.quantity
               let proceeds = quantity_sold * kline.close
               total_commission = proceeds * engine.config.commission_rate
-              let success = engine.portfolio.sell(kline.code, quantity_sold, kline.close)
+              let success = engine.portfolio.sell(
+                kline.code,
+                quantity_sold,
+                kline.close,
+              )
               if success {
                 trades.push(Trade::{
                   stock: kline.code,
@@ -222,28 +230,6 @@ pub fn run_backtest(
 }
 
 ///|
-/// Generate backtest result
-fn generate_result(engine : BacktestEngine) -> BacktestResult {
-  let final_capital = engine.portfolio.total_value()
-  let total_return = (final_capital - engine.config.initial_capital) /
-    engine.config.initial_capital
-
-  let stats = calculate_stats(engine)
-
-  BacktestResult::{
-    initial_capital: engine.config.initial_capital,
-    final_capital,
-    total_return,
-    max_drawdown: engine.max_drawdown,
-    sharpe_ratio: stats.sharpe_ratio,
-    total_trades: engine.trades.length(),
-    equity_curve: engine.equity_curve,
-    trades: engine.trades,
-    stats,
-  }
-}
-
-///|
 /// Generate backtest result with mutable state
 fn generate_result_with_state(
   engine : BacktestEngine,
@@ -258,7 +244,13 @@ fn generate_result_with_state(
   let total_return = (final_capital - engine.config.initial_capital) /
     engine.config.initial_capital
 
-  let stats = calculate_stats_with_state(engine, equity_curve, trades)
+  let stats = calculate_stats_core(
+    engine.config.initial_capital,
+    engine.portfolio,
+    equity_curve,
+    trades,
+    max_drawdown,
+  )
 
   BacktestResult::{
     initial_capital: engine.config.initial_capital,
@@ -274,117 +266,20 @@ fn generate_result_with_state(
 }
 
 ///|
-/// Calculate backtest statistics
-fn calculate_stats(engine : BacktestEngine) -> BacktestStats {
-  let equities = engine.equity_curve.map(fn(e) { e.equity })
-  let returns = calculate_returns(equities)
-
-  let total_return = if engine.config.initial_capital > 0.0 {
-    (engine.portfolio.total_value() - engine.config.initial_capital) /
-    engine.config.initial_capital
-  } else {
-    0.0
-  }
-
-  // Annualized return
-  let num_days = if equities.length() > 0 { equities.length() } else { 1 }
-  let annual_return = if num_days > 0 {
-    Float::pow(1.0 + total_return, Float::from_int(252) / Float::from_int(num_days)) - 1.0
-  } else {
-    0.0
-  }
-
-  // Sharpe ratio (annualized)
-  let sharpe = if returns.length() > 1 {
-    let avg_return = average(returns)
-    let std_return = std_dev(returns)
-    if std_return > 0.0 {
-      avg_return / std_return * Float::sqrt(252.0)
-    } else {
-      0.0
-    }
-  } else {
-    0.0
-  }
-
-  // Calculate win/loss statistics by pairing buy and sell trades
-  let mut winning = 0
-  let mut losing = 0
-  let mut total_profit : Float = 0.0
-  let mut total_loss : Float = 0.0
-  let mut buy_pending : Trade? = None
-
-  for trade in engine.trades {
-    match trade.action {
-      @strategy.Action::Buy => {
-        buy_pending = Some(trade)
-      }
-      @strategy.Action::Sell => {
-        match buy_pending {
-          Some(buy_trade) => {
-            let buy_cost = buy_trade.quantity * buy_trade.price + buy_trade.commission
-            let sell_proceeds = trade.quantity * trade.price - trade.commission
-            let pnl = sell_proceeds - buy_cost
-
-            if pnl > 0.0 {
-              winning = winning + 1
-              total_profit = total_profit + pnl
-            } else {
-              losing = losing + 1
-              total_loss = total_loss + Float::abs(pnl)
-            }
-          }
-          None => ignore(())
-        }
-      }
-      @strategy.Action::Hold => ignore(())
-    }
-  }
-
-  let win_rate = if winning + losing > 0 {
-    Float::from_int(winning) / Float::from_int(winning + losing)
-  } else {
-    0.0
-  }
-
-  let profit_factor = if total_loss > 0.0 {
-    total_profit / total_loss
-  } else if total_profit > 0.0 {
-    Float::from_double(999.0)
-  } else {
-    0.0
-  }
-
-  BacktestStats::{
-    total_return,
-    annual_return,
-    max_drawdown: engine.max_drawdown,
-    sharpe_ratio: sharpe,
-    sortino_ratio: 0.0,
-    win_rate,
-    profit_factor,
-    total_trades: engine.trades.length(),
-    winning_trades: winning,
-    losing_trades: losing,
-    avg_win: if winning > 0 { total_profit / Float::from_int(winning) } else { 0.0 },
-    avg_loss: if losing > 0 { total_loss / Float::from_int(losing) } else { 0.0 },
-    avg_trade_duration: 0.0,
-  }
-}
-
-///|
-/// Calculate backtest statistics with mutable state
-fn calculate_stats_with_state(
-  engine : BacktestEngine,
+/// Core statistics calculation function
+/// Calculates backtest statistics from equity curve and trades
+fn calculate_stats_core(
+  initial_capital : Float,
+  portfolio : @portfolio.Portfolio,
   equity_curve : Array[EquityPoint],
   trades : Array[Trade],
+  max_drawdown : Float,
 ) -> BacktestStats {
   let equities = equity_curve.map(fn(e) { e.equity })
   let returns = calculate_returns(equities)
 
-  let total_return = if engine.config.initial_capital > 0.0 {
-    (engine.portfolio.total_value() - engine.config.initial_capital) /
-    engine.config.initial_capital
+  let total_return = if initial_capital > 0.0 {
+    (portfolio.total_value() - initial_capital) / initial_capital
   } else {
     0.0
   }
@@ -392,7 +287,11 @@ fn calculate_stats_with_state(
   // Annualized return
   let num_days = if equities.length() > 0 { equities.length() } else { 1 }
   let annual_return = if num_days > 0 {
-    Float::pow(1.0 + total_return, Float::from_int(252) / Float::from_int(num_days)) - 1.0
+    @math.powf(
+      1.0 + total_return,
+      Float::from_int(252) / Float::from_int(num_days),
+    ) -
+    1.0
   } else {
     0.0
   }
@@ -419,14 +318,12 @@ fn calculate_stats_with_state(
 
   for trade in trades {
     match trade.action {
-      @strategy.Action::Buy => {
-        buy_pending = Some(trade)
-      }
-      @strategy.Action::Sell => {
+      @strategy.Action::Buy => buy_pending = Some(trade)
+      @strategy.Action::Sell =>
         match buy_pending {
           Some(buy_trade) => {
-            // Calculate P&L for this round-trip trade
-            let buy_cost = buy_trade.quantity * buy_trade.price + buy_trade.commission
+            let buy_cost = buy_trade.quantity * buy_trade.price +
+              buy_trade.commission
             let sell_proceeds = trade.quantity * trade.price - trade.commission
             let pnl = sell_proceeds - buy_cost
 
@@ -440,13 +337,10 @@ fn calculate_stats_with_state(
           }
           None => ignore(())
         }
-      }
       @strategy.Action::Hold => ignore(())
     }
   }
 
-  let total_winning_trades = winning
-  let total_losing_trades = losing
   let win_rate = if winning + losing > 0 {
     Float::from_int(winning) / Float::from_int(winning + losing)
   } else {
@@ -456,19 +350,7 @@ fn calculate_stats_with_state(
   let profit_factor = if total_loss > 0.0 {
     total_profit / total_loss
   } else if total_profit > 0.0 {
-    Float::from_double(999.0) // All wins, no losses
-  } else {
-    0.0
-  }
-
-  let avg_win = if winning > 0 {
-    total_profit / Float::from_int(winning)
-  } else {
-    0.0
-  }
-
-  let avg_loss = if losing > 0 {
-    total_loss / Float::from_int(losing)
+    Float::from_double(999.0)
   } else {
     0.0
   }
@@ -476,18 +358,38 @@ fn calculate_stats_with_state(
   BacktestStats::{
     total_return,
     annual_return,
-    max_drawdown: 0.0, // Will be overridden by caller
+    max_drawdown,
     sharpe_ratio: sharpe,
-    sortino_ratio: 0.0, // Simplified - requires downside deviation
+    sortino_ratio: 0.0,
     win_rate,
     profit_factor,
     total_trades: trades.length(),
-    winning_trades: total_winning_trades,
-    losing_trades: total_losing_trades,
-    avg_win,
-    avg_loss,
-    avg_trade_duration: 0.0, // Would need trade timestamps to calculate
+    winning_trades: winning,
+    losing_trades: losing,
+    avg_win: if winning > 0 {
+      total_profit / Float::from_int(winning)
+    } else {
+      0.0
+    },
+    avg_loss: if losing > 0 {
+      total_loss / Float::from_int(losing)
+    } else {
+      0.0
+    },
+    avg_trade_duration: 0.0,
   }
+}
+
+///|
+/// Calculate backtest statistics (convenience wrapper)
+fn calculate_stats(engine : BacktestEngine) -> BacktestStats {
+  calculate_stats_core(
+    engine.config.initial_capital,
+    engine.portfolio,
+    engine.equity_curve,
+    engine.trades,
+    engine.max_drawdown,
+  )
 }
 
 ///|

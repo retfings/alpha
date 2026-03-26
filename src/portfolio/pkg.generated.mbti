@@ -13,6 +13,15 @@ pub struct Portfolio {
   initial_capital : Float
 }
 pub fn Portfolio::buy(Self, String, Float, Float) -> Bool
+pub fn Portfolio::calculate_daily_pnl(Self, Map[String, Float], Map[String, Float]) -> Float
+pub fn Portfolio::calculate_position_pnl(Self) -> Float
+pub fn Portfolio::calculate_position_pnl_pct(Self) -> Float
+pub fn Portfolio::get_position(Self, String) -> Position?
+pub fn Portfolio::get_position_pnl(Self, String) -> Float
+pub fn Portfolio::get_position_pnl_pct(Self, String) -> Float
+pub fn Portfolio::get_total_exposure(Self) -> Float
+pub fn Portfolio::has_position(Self, String) -> Bool
+pub fn Portfolio::position_count(Self) -> Int
 pub fn Portfolio::position_ratio(Self) -> Float
 pub fn Portfolio::position_value(Self) -> Float
 pub fn Portfolio::sell(Self, String, Float, Float) -> Bool
@@ -22,7 +31,7 @@ pub fn Portfolio::total_value(Self) -> Float
 pub fn Portfolio::update_prices(Self, (String) -> Float) -> Unit
 pub impl Show for Portfolio
 
-pub struct Position {
+pub(all) struct Position {
   stock : String
   mut quantity : Float
   mut avg_cost : Float

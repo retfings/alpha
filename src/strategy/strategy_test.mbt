@@ -192,7 +192,11 @@ test "Signal::hold - creates hold signal with zero strength" {
 ///|
 test "Signal::with_action - creates signal with custom action" {
   let signal = @strategy.Signal::with_action(
-    "sh.600000", @strategy.Action::Buy, 10.5, "2023-01-01", 0.9,
+    "sh.600000",
+    @strategy.Action::Buy,
+    10.5,
+    "2023-01-01",
+    0.9,
   )
   assert_true(signal.stock == "sh.600000")
   assert_true(signal.action == @strategy.Action::Buy)
@@ -203,7 +207,11 @@ test "Signal::with_action - creates signal with custom action" {
 ///|
 test "Signal::with_action - sell action" {
   let signal = @strategy.Signal::with_action(
-    "sz.000001", @strategy.Action::Sell, 20.0, "2023-01-02", 0.7,
+    "sz.000001",
+    @strategy.Action::Sell,
+    20.0,
+    "2023-01-02",
+    0.7,
   )
   assert_true(signal.action == @strategy.Action::Sell)
   assert_true(signal.strength == 0.7)
@@ -225,9 +233,7 @@ test "process_bar - generates signal from strategy" {
   }
 
   let close_history : Array[Float] = [10.5, 10.6, 10.7, 10.8]
-  let result = @strategy.process_bar(
-    engine, buy_strategy, kline, close_history,
-  )
+  let result = @strategy.process_bar(engine, buy_strategy, kline, close_history)
 
   assert_true(result.signal.action == @strategy.Action::Buy)
   assert_true(result.signal.price == 10.8)
@@ -282,7 +288,7 @@ test "get_engine_stats - tracks signal count" {
   let (capital, position, signal_count) = @strategy.get_engine_stats(engine)
   assert_true(capital == 100000.0)
   assert_true(position == 0.0)
-  assert_true(signal_count == 0)  // Signals not stored in current impl
+  assert_true(signal_count == 0) // Signals not stored in current impl
 }
 
 ///|
@@ -307,7 +313,7 @@ test "StrategyContext - last_signal extraction" {
   let _ = @strategy.process_bar(
     engine, check_context_strategy, kline1, close_history,
   )
-  assert_true(true)  // Test passes if no panic
+  assert_true(true) // Test passes if no panic
 }
 
 ///|

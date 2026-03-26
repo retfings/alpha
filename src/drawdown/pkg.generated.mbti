@@ -24,6 +24,8 @@ pub fn create_monitor(Float, Float) -> DrawdownMonitor
 
 pub fn default_alert_config() -> DrawdownAlert
 
+pub fn find_top_drawdowns(Array[Float], Array[String], Int) -> Array[DrawdownInfo]
+
 pub fn get_drawdown_stats(Array[Float]) -> DrawdownStats
 
 // Errors

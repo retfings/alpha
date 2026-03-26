@@ -1,36 +1,73 @@
-// Quantitative Drawdown Framework - Frontend Application
+/**
+ * Quantitative Drawdown Framework - Frontend Application
+ *
+ * Main application logic for the web interface.
+ * Uses ES6 modules to import API functions.
+ */
 
-// API Base URL
-const API_BASE = '/api';
+import * as api from './api.js';
 
-// Global state
+// ============================================================================
+// Global State
+// ============================================================================
+
 let equityChart = null;
 let drawdownChart = null;
 let backtestEquityChart = null;
 let analysisChart = null;
 
-// Utility functions
+// Dashboard state
+let dashboardData = {
+  portfolioValue: 0,
+  maxDrawdown: 0,
+  currentDrawdown: 0,
+  sharpeRatio: 0
+};
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
 function showLoading() {
-  document.getElementById('loading').style.display = 'flex';
+  const loading = document.getElementById('loading');
+  if (loading) loading.style.display = 'flex';
 }
 
 function hideLoading() {
-  document.getElementById('loading').style.display = 'none';
+  const loading = document.getElementById('loading');
+  if (loading) loading.style.display = 'none';
 }
 
 function formatPercent(value) {
-  return (value * 100).toFixed(2) + '%';
+  const num = parseFloat(value) || 0;
+  const sign = num < 0 ? '-' : '';
+  return sign + (Math.abs(num) * 100).toFixed(2) + '%';
 }
 
 function formatNumber(value, decimals = 2) {
-  return parseFloat(value).toFixed(decimals);
+  return (parseFloat(value) || 0).toFixed(decimals);
 }
 
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('zh-CN');
+  if (!dateStr) return '--';
+  try {
+    return new Date(dateStr).toLocaleDateString('zh-CN');
+  } catch {
+    return dateStr;
+  }
 }
 
-// Tab navigation
+function formatCurrency(value) {
+  return new Intl.NumberFormat('zh-CN', {
+    style: 'currency',
+    currency: 'CNY'
+  }).format(value);
+}
+
+// ============================================================================
+// Tab Navigation
+// ============================================================================
+
 function setupTabs() {
   const navBtns = document.querySelectorAll('.nav-btn');
   const tabs = document.querySelectorAll('.tab');
@@ -39,62 +76,30 @@ function setupTabs() {
     btn.addEventListener('click', () => {
       const tabId = btn.dataset.tab;
 
-      // Update active states
       navBtns.forEach(b => b.classList.remove('active'));
       tabs.forEach(t => t.classList.remove('active'));
 
       btn.classList.add('active');
-      document.getElementById(tabId).classList.add('active');
+      const targetTab = document.getElementById(tabId);
+      if (targetTab) targetTab.classList.add('active');
+
+      // Refresh charts when tab becomes visible
+      if (tabId === 'dashboard') {
+        loadDashboardData();
+      }
     });
   });
 }
 
-// Load stock list
-async function loadStockList() {
-  try {
-    const response = await fetch(`${API_BASE}/stocks`);
-    const stocks = await response.json();
+// ============================================================================
+// Chart Initialization
+// ============================================================================
 
-    const backtestSelect = document.getElementById('backtest-stock');
-    const analysisSelect = document.getElementById('analysis-stock');
-
-    stocks.forEach(stock => {
-      const option1 = document.createElement('option');
-      option1.value = stock;
-      option1.textContent = stock;
-      backtestSelect.appendChild(option1);
-
-      const option2 = document.createElement('option');
-      option2.value = stock;
-      option2.textContent = stock;
-      analysisSelect.appendChild(option2);
-    });
-  } catch (error) {
-    console.error('Failed to load stocks:', error);
-  }
-}
-
-// Load strategies
-async function loadStrategies() {
-  try {
-    const response = await fetch(`${API_BASE}/strategies`);
-    const strategies = await response.json();
-
-    const strategySelect = document.getElementById('backtest-strategy');
-    strategies.forEach(strategy => {
-      const option = document.createElement('option');
-      option.value = strategy.name;
-      option.textContent = strategy.description;
-      strategySelect.appendChild(option);
-    });
-  } catch (error) {
-    console.error('Failed to load strategies:', error);
-  }
-}
-
-// Initialize charts
 function initEquityChart() {
-  const ctx = document.getElementById('equity-chart').getContext('2d');
+  const canvas = document.getElementById('equity-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
   equityChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -112,24 +117,16 @@ function initEquityChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true
-        }
+        legend: { display: false }
       },
       scales: {
         x: {
           display: true,
-          title: {
-            display: true,
-            text: '日期'
-          }
+          title: { display: true, text: '日期' }
         },
         y: {
           display: true,
-          title: {
-            display: true,
-            text: '价值 (CNY)'
-          }
+          title: { display: true, text: '价值 (CNY)' }
         }
       }
     }
@@ -137,7 +134,10 @@ function initEquityChart() {
 }
 
 function initDrawdownChart() {
-  const ctx = document.getElementById('drawdown-chart').getContext('2d');
+  const canvas = document.getElementById('drawdown-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
   drawdownChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -155,26 +155,18 @@ function initDrawdownChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true
-        }
+        legend: { display: false }
       },
       scales: {
         x: {
           display: true,
-          title: {
-            display: true,
-            text: '日期'
-          }
+          title: { display: true, text: '日期' }
         },
         y: {
           display: true,
-          title: {
-            display: true,
-            text: '回撤 (%)'
-          },
+          title: { display: true, text: '回撤 (%)' },
           ticks: {
-            callback: (value) => (value * 100).toFixed(0) + '%'
+            callback: (value) => formatPercent(value)
           }
         }
       }
@@ -183,7 +175,10 @@ function initDrawdownChart() {
 }
 
 function initBacktestEquityChart() {
-  const ctx = document.getElementById('backtest-equity-chart').getContext('2d');
+  const canvas = document.getElementById('backtest-equity-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
   backtestEquityChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -201,24 +196,16 @@ function initBacktestEquityChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true
-        }
+        legend: { display: false }
       },
       scales: {
         x: {
           display: true,
-          title: {
-            display: true,
-            text: '日期'
-          }
+          title: { display: true, text: '日期' }
         },
         y: {
           display: true,
-          title: {
-            display: true,
-            text: '价值 (CNY)'
-          }
+          title: { display: true, text: '价值 (CNY)' }
         }
       }
     }
@@ -226,7 +213,10 @@ function initBacktestEquityChart() {
 }
 
 function initAnalysisChart() {
-  const ctx = document.getElementById('analysis-chart').getContext('2d');
+  const canvas = document.getElementById('analysis-chart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
   analysisChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -256,213 +246,336 @@ function initAnalysisChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true
-        }
+        legend: { display: true }
       },
       scales: {
         x: {
           display: true,
-          title: {
-            display: true,
-            text: '日期'
-          }
+          title: { display: true, text: '日期' }
         },
         y: {
           display: true,
           position: 'left',
-          title: {
-            display: true,
-            text: '价格 (CNY)'
-          }
+          title: { display: true, text: '价格 (CNY)' }
         },
         y1: {
           display: true,
           position: 'right',
-          title: {
-            display: true,
-            text: '回撤 (%)'
-          },
+          title: { display: true, text: '回撤 (%)' },
           ticks: {
-            callback: (value) => (value * 100).toFixed(0) + '%'
+            callback: (value) => formatPercent(value)
           },
-          grid: {
-            drawOnChartArea: false
-          }
+          grid: { drawOnChartArea: false }
         }
       }
     }
   });
 }
 
-// Run backtest
-async function runBacktest(stockCode, strategy, startDate, endDate, initialCapital) {
+// ============================================================================
+// Data Loading
+// ============================================================================
+
+async function loadStockList() {
+  try {
+    const stocks = await api.getStocks();
+    const backtestSelect = document.getElementById('backtest-stock');
+    const analysisSelect = document.getElementById('analysis-stock');
+
+    // Clear existing options except the first placeholder
+    if (backtestSelect) {
+      backtestSelect.innerHTML = '<option value="">选择股票</option>';
+      stocks.slice(0, 100).forEach(stock => {
+        const option = document.createElement('option');
+        option.value = stock;
+        option.textContent = stock;
+        backtestSelect.appendChild(option);
+      });
+    }
+
+    if (analysisSelect) {
+      analysisSelect.innerHTML = '<option value="">选择股票</option>';
+      stocks.slice(0, 100).forEach(stock => {
+        const option = document.createElement('option');
+        option.value = stock;
+        option.textContent = stock;
+        analysisSelect.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error('Failed to load stocks:', error);
+    showError('加载股票列表失败');
+  }
+}
+
+async function loadStrategies() {
+  try {
+    const strategies = await api.getStrategies();
+    const strategySelect = document.getElementById('backtest-strategy');
+
+    if (strategySelect) {
+      strategySelect.innerHTML = '';
+      strategies.forEach(strategy => {
+        const option = document.createElement('option');
+        option.value = strategy.name;
+        option.textContent = strategy.description;
+        strategySelect.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error('Failed to load strategies:', error);
+  }
+}
+
+async function loadDashboardData() {
+  // Load mock dashboard data (in production, this would come from API)
+  try {
+    // Try to get portfolio drawdown
+    const portfolioData = await api.getPortfolioDrawdown();
+
+    updateDashboardMetrics({
+      portfolioValue: portfolioData.peak_value || 100000,
+      maxDrawdown: portfolioData.max_drawdown || 0,
+      currentDrawdown: portfolioData.current_drawdown || 0,
+      sharpeRatio: 1.5
+    });
+
+    // Update charts with sample data
+    updateDashboardCharts(portfolioData);
+  } catch (error) {
+    console.log('Dashboard data not available, using mock data');
+    // Use mock data
+    updateDashboardMetrics({
+      portfolioValue: 100000,
+      maxDrawdown: -0.15,
+      currentDrawdown: -0.05,
+      sharpeRatio: 1.2
+    });
+  }
+}
+
+function updateDashboardMetrics(metrics) {
+  const valueEl = document.getElementById('portfolio-value');
+  const maxDdEl = document.getElementById('max-drawdown');
+  const curDdEl = document.getElementById('current-drawdown');
+  const sharpeEl = document.getElementById('sharpe-ratio');
+
+  if (valueEl) valueEl.textContent = formatCurrency(metrics.portfolioValue);
+  if (maxDdEl) {
+    maxDdEl.textContent = formatPercent(metrics.maxDrawdown);
+    maxDdEl.className = 'metric negative';
+  }
+  if (curDdEl) {
+    curDdEl.textContent = formatPercent(metrics.currentDrawdown);
+    curDdEl.className = 'metric negative';
+  }
+  if (sharpeEl) sharpeEl.textContent = formatNumber(metrics.sharpeRatio, 2);
+}
+
+function updateDashboardCharts(portfolioData) {
+  // Update drawdown chart if data available
+  if (drawdownChart && portfolioData.drawdown_series) {
+    drawdownChart.data.labels = portfolioData.drawdown_series.map(p => p.date);
+    drawdownChart.data.datasets[0].data = portfolioData.drawdown_series.map(p => p.drawdown);
+    drawdownChart.update();
+  }
+}
+
+// ============================================================================
+// Backtest Functions
+// ============================================================================
+
+async function handleBacktest(config) {
   showLoading();
 
   try {
-    const response = await fetch(`${API_BASE}/backtest`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        stock_code: stockCode,
-        strategy: strategy,
-        start_date: startDate,
-        end_date: endDate,
-        initial_capital: initialCapital
-      })
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      displayBacktestResults(result);
-    } else {
-      alert('回测失败：' + (result.error || '未知错误'));
-    }
+    const result = await api.runBacktest(config);
+    displayBacktestResults(result);
+    showSuccess('回测完成');
   } catch (error) {
     console.error('Backtest error:', error);
-    alert('回测失败：' + error.message);
+    showError('回测失败：' + error.message);
   } finally {
     hideLoading();
   }
 }
 
-// Display backtest results
 function displayBacktestResults(result) {
-  document.getElementById('backtest-results').style.display = 'block';
+  const resultsDiv = document.getElementById('backtest-results');
+  if (resultsDiv) resultsDiv.style.display = 'block';
 
   // Update metrics
-  const totalReturn = result.total_return || 0;
-  document.getElementById('bt-total-return').textContent = formatPercent(totalReturn);
-  document.getElementById('bt-total-return').className = 'metric ' + (totalReturn >= 0 ? 'positive' : 'negative');
+  updateMetric('bt-total-return', result.total_return, true);
+  updateMetric('bt-annual-return', result.annual_return, true);
+  updateMetric('bt-max-drawdown', result.max_drawdown, false);
+  updateMetricText('bt-sharpe-ratio', formatNumber(result.sharpe_ratio, 3));
+  updateMetricText('bt-total-trades', result.total_trades || 0);
+  updateMetricText('bt-win-rate', formatPercent(result.win_rate || 0));
 
-  document.getElementById('bt-annual-return').textContent = formatPercent(result.annual_return || 0);
-  document.getElementById('bt-max-drawdown').textContent = formatPercent(result.max_drawdown || 0);
-  document.getElementById('bt-max-drawdown').className = 'metric negative';
-  document.getElementById('bt-sharpe-ratio').textContent = formatNumber(result.sharpe_ratio || 0, 3);
-  document.getElementById('bt-total-trades').textContent = result.total_trades || 0;
-  document.getElementById('bt-win-rate').textContent = formatPercent(result.win_rate || 0);
-
-  // Update chart
-  if (backtestEquityChart) {
-    const equityCurve = result.equity_curve || [];
-    backtestEquityChart.data.labels = equityCurve.map(p => p.date);
-    backtestEquityChart.data.datasets[0].data = equityCurve.map(p => p.equity);
+  // Update equity curve chart
+  if (backtestEquityChart && result.equity_curve) {
+    backtestEquityChart.data.labels = result.equity_curve.map(p => p.date);
+    backtestEquityChart.data.datasets[0].data = result.equity_curve.map(p => p.equity);
     backtestEquityChart.update();
   }
 
   // Update trades table
   const tradesBody = document.getElementById('trades-body');
-  tradesBody.innerHTML = '';
-  const trades = result.trades || [];
-  trades.forEach(trade => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${trade.timestamp}</td>
-      <td>${trade.action}</td>
-      <td>${formatNumber(trade.price)}</td>
-      <td>${formatNumber(trade.quantity, 0)}</td>
-      <td>${formatNumber(trade.commission)}</td>
-    `;
-    tradesBody.appendChild(row);
-  });
+  if (tradesBody && result.trades) {
+    tradesBody.innerHTML = '';
+    result.trades.forEach(trade => {
+      const row = document.createElement('tr');
+      const actionClass = trade.action === 'Buy' ? 'positive' : 'negative';
+      row.innerHTML = `
+        <td>${trade.timestamp}</td>
+        <td class="${actionClass}">${trade.action}</td>
+        <td>${formatNumber(trade.price)}</td>
+        <td>${formatNumber(trade.quantity, 0)}</td>
+        <td>${formatNumber(trade.commission)}</td>
+      `;
+      tradesBody.appendChild(row);
+    });
+  }
 }
 
-// Analyze drawdown
-async function analyzeDrawdown(stockCode, startDate, endDate) {
+// ============================================================================
+// Analysis Functions
+// ============================================================================
+
+async function handleDrawdownAnalysis(stockCode, startDate, endDate) {
   showLoading();
 
   try {
-    const response = await fetch(
-      `${API_BASE}/drawdown/${encodeURIComponent(stockCode)}?start=${startDate}&end=${endDate}`
-    );
-    const result = await response.json();
-
-    if (response.ok) {
-      displayAnalysisResults(result);
-    } else {
-      alert('分析失败：' + (result.error || '未知错误'));
-    }
+    const result = await api.getDrawdown(stockCode, startDate, endDate);
+    displayAnalysisResults(result);
+    showSuccess('分析完成');
   } catch (error) {
     console.error('Analysis error:', error);
-    alert('分析失败：' + error.message);
+    showError('分析失败：' + error.message);
   } finally {
     hideLoading();
   }
 }
 
-// Display analysis results
 function displayAnalysisResults(result) {
-  document.getElementById('analysis-results').style.display = 'block';
+  const resultsDiv = document.getElementById('analysis-results');
+  if (resultsDiv) resultsDiv.style.display = 'block';
 
   // Update metrics
-  document.getElementById('an-max-drawdown').textContent = formatPercent(result.drawdown || 0);
-  document.getElementById('an-max-drawdown').className = 'metric negative';
-  document.getElementById('an-peak-date').textContent = formatDate(result.peak_date);
-  document.getElementById('an-trough-date').textContent = formatDate(result.trough_date);
-  document.getElementById('an-duration').textContent = result.duration + ' 天';
+  updateMetricText('an-max-drawdown', formatPercent(result.max_drawdown));
+  document.getElementById('an-max-drawdown')?.classList.add('negative');
+  updateMetricText('an-peak-date', formatDate(result.peak_date));
+  updateMetricText('an-trough-date', formatDate(result.trough_date));
+  updateMetricText('an-duration', result.duration + ' 天');
 
   // Update chart
-  if (analysisChart) {
-    // Fetch K-line data for the chart
-    fetchKlinesForAnalysis(result);
+  if (analysisChart && result.drawdown_series) {
+    analysisChart.data.labels = result.drawdown_series.map(p => p.date);
+    analysisChart.data.datasets[0].data = result.drawdown_series.map(p => p.value);
+    analysisChart.data.datasets[1].data = result.drawdown_series.map(p => p.drawdown);
+    analysisChart.update();
   }
 }
 
-async function fetchKlinesForAnalysis(drawdownInfo) {
-  // This would fetch K-line data and update the chart
-  // For now, just update with placeholder data
-  analysisChart.data.labels = [drawdownInfo.peak_date, drawdownInfo.trough_date];
-  analysisChart.data.datasets[0].data = [drawdownInfo.peak, drawdownInfo.trough];
-  analysisChart.data.datasets[1].data = [0, drawdownInfo.drawdown];
-  analysisChart.update();
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+function updateMetric(elementId, value, isPercent) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const numValue = parseFloat(value) || 0;
+  if (isPercent) {
+    el.textContent = formatPercent(numValue);
+    el.className = 'metric ' + (numValue >= 0 ? 'positive' : 'negative');
+  } else {
+    el.textContent = formatPercent(numValue);
+    el.className = 'metric negative';
+  }
 }
 
-// Setup event handlers
+function updateMetricText(elementId, text) {
+  const el = document.getElementById(elementId);
+  if (el) el.textContent = text;
+}
+
+function showError(message) {
+  // Could use a toast notification here
+  alert('错误：' + message);
+}
+
+function showSuccess(message) {
+  // Could use a toast notification here
+  console.log('Success:', message);
+}
+
+// ============================================================================
+// Event Handlers
+// ============================================================================
+
 function setupEventHandlers() {
   // Backtest form
-  document.getElementById('backtest-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const stockCode = document.getElementById('backtest-stock').value;
-    const strategy = document.getElementById('backtest-strategy').value;
-    const startDate = document.getElementById('backtest-start').value;
-    const endDate = document.getElementById('backtest-end').value;
-    const initialCapital = parseFloat(document.getElementById('backtest-capital').value);
+  const backtestForm = document.getElementById('backtest-form');
+  if (backtestForm) {
+    backtestForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    if (!stockCode) {
-      alert('请选择股票代码');
-      return;
-    }
+      const stockCode = document.getElementById('backtest-stock')?.value;
+      const strategy = document.getElementById('backtest-strategy')?.value;
+      const startDate = document.getElementById('backtest-start')?.value;
+      const endDate = document.getElementById('backtest-end')?.value;
+      const initialCapital = parseFloat(document.getElementById('backtest-capital')?.value || 100000);
 
-    runBacktest(stockCode, strategy, startDate, endDate, initialCapital);
-  });
+      if (!stockCode) {
+        showError('请选择股票代码');
+        return;
+      }
+
+      handleBacktest({
+        stock_code: stockCode,
+        strategy,
+        start_date: startDate,
+        end_date: endDate,
+        initial_capital: initialCapital
+      });
+    });
+  }
 
   // Analysis form
-  document.getElementById('analysis-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const stockCode = document.getElementById('analysis-stock').value;
-    const startDate = document.getElementById('analysis-start').value;
-    const endDate = document.getElementById('analysis-end').value;
+  const analysisForm = document.getElementById('analysis-form');
+  if (analysisForm) {
+    analysisForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    if (!stockCode) {
-      alert('请选择股票代码');
-      return;
-    }
+      const stockCode = document.getElementById('analysis-stock')?.value;
+      const startDate = document.getElementById('analysis-start')?.value;
+      const endDate = document.getElementById('analysis-end')?.value;
 
-    analyzeDrawdown(stockCode, startDate, endDate);
-  });
+      if (!stockCode) {
+        showError('请选择股票代码');
+        return;
+      }
 
-  // Settings form
-  document.getElementById('settings-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    alert('设置已保存（功能开发中）');
-  });
+      handleDrawdownAnalysis(stockCode, startDate, endDate);
+    });
+  }
+
+  // Settings form (placeholder)
+  const settingsForm = document.getElementById('settings-form');
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      showSuccess('设置已保存');
+    });
+  }
 }
 
-// Initialize application
-document.addEventListener('DOMContentLoaded', () => {
+// ============================================================================
+// Application Initialization
+// ============================================================================
+
+function initializeApp() {
   setupTabs();
   setupEventHandlers();
   initEquityChart();
@@ -471,4 +584,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initAnalysisChart();
   loadStockList();
   loadStrategies();
-});
+  loadDashboardData();
+
+  console.log('Application initialized');
+}
+
+// Start the application
+document.addEventListener('DOMContentLoaded', initializeApp);

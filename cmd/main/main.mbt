@@ -130,8 +130,12 @@ fn print_help() -> Unit {
   println("    help              Show this help message")
   println("")
   println("EXAMPLES:")
-  println("    moon run cmd/main analyze --stock sh.600000 --metric max_drawdown")
-  println("    moon run cmd/main backtest --strategy ma_cross --stock sh.600000")
+  println(
+    "    moon run cmd/main analyze --stock sh.600000 --metric max_drawdown",
+  )
+  println(
+    "    moon run cmd/main backtest --strategy ma_cross --stock sh.600000",
+  )
   println("    moon run cmd/main monitor --stock sh.600000")
   println("    moon run cmd/main report --format html")
   println("    moon run cmd/main list-strategies")
@@ -168,7 +172,9 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
 
   // Validate stock code format
   if !stock.contains(".") {
-    println("Warning: Stock code should be in format 'market.code' (e.g., sh.600000)")
+    println(
+      "Warning: Stock code should be in format 'market.code' (e.g., sh.600000)",
+    )
   }
 
   println("Loading data...")
@@ -195,7 +201,9 @@ fn _run_backtest(
 ) -> Unit {
   if stock == "" {
     println("Error: --stock is required for backtest command")
-    println("Usage: moon run cmd/main backtest --strategy ma_cross --stock sh.600000")
+    println(
+      "Usage: moon run cmd/main backtest --strategy ma_cross --stock sh.600000",
+    )
     return
   }
 
@@ -223,7 +231,9 @@ fn _run_backtest(
   }
 
   if !found {
-    println("Warning: Unknown strategy '\{strategy}'. Available: ma_cross, momentum")
+    println(
+      "Warning: Unknown strategy '\{strategy}'. Available: ma_cross, momentum",
+    )
   }
 
   println("Initializing backtest engine...")
@@ -278,7 +288,9 @@ fn _run_report(format : String) -> Unit {
   }
 
   if !found {
-    println("Error: Invalid format '\{format}'. Available: text, html, json, pdf")
+    println(
+      "Error: Invalid format '\{format}'. Available: text, html, json, pdf",
+    )
     return
   }
 

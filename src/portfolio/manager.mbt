@@ -183,6 +183,7 @@ pub fn Portfolio::update_prices(
 /// ```mbt check-disabled
 /// let portfolio = create_portfolio(100000.0)
 /// // ... add some positions ...
+///
 /// let pnl = portfolio.calculate_position_pnl()
 /// ```
 pub fn Portfolio::calculate_position_pnl(self : Portfolio) -> Float {
@@ -203,6 +204,7 @@ pub fn Portfolio::calculate_position_pnl(self : Portfolio) -> Float {
 /// ```mbt check-disabled
 /// let portfolio = create_portfolio(100000.0)
 /// // ... add some positions ...
+///
 /// let pnl_pct = portfolio.calculate_position_pnl_pct()
 /// ```
 pub fn Portfolio::calculate_position_pnl_pct(self : Portfolio) -> Float {
@@ -230,6 +232,7 @@ pub fn Portfolio::calculate_position_pnl_pct(self : Portfolio) -> Float {
 /// ```mbt check-disabled
 /// let portfolio = create_portfolio(100000.0)
 /// // ... add some positions ...
+///
 /// let exposure = portfolio.get_total_exposure()
 /// ```
 pub fn Portfolio::get_total_exposure(self : Portfolio) -> Float {
@@ -279,6 +282,7 @@ pub fn Portfolio::get_position(
 /// ```mbt check-disabled
 /// let portfolio = create_portfolio(100000.0)
 /// // ... add some positions ...
+///
 /// let pnl = portfolio.get_position_pnl("sh.600000")
 /// ```
 pub fn Portfolio::get_position_pnl(
@@ -304,6 +308,7 @@ pub fn Portfolio::get_position_pnl(
 /// ```mbt check-disabled
 /// let portfolio = create_portfolio(100000.0)
 /// // ... add some positions ...
+///
 /// let pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
 /// ```
 pub fn Portfolio::get_position_pnl_pct(
@@ -333,7 +338,10 @@ pub fn Portfolio::position_count(self : Portfolio) -> Int {
 ///
 /// Returns:
 /// - true if portfolio holds the stock, false otherwise
-pub fn Portfolio::has_position(self : Portfolio, stock : @data.StockCode) -> Bool {
+pub fn Portfolio::has_position(
+  self : Portfolio,
+  stock : @data.StockCode,
+) -> Bool {
   for pos in self.positions {
     if pos.stock == stock {
       return true
@@ -345,27 +353,55 @@ pub fn Portfolio::has_position(self : Portfolio, stock : @data.StockCode) -> Boo
 ///|
 /// Get daily P&L change
 ///
+/// Calculates the change in portfolio value from the previous day to today
+/// by comparing position values using previous and current prices.
+///
 /// Parameters:
-/// - prev_values: Previous position values map
-/// - current_prices: Current prices map
+/// - prev_values: Map of stock codes to their position values from previous day
+/// - current_prices: Map of stock codes to their current prices
 ///
 /// Returns:
-/// - Total P&L change since previous values
+/// - Total P&L change since previous day (positive for gains, negative for losses)
 ///
 /// Examples:
 /// ```mbt check-disabled
 /// let prev_values : Map[@data.StockCode, Float] = Map::new()
-/// // ... populate with previous values ...
+/// prev_values.set("sh.600000", 50000.0)
+/// prev_values.set("sz.000001", 30000.0)
 /// let current_prices : Map[@data.StockCode, Float] = Map::new()
-/// // ... populate with current prices ...
+/// current_prices.set("sh.600000", 51000.0)
+/// current_prices.set("sz.000001", 29000.0)
 /// let daily_pnl = portfolio.calculate_daily_pnl(prev_values, current_prices)
+/// // daily_pnl should be 1000.0 (1000 gain - 1000 loss = 0, but this depends on positions)
 /// ```
 pub fn Portfolio::calculate_daily_pnl(
   self : Portfolio,
-  _prev_values : Map[@data.StockCode, Float],
-  _current_prices : Map[@data.StockCode, Float],
+  prev_values : Map[@data.StockCode, Float],
+  current_prices : Map[@data.StockCode, Float],
 ) -> Float {
-  // Simplified: use current position P&L as proxy for daily P&L
-  // Full implementation would track previous day's prices
-  self.calculate_position_pnl()
+  let mut daily_pnl = Float::from_double(0.0)
+
+  // Calculate P&L for each position by comparing current value to previous value
+  for pos in self.positions {
+    match prev_values.get(pos.stock) {
+      Some(prev_value) =>
+        // Get current price for this position
+        match current_prices.get(pos.stock) {
+          Some(current_price) => {
+            let current_value = pos.quantity * current_price
+            daily_pnl = daily_pnl + (current_value - prev_value)
+          }
+          None => {
+            // If no current price, use position's current_price
+            let current_value = pos.value()
+            daily_pnl = daily_pnl + (current_value - prev_value)
+          }
+        }
+      None =>
+        // New position today (not in prev_values), count full value as gain
+        daily_pnl = daily_pnl + pos.value()
+    }
+  }
+
+  daily_pnl
 }

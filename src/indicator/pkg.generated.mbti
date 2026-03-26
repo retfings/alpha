@@ -10,13 +10,21 @@ pub fn atr(Array[@data.KLine], Int) -> Array[Float]
 
 pub fn bollinger_bands(Array[Float], Int, Float) -> (Array[Float], Array[Float], Array[Float])
 
+pub fn cci(Array[@data.KLine], Int) -> Array[Float]
+
 pub fn ema(Array[Float], Int) -> Array[Float]
 
+pub fn kdj(Array[@data.KLine], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
+
 pub fn macd(Array[Float], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
+
+pub fn obv(Array[@data.KLine]) -> Array[Float]
 
 pub fn rsi(Array[Float], Int) -> Array[Float]
 
 pub fn sma(Array[Float], Int) -> Array[Float]
+
+pub fn williams_r(Array[@data.KLine], Int) -> Array[Float]
 
 // Errors
 
