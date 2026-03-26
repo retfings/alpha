@@ -351,10 +351,18 @@ test "rule combinators" {
 ```mbt check-disabled
 ///|
 test "sma calculation" {
-  let prices : Array[Float] = [10.0, 11.0, 12.0, 13.0, 14.0]
-  let sma = @indicator.sma(prices, 3)
-  assert_true(sma == 13.0)
-  inspect(sma)
+  let prices : Array[Float] = [
+    Float::from_double(10.0),
+    Float::from_double(11.0),
+    Float::from_double(12.0),
+    Float::from_double(13.0),
+    Float::from_double(14.0),
+  ]
+  let sma_values = @indicator.sma(prices, 3)
+  // Last SMA value should be (12+13+14)/3 = 13.0
+  let last_sma = sma_values[sma_values.length() - 1]
+  assert_true(last_sma == Float::from_double(13.0))
+  @json.inspect(sma_values)
 }
 ```
 
@@ -364,10 +372,12 @@ test "sma calculation" {
 ///|
 test "ema calculation" {
   let prices : Array[Float] = [10.0, 11.0, 12.0, 13.0, 14.0]
-  let ema = @indicator.ema(prices, 3)
-  assert_true(ema > 12.0)
-  assert_true(ema < 14.0)
-  inspect(ema)
+  let ema_values = @indicator.ema(prices, 3)
+  // Last EMA value should be between 12.0 and 14.0
+  let last_ema = ema_values[ema_values.length() - 1]
+  assert_true(last_ema > Float::from_double(12.0))
+  assert_true(last_ema < Float::from_double(14.0))
+  inspect(ema_values)
 }
 ```
 
