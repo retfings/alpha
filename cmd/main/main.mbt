@@ -306,13 +306,47 @@ fn _run_report(format : String) -> Unit {
 }
 
 ///|
+/// Parse space-separated arguments into Array[String]
+fn _parse_env_args(args_str : String) -> Array[String] {
+  args_str
+  .split(" ")
+  .filter(fn(s) { s != "" })
+  .map(fn(s) { s.to_string() })
+  .to_array()
+}
+
+///|
+/// Get command from environment variables
+/// MOONBIT_CMD = command name (analyze, backtest, monitor, report, serve, help)
+/// MOONBIT_ARGS = space-separated arguments
+fn _get_env_command() -> Command {
+  match @ffi.getenv("MOONBIT_CMD") {
+    None => Command::Help
+    Some(cmd) => {
+      let args_str = @ffi.getenv("MOONBIT_ARGS").unwrap_or("")
+      let args = _parse_env_args(args_str)
+      _parse_args([cmd] + args)
+    }
+  }
+}
+
+///|
+/// Execute command
+fn _execute_command(cmd : Command) -> Unit {
+  match cmd {
+    Command::Help => print_help()
+    Command::Analyze(stock, metric) => _run_analyze(stock, metric)
+    Command::Backtest(strategy, stock, start, end) =>
+      _run_backtest(strategy, stock, start, end)
+    Command::Monitor(stock) => _run_monitor(stock)
+    Command::Report(format) => _run_report(format)
+    Command::ListStrategies => _print_strategies()
+  }
+}
+
+///|
 /// Main entry point
 fn main {
-  // Demo mode: display help message
-  // Note: MoonBit does not currently support command-line argument parsing
-  // Arguments would need to be passed via environment variables or config files
-  print_help()
-  println("")
-  println("Note: Full CLI argument parsing requires external configuration.")
-  println("This is a placeholder demonstrating the framework structure.")
+  let cmd = _get_env_command()
+  _execute_command(cmd)
 }

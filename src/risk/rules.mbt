@@ -324,10 +324,20 @@ pub fn total_exposure_limit_rule(max_pct : Float) -> RiskRule {
 }
 
 ///|
-/// Single stock position limit rule (DEPRECATED - use total_exposure_limit_rule)
+/// Single stock position limit rule (DEPRECATED)
 ///
-/// This function is an alias for `total_exposure_limit_rule` for backwards compatibility.
+/// **Deprecated:** This function is an alias for `total_exposure_limit_rule` for backwards compatibility.
 /// The name is misleading - it checks TOTAL position exposure, not per-stock exposure.
+///
+/// **Migration:** Use `total_exposure_limit_rule` instead:
+/// ```mbt nocheck
+/// // Old (deprecated):
+/// let rule = single_stock_limit_rule(0.20)
+///
+/// // New (recommended):
+///
+/// let rule = total_exposure_limit_rule(0.20)
+/// ```
 ///
 /// For proper single-stock exposure checks, use `check_single_stock_exposure` instead.
 ///
@@ -337,13 +347,8 @@ pub fn total_exposure_limit_rule(max_pct : Float) -> RiskRule {
 /// Returns:
 /// - RiskRule (same as total_exposure_limit_rule)
 ///
-/// Examples:
-/// ```mbt check-disabled
-/// test "single_stock_limit_rule example" {
-///   let rule = single_stock_limit_rule(0.20) // 20% max exposure
-///   ignore(rule)
-/// }
-/// ```
+/// @deprecated Use `total_exposure_limit_rule` instead
+#deprecated("Use total_exposure_limit_rule instead")
 pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
   total_exposure_limit_rule(max_pct)
 }

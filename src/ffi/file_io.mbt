@@ -78,3 +78,19 @@ pub fn mkdir_p(path : String) -> Bool {
 pub fn read_csv_file(path : String) -> String? {
   read_file(path)
 }
+
+///|
+/// Get environment variable value
+/// Returns None if variable is not set
+#borrow(name)
+extern "c" fn __getenv(name : Bytes) -> Bytes? = "moonbit_getenv"
+
+///|
+/// Get environment variable as String
+pub fn getenv(name : String) -> String? {
+  let name_bytes = @utf8.encode(name)
+  match __getenv(name_bytes) {
+    Some(bytes) => Some(@utf8.decode_lossy(bytes))
+    None => None
+  }
+}

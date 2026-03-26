@@ -689,20 +689,29 @@ test "Portfolio complex position management snapshot" {
   let portfolio = @portfolio.create_portfolio(100000.0)
 
   // Buy in tranches
-  ignore(portfolio.buy("sh.600000", 100.0, 10.0))  // 100 @ 10
-  ignore(portfolio.buy("sh.600000", 200.0, 12.0))  // 200 @ 12
-  ignore(portfolio.buy("sh.600000", 100.0, 11.0))  // 100 @ 11
+  ignore(portfolio.buy("sh.600000", 100.0, 10.0)) // 100 @ 10
+  ignore(portfolio.buy("sh.600000", 200.0, 12.0)) // 200 @ 12
+  ignore(portfolio.buy("sh.600000", 100.0, 11.0)) // 100 @ 11
 
   // Total: 400 shares, avg cost = (1000+2400+1100)/400 = 11.25
   inspect(portfolio.positions[0].quantity, content="400")
-  inspect(portfolio.positions[0].avg_cost > Float::from_double(11.2), content="true")
-  inspect(portfolio.positions[0].avg_cost < Float::from_double(11.3), content="true")
+  inspect(
+    portfolio.positions[0].avg_cost > Float::from_double(11.2),
+    content="true",
+  )
+  inspect(
+    portfolio.positions[0].avg_cost < Float::from_double(11.3),
+    content="true",
+  )
 
   // Sell partial
   ignore(portfolio.sell("sh.600000", 150.0, 13.0))
   inspect(portfolio.positions[0].quantity, content="250")
   // Avg cost should remain unchanged after sell
-  inspect(portfolio.positions[0].avg_cost > Float::from_double(11.2), content="true")
+  inspect(
+    portfolio.positions[0].avg_cost > Float::from_double(11.2),
+    content="true",
+  )
 
   // Sell remaining
   ignore(portfolio.sell("sh.600000", 250.0, 14.0))
@@ -721,7 +730,11 @@ test "Portfolio single position full lifecycle snapshot" {
 
   // Update price up
   let get_price_up = fn(code) -> Float {
-    if code == "sh.600000" { Float::from_double(12.0) } else { Float::from_double(0.0) }
+    if code == "sh.600000" {
+      Float::from_double(12.0)
+    } else {
+      Float::from_double(0.0)
+    }
   }
   portfolio.update_prices(get_price_up)
   let pnl_up = portfolio.get_position_pnl("sh.600000")
@@ -729,7 +742,11 @@ test "Portfolio single position full lifecycle snapshot" {
 
   // Update price down
   let get_price_down = fn(code) -> Float {
-    if code == "sh.600000" { Float::from_double(8.0) } else { Float::from_double(0.0) }
+    if code == "sh.600000" {
+      Float::from_double(8.0)
+    } else {
+      Float::from_double(0.0)
+    }
   }
   portfolio.update_prices(get_price_down)
   let pnl_down = portfolio.get_position_pnl("sh.600000")

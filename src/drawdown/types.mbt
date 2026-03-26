@@ -184,16 +184,11 @@ pub fn create_drawdown_alert(
     DrawdownLevel::Normal => "Drawdown within normal range"
     DrawdownLevel::Minor => "Minor drawdown detected - monitor closely"
     DrawdownLevel::Moderate => "Moderate drawdown - consider reducing risk"
-    DrawdownLevel::Significant => "Significant drawdown - defensive posture recommended"
+    DrawdownLevel::Significant =>
+      "Significant drawdown - defensive posture recommended"
     DrawdownLevel::Severe => "Severe drawdown - immediate action required"
   }
-  DrawdownAlertInstance::{
-    stock,
-    level,
-    drawdown,
-    triggered_at: date,
-    message,
-  }
+  DrawdownAlertInstance::{ stock, level, drawdown, triggered_at: date, message }
 }
 
 ///|
@@ -209,7 +204,7 @@ pub struct PortfolioDrawdown {
   /// Number of stocks in drawdown (>5%)
   stocks_in_drawdown : Int
   /// List of individual stock drawdowns
-  stock_drawdowns : Array[( @data.StockCode, Float )]
+  stock_drawdowns : Array[(@data.StockCode, Float)]
 } derive(ToJson, Show)
 
 ///|
@@ -221,7 +216,7 @@ pub struct PortfolioDrawdown {
 /// Returns:
 /// - PortfolioDrawdown with aggregated statistics
 pub fn create_portfolio_drawdown(
-  stock_drawdowns : Array[( @data.StockCode, Float )],
+  stock_drawdowns : Array[(@data.StockCode, Float)],
 ) -> PortfolioDrawdown {
   if stock_drawdowns.length() == 0 {
     return PortfolioDrawdown::{
@@ -304,7 +299,11 @@ pub fn calculate_drawdown_duration(info : DrawdownInfo) -> DrawdownDuration {
   DrawdownDuration::{
     peak_date: info.peak_date,
     trough_date: info.trough_date,
-    recovery_date: if recovered { Some(info.trough_date) } else { None },
+    recovery_date: if recovered {
+      Some(info.trough_date)
+    } else {
+      None
+    },
     peak_to_trough_days: peak_to_trough,
     trough_to_recovery_days: trough_to_recovery,
     total_duration_days: total_duration,
