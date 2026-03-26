@@ -18,13 +18,46 @@ moon info               # Generate public interface (.mbti) files
 
 ## Architecture
 
-This is a MoonBit module (`moon.mod.json`) with a standard layout:
+This is a **quantitative drawdown framework** built with MoonBit, supporting both CLI and Web interfaces.
 
-- **Root package** (`alpha.mbt`) - Library code and public APIs
-- **cmd/main/** - Executable entry point with `options("is-main": true)`
+### Project Layout
+
+```
+alpha/
+├── cmd/main/           # CLI entry point
+├── src/                # Core business logic
+│   ├── data/           # Data layer (CSV/Parquet loaders, KLine types)
+│   ├── strategy/       # Strategy engine and built-in strategies
+│   ├── drawdown/       # Drawdown calculation core
+│   ├── risk/           # Risk management rules engine
+│   ├── portfolio/      # Portfolio and position management
+│   ├── indicator/      # Technical indicators (MA, MACD, RSI, etc.)
+│   └── backtest/       # Backtest engine and reporting
+├── server/             # HTTP API server
+├── www/                # Web frontend (static files)
+├── data/               # Stock data (CSV files)
+├── script/             # Python utilities (data download)
+└── docs/               # Documentation
+```
+
+### Key Components
+
+- **Root package** (`alpha.mbt`) - Public API exports
+- **cmd/main/** - CLI executable with command parsing
 - **Test files**: `*_test.mbt` (blackbox) and `*_wbtest.mbt` (whitebox)
 
+### Technical Stack
+
+- **Data Format**: CSV (current), Parquet (planned)
+- **Strategy Definition**: Pure MoonBit code (type-safe)
+- **Web Backend**: Simple HTTP server in MoonBit
+- **Web Frontend**: Static HTML/CSS/JS with Chart.js
+
 MoonBit packages are per-directory with `moon.pkg` declaring imports. All `.mbt` files in a package are concatenated; declarations are package-scoped regardless of file. Use `///|` to separate top-level blocks.
+
+### Documentation
+
+- `docs/architecture.md` - Full architecture design
 
 ## Development Workflow
 
