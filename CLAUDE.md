@@ -49,3 +49,15 @@ Three specialized skills are available in `.claude/skills/`:
 - `moonbit-agent-guide` - General MoonBit development
 - `moonbit-refactoring` - Idiomatic refactoring patterns
 - `moonbit-c-binding` - C FFI bindings
+
+## Git Workflow
+
+**Important:** After any file changes, always commit and push to remote:
+
+```bash
+git add .
+git commit -m "Your commit message"
+git push
+```
+
+This ensures all changes are backed up to the remote repository immediately.
