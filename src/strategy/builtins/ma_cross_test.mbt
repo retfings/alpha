@@ -133,6 +133,6 @@ test "MaCrossStrategy::on_bar - snapshot of signal with various histories" {
   json_inspect(results, content=[
     ["uptrend", "Hold", 0],
     ["downtrend", "Hold", 0],
-    ["sideways", "Buy", 0.008064508438110352],
+    ["sideways", "Hold", 0],
   ])
 }

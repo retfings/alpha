@@ -4,6 +4,5 @@ import {
   "username/alpha/src/strategy" @strategy,
   "username/alpha/src/risk" @risk,
   "username/alpha/src/portfolio" @portfolio,
-  "username/alpha/src/indicator" @indicator,
   "username/alpha/src/backtest" @backtest,
 }

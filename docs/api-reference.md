@@ -1,334 +1,696 @@
-# API Reference
+# MoonBit 量化回撤框架 - API 参考文档
 
-Complete API reference for the MoonBit Quantitative Drawdown Framework.
+本文档提供框架核心模块的完整 API 参考，包括类型定义、函数说明和使用示例。
 
-## Modules
+## 目录
 
-- [@data](#data-module) - Data types and CSV loader
-- [@indicator](#indicator-module) - Technical indicators
-- [@portfolio](#portfolio-module) - Portfolio management
-- [@risk](#risk-module) - Risk management
-- [@drawdown](#drawdown-module) - Drawdown calculation
-- [@strategy](#strategy-module) - Strategy engine
-- [@backtest](#backtest-module) - Backtest engine
+- [数据类型模块 (data)](#数据类型模块-data)
+- [回撤计算模块 (drawdown)](#回撤计算模块-drawdown)
+- [投资组合模块 (portfolio)](#投资组合模块-portfolio)
+- [风险管理模块 (risk)](#风险管理模块-risk)
+- [策略引擎模块 (strategy)](#策略引擎模块-strategy)
+- [技术指标模块 (indicator)](#技术指标模块-indicator)
+- [回测引擎模块 (backtest)](#回测引擎模块-backtest)
 
 ---
 
-## @data Module
+## 数据类型模块 (data)
 
-Data types and CSV loader for quantitative trading.
+**包路径**: `username/alpha/src/data`
 
-### Types
+### 核心类型
 
-#### KLine
+#### KLine (K 线数据类型)
 
-K-line (candlestick) data structure.
-
-```mbt
+```moonbit
 pub struct KLine {
-  code : StockCode      // Stock code (e.g., "sh.600000")
-  date : String         // Trading date (YYYY-MM-DD)
-  time : String?        // Optional time for minute data
-  open : Float          // Opening price
-  high : Float          // Highest price
-  low : Float           // Lowest price
-  close : Float         // Closing price
-  volume : Float        // Trading volume
-  amount : Float        // Trading amount (CNY)
-  turn : Float          // Turnover rate (%)
+  code : String           // 股票代码
+  date : String           // 日期 (格式："YYYY-MM-DD")
+  time : String?          // 时间 (分钟线需要，日线为 None)
+  open : Float            // 开盘价
+  high : Float            // 最高价
+  low : Float             // 最低价
+  close : Float           // 收盘价
+  volume : Float          // 成交量
+  amount : Float          // 成交额
+  turn : Float            // 换手率
 }
 ```
 
-#### StockCode
+**构造方法**:
+- `KLine::daily(code, date, open, high, low, close, volume, amount, turn)` - 创建日线 K 线
 
-```mbt
-pub type StockCode = String
-```
+**Trait 实现**: `Eq`, `Show`, `ToJson`
 
-#### Frequency
+#### Frequency (数据频率枚举)
 
-```mbt
+```moonbit
 pub enum Frequency {
-  Daily, Weekly, Monthly, Minute5, Minute15, Minute30, Minute60
+  Daily      // 日线
+  Weekly     // 周线
+  Monthly    // 月线
+  Minute5    // 5 分钟线
+  Minute15   // 15 分钟线
+  Minute30   // 30 分钟线
+  Minute60   // 60 分钟线
 }
 ```
 
-### Functions
+#### AdjustFactor (复权因子)
+
+```moonbit
+pub struct AdjustFactor {
+  date : String       // 除权除息日
+  ratio : Float       // 配股比例
+  dividend : Float    // 每股分红
+  rights_ratio : Float // 配股比例
+  rights_price : Float // 配股价格
+}
+```
+
+### 数据加载函数
+
+#### load_klines_from_csv
+
+```moonbit
+pub fn load_klines_from_csv(String) -> Result[Array[KLine], String]
+```
+
+从 CSV 文件加载 K 线数据。
+
+**参数**:
+- `file_path` - CSV 文件路径
+
+**返回**:
+- `Ok(Array[KLine])` - K 线数组
+- `Err(String)` - 错误信息
+
+**示例**:
+```moonbit
+match data::load_klines_from_csv("data/sh.600000.csv") {
+  Ok(klines) => {
+    io::println("加载成功：" + String::from_int(klines.length()))
+  }
+  Err(e) => {
+    io::println("加载失败：" + e)
+  }
+}
+```
 
 #### parse_csv_content
 
-Parse CSV string content into K-line array.
-
-```mbt
-pub fn parse_csv_content(content : String) -> Result[Array[KLine], String]
+```moonbit
+pub fn parse_csv_content(String) -> Result[Array[KLine], String]
 ```
 
-#### kline_to_csv_line
+解析 CSV 字符串内容为 K 线数组。
 
-Convert K-line to CSV format string.
+### 数据处理函数
 
-```mbt
-pub fn kline_to_csv_line(kline : KLine) -> String
+#### calculate_returns
+
+```moonbit
+pub fn calculate_returns(Array[KLine]) -> Array[Float]
 ```
 
-#### extract_stock_code_from_filename
+计算 K 线序列的收益率（简单收益率）。
 
-Extract stock code from filename.
+**返回**: 收益率数组，长度比输入少 1
 
-```mbt
-pub fn extract_stock_code_from_filename(filename : String) -> String?
+#### calculate_log_returns
+
+```moonbit
+pub fn calculate_log_returns(Array[KLine]) -> Array[Float]
+```
+
+计算 K 线序列的对数收益率。
+
+#### resample_klines
+
+```moonbit
+pub fn resample_klines(Array[KLine], Frequency) -> Array[KLine]
+```
+
+重采样 K 线到指定频率。
+
+**参数**:
+- `klines` - 原始 K 线数组
+- `freq` - 目标频率
+
+**示例**:
+```moonbit
+// 将日线重采样为周线
+let weekly = data::resample_klines(daily_klines, data::Frequency::Weekly)
+```
+
+#### trim_klines_to_range
+
+```moonbit
+pub fn trim_klines_to_range(Array[KLine], String, String) -> Array[KLine]
+```
+
+裁剪 K 线到指定日期范围。
+
+**参数**:
+- `klines` - K 线数组
+- `start_date` - 开始日期
+- `end_date` - 结束日期
+
+#### sort_klines_by_date
+
+```moonbit
+pub fn sort_klines_by_date(Array[KLine]) -> Array[KLine]
+```
+
+按日期对 K 线进行排序（升序）。
+
+#### filter_invalid_klines
+
+```moonbit
+pub fn filter_invalid_klines(Array[KLine]) -> Array[KLine]
+```
+
+过滤掉无效的 K 线（如零价格、零成交量等）。
+
+### 复权处理函数
+
+#### apply_forward_adjustment
+
+```moonbit
+pub fn apply_forward_adjustment(Array[KLine], Float) -> Array[KLine]
+```
+
+应用前复权到 K 线序列。
+
+#### apply_backward_adjustment
+
+```moonbit
+pub fn apply_backward_adjustment(Array[KLine], Float) -> Array[KLine]
+```
+
+应用后复权到 K 线序列。
+
+### 波动率计算函数
+
+#### calculate_rolling_volatility
+
+```moonbit
+pub fn calculate_rolling_volatility(Array[Float], Int) -> Array[Float]
+```
+
+计算滚动波动率。
+
+**参数**:
+- `returns` - 收益率数组
+- `window` - 滚动窗口大小
+
+**返回**: 滚动波动率数组
+
+#### annualize_volatility
+
+```moonbit
+pub fn annualize_volatility(Float, Int) -> Float
+```
+
+将日波动率年化。
+
+**参数**:
+- `daily_volatility` - 日波动率
+- `trading_days` - 年交易日数（通常用 252）
+
+**返回**: 年化波动率
+
+---
+
+## 技术指标模块 (indicator)
+
+**包路径**: `username/alpha/src/indicator`
+
+所有指标函数都接受数据数组并返回计算结果数组。
+
+### 趋势类指标
+
+#### sma (简单移动平均)
+
+```moonbit
+pub fn sma(Array[Float], Int) -> Array[Float]
+```
+
+**参数**:
+- `data` - 输入数据（通常为收盘价）
+- `period` - 周期
+
+**返回**: SMA 数组（前 `period-1` 个元素为 0 或无效值）
+
+#### ema (指数移动平均)
+
+```moonbit
+pub fn ema(Array[Float], Int) -> Array[Float]
+```
+
+### 摆动类指标
+
+#### rsi (相对强弱指标)
+
+```moonbit
+pub fn rsi(Array[Float], Int) -> Array[Float]
+```
+
+**参数**:
+- `prices` - 价格序列
+- `period` - 周期（通常用 14）
+
+**返回**: RSI 数组（值域 0-100）
+
+#### kdj (随机指标)
+
+```moonbit
+pub fn kdj(Array[@data.KLine], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
+```
+
+**参数**:
+- `klines` - K 线数组
+- `n` - 周期（通常用 9）
+- `m1` - K 的平滑周期（通常用 3）
+- `m2` - D 的平滑周期（通常用 3）
+
+**返回**: `(K 值数组，D 值数组，J 值数组)`
+
+#### williams_r (威廉指标)
+
+```moonbit
+pub fn williams_r(Array[@data.KLine], Int) -> Array[Float]
+```
+
+### 趋势确认指标
+
+#### macd (平滑异同移动平均)
+
+```moonbit
+pub fn macd(Array[Float], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
+```
+
+**参数**:
+- `prices` - 价格序列
+- `fast_period` - 快线周期（通常用 12）
+- `slow_period` - 慢线周期（通常用 26）
+- `signal_period` - 信号线周期（通常用 9）
+
+**返回**: `(DIF 数组，DEA 数组，MACD 柱状图数组)`
+
+#### bollinger_bands (布林带)
+
+```moonbit
+pub fn bollinger_bands(Array[Float], Int, Float) -> (Array[Float], Array[Float], Array[Float])
+```
+
+**参数**:
+- `prices` - 价格序列
+- `period` - 周期（通常用 20）
+- `std_dev` - 标准差倍数（通常用 2.0）
+
+**返回**: `(上轨数组，中轨数组，下轨数组)`
+
+### 成交量指标
+
+#### obv (能量潮)
+
+```moonbit
+pub fn obv(Array[@data.KLine]) -> Array[Float]
+```
+
+### 波动率指标
+
+#### atr (平均真实波幅)
+
+```moonbit
+pub fn atr(Array[@data.KLine], Int) -> Array[Float]
+```
+
+**参数**:
+- `klines` - K 线数组
+- `period` - 周期（通常用 14）
+
+### 其他指标
+
+#### cci (商品通道指数)
+
+```moonbit
+pub fn cci(Array[@data.KLine], Int) -> Array[Float]
+```
+
+**使用示例**:
+```moonbit
+// 计算 MACD
+let closes = klines.map(fn(k) { k.close })
+let (dif, dea, macd_hist) = indicator::macd(closes, 12, 26, 9)
+
+// 计算 RSI
+let rsi_values = indicator::rsi(closes, 14)
+
+// 判断超买超卖
+let last_rsi = rsi_values[rsi_values.length() - 1]
+if last_rsi > 70.0 {
+  io::println("超买信号")
+} else if last_rsi < 30.0 {
+  io::println("超卖信号")
+}
+
+// 布林带突破
+let (upper, middle, lower) = indicator::bollinger_bands(closes, 20, 2.0)
+if current_price > upper[last] {
+  io::println("上轨突破")
+}
 ```
 
 ---
 
-## @indicator Module
+## 投资组合模块 (portfolio)
 
-Technical analysis indicators library.
+**包路径**: `username/alpha/src/portfolio`
 
-### Functions
+### 核心类型
 
-#### sma
+#### Position (持仓)
 
-Calculate Simple Moving Average.
-
-```mbt
-pub fn sma(values : Array[Float], period : Int) -> Array[Float]
-```
-
-**Parameters:**
-- `values`: Array of prices
-- `period`: Number of periods to average
-
-**Returns:** Array of SMA values (leading periods filled with 0.0)
-
-#### ema
-
-Calculate Exponential Moving Average.
-
-```mbt
-pub fn ema(values : Array[Float], period : Int) -> Array[Float]
-```
-
-#### rsi
-
-Calculate Relative Strength Index.
-
-```mbt
-pub fn rsi(values : Array[Float], period : Int) -> Array[Float]
-```
-
-**Parameters:**
-- `values`: Array of prices
-- `period`: Number of periods (typically 14)
-
-**Returns:** Array of RSI values (0-100 range)
-
-#### macd
-
-Calculate MACD indicator.
-
-```mbt
-pub fn macd(
-  values : Array[Float],
-  fast_period : Int,    // Typically 12
-  slow_period : Int,    // Typically 26
-  signal_period : Int,  // Typically 9
-) -> (Array[Float], Array[Float], Array[Float])
-```
-
-**Returns:** Tuple of (MACD line, Signal line, Histogram)
-
-#### bollinger_bands
-
-Calculate Bollinger Bands.
-
-```mbt
-pub fn bollinger_bands(
-  values : Array[Float],
-  period : Int,      // Typically 20
-  std_dev : Float,   // Typically 2.0
-) -> (Array[Float], Array[Float], Array[Float])
-```
-
-**Returns:** Tuple of (upper_band, middle_band, lower_band)
-
-#### atr
-
-Calculate Average True Range.
-
-```mbt
-pub fn atr(klines : Array[KLine], period : Int) -> Array[Float]
-```
-
----
-
-## @portfolio Module
-
-Portfolio and position management.
-
-### Types
-
-#### Position
-
-```mbt
+```moonbit
 pub struct Position {
-  stock : StockCode
-  mut quantity : Float
-  mut avg_cost : Float
-  mut current_price : Float
+  stock : String        // 股票代码
+  mut quantity : Float  // 持仓数量
+  mut avg_cost : Float  // 平均成本
+  mut current_price : Float  // 当前价格
 }
 ```
 
-#### Portfolio
+**方法**:
+- `value()` - 持仓市值
+- `pnl()` - 持仓盈亏（绝对值）
+- `pnl_pct()` - 持仓盈亏比例
 
-```mbt
+**Trait 实现**: `Eq`, `Show`
+
+#### Portfolio (投资组合)
+
+```moonbit
 pub struct Portfolio {
-  positions : Array[Position]
-  mut cash : Float
-  initial_capital : Float
+  positions : Array[Position]  // 持仓列表
+  mut cash : Float             // 现金
+  initial_capital : Float      // 初始资金
 }
 ```
 
-### Functions
+**方法**:
+- `buy(stock, quantity, price)` - 买入
+- `sell(stock, quantity, price)` - 卖出
+- `get_position(stock)` - 获取持仓
+- `has_position(stock)` - 是否持有
+- `position_count()` - 持仓数量
+- `total_value()` - 组合总市值
+- `position_value()` - 持仓总市值
+- `position_ratio()` - 仓位比例
+- `get_total_exposure()` - 总敞口
+- `total_pnl()` - 总盈亏
+- `total_pnl_pct()` - 总盈亏比例
+- `calculate_position_pnl()` - 计算持仓盈亏
+- `calculate_daily_pnl(current_prices, prev_prices)` - 计算日盈亏
+- `update_prices(price_func)` - 更新持仓价格
+
+**Trait 实现**: `Show`
+
+### 投资组合函数
 
 #### create_portfolio
 
-```mbt
-pub fn create_portfolio(initial_capital : Float) -> Portfolio
+```moonbit
+pub fn create_portfolio(Float) -> Portfolio
 ```
 
-### Position Methods
+创建新的投资组合。
 
-- `value() -> Float` - Calculate position market value
-- `pnl() -> Float` - Calculate unrealized P&L
-- `pnl_pct() -> Float` - Calculate P&L percentage
+**参数**: `initial_capital` - 初始资金
 
-### Portfolio Methods
+**返回**: 新的 Portfolio 实例
 
-- `total_value() -> Float` - Get total portfolio value
-- `position_value() -> Float` - Get total position value
-- `position_ratio() -> Float` - Get position ratio
-- `total_pnl() -> Float` - Get total P&L
-- `total_pnl_pct() -> Float` - Get total P&L percentage
-- `buy(stock, quantity, price) -> Bool` - Buy stock
-- `sell(stock, quantity, price) -> Bool` - Sell stock
-- `update_prices(get_price) -> Unit` - Update current prices
+**示例**:
+```moonbit
+// 创建初始资金为 100 万的组合
+let mut portfolio = portfolio::create_portfolio(1_000_000.0)
+
+// 买入股票
+portfolio.buy("sh.600000", 1000, 10.5)
+
+// 查询持仓
+match portfolio.get_position("sh.600000") {
+  Some(pos) => {
+    io::println("持仓市值：" + String::from_float(pos.value()))
+  }
+  None => io::println("无持仓")
+}
+
+// 获取组合信息
+io::println("总市值：" + String::from_float(portfolio.total_value()))
+io::println("仓位：" + String::from_float(portfolio.position_ratio() * 100) + "%")
+```
 
 ---
 
-## @risk Module
+## 风险管理模块 (risk)
 
-Risk management rules engine.
+**包路径**: `username/alpha/src/risk`
 
-### Types
+### 核心类型
 
-#### RiskAction
+#### RiskAction (风控动作)
 
-```mbt
+```moonbit
 pub enum RiskAction {
-  Allow
-  Reject
-  ReducePosition(Float)
-  StopTrading
+  Allow                    // 允许交易
+  Reject                   // 拒绝交易
+  ReducePosition(Float)    // 减仓（参数为建议减仓比例）
+  StopTrading              // 停止交易
 }
 ```
 
-#### RiskResult
+**Trait 实现**: `Eq`, `Show`
 
-```mbt
+#### RiskResult (风控结果)
+
+```moonbit
 pub struct RiskResult {
-  passed : Bool
-  message : String
-  action : RiskAction
+  passed : Bool       // 是否通过
+  message : String    // 结果说明
+  action : RiskAction // 执行动作
 }
 ```
 
-#### RiskRule
+#### RiskRule (风控规则)
 
-```mbt
+```moonbit
 pub struct RiskRule {
-  name : String
-  priority : Int
-  check_fn : (Float, Float, Float) -> RiskResult
+  name : String                           // 规则名称
+  priority : Int                          // 优先级（数字越小优先级越高）
+  check_fn : (Float, Float, Float) -> RiskResult  // 检查函数
 }
 ```
 
-#### RiskEngine
+**Trait 实现**: `Show`
 
-```mbt
+#### RiskEngine (风控引擎)
+
+```moonbit
 pub struct RiskEngine {
-  rules : Array[RiskRule]
-  mut stopped : Bool
-  violations : Array[String]
+  rules : Array[RiskRule]    // 规则列表
+  mut stopped : Bool         // 是否已停止交易
+  violations : Array[String] // 违规记录
 }
 ```
 
-### Functions
+**方法**:
+- `add_rule(rule)` - 添加规则
+- `check(current_drawdown, daily_loss, position_ratio)` - 执行检查
+
+### 风控引擎函数
 
 #### create_risk_engine
 
-```mbt
+```moonbit
 pub fn create_risk_engine() -> RiskEngine
 ```
 
-### Built-in Rules
+创建风控引擎实例。
 
-- `max_drawdown_rule(max_pct : Float) -> RiskRule`
-- `position_limit_rule(max_pct : Float) -> RiskRule`
-- `daily_loss_limit_rule(max_pct : Float) -> RiskRule`
-- `stop_loss_rule(stock : String, max_loss_pct : Float) -> RiskRule`
-- `single_stock_limit_rule(max_pct : Float) -> RiskRule`
-- `take_profit_rule(min_profit_pct : Float) -> RiskRule`
-- `default_rules() -> Array[RiskRule]`
+### 内置风控规则
 
-### RiskEngine Methods
+#### max_drawdown_rule
 
-- `add_rule(rule : RiskRule) -> Unit`
-- `check(drawdown, position_ratio, daily_loss) -> RiskResult`
+```moonbit
+pub fn max_drawdown_rule(Float) -> RiskRule
+```
+
+最大回撤规则：当回撤超过阈值时停止交易。
+
+**参数**: `max_drawdown` - 最大回撤阈值（如 0.2 表示 20%）
+
+#### position_limit_rule
+
+```moonbit
+pub fn position_limit_rule(Float) -> RiskRule
+```
+
+仓位限制规则：当仓位超过阈值时拒绝新开仓。
+
+**参数**: `max_position_ratio` - 最大仓位比例（如 0.9 表示 90%）
+
+#### daily_loss_limit_rule
+
+```moonbit
+pub fn daily_loss_limit_rule(Float) -> RiskRule
+```
+
+日损限制规则：当日亏损超过阈值时停止交易。
+
+**参数**: `max_daily_loss` - 最大日损比例
+
+#### stop_loss_rule
+
+```moonbit
+pub fn stop_loss_rule(String, Float) -> RiskRule
+```
+
+止损规则：当个股/组合亏损超过阈值时减仓。
+
+**参数**:
+- `stock_code` - 股票代码（空字符串表示组合级别）
+- `stop_loss_ratio` - 止损阈值
+
+#### single_stock_limit_rule
+
+```moonbit
+pub fn single_stock_limit_rule(Float) -> RiskRule
+```
+
+单股集中度限制规则：当单股持仓超过阈值时减仓。
+
+**参数**: `max_single_ratio` - 单股最大持仓比例
+
+#### take_profit_rule
+
+```moonbit
+pub fn take_profit_rule(Float) -> RiskRule
+```
+
+止盈规则：当盈利超过阈值时部分减仓锁定利润。
+
+**参数**: `take_profit_ratio` - 止盈阈值
+
+#### total_exposure_limit_rule
+
+```moonbit
+pub fn total_exposure_limit_rule(Float) -> RiskRule
+```
+
+总敞口限制规则：限制组合总风险敞口。
+
+### 辅助函数
+
+#### risk_result_pass
+
+```moonbit
+pub fn risk_result_pass(String) -> RiskResult
+```
+
+创建通过的风控结果。
+
+#### risk_result_fail
+
+```moonbit
+pub fn risk_result_fail(String, RiskAction) -> RiskResult
+```
+
+创建失败的风控结果。
+
+#### risk_action_* 系列函数
+
+```moonbit
+pub fn risk_action_allow() -> RiskAction
+pub fn risk_action_reject() -> RiskAction
+pub fn risk_action_reduce_position(Float) -> RiskAction
+pub fn risk_action_stop_trading() -> RiskAction
+```
+
+创建对应的风控动作。
+
+**使用示例**:
+```moonbit
+// 创建风控引擎
+let mut risk_engine = risk::create_risk_engine()
+
+// 添加规则
+risk_engine.add_rule(risk::max_drawdown_rule(0.2))
+risk_engine.add_rule(risk::position_limit_rule(0.9))
+risk_engine.add_rule(risk::single_stock_limit_rule(0.3))
+
+// 执行检查
+let result = risk_engine.check(
+  current_drawdown=0.15,  // 当前回撤 15%
+  daily_loss=0.02,        // 日损 2%
+  position_ratio=0.85     // 仓位 85%
+)
+
+if !result.passed {
+  io::println("风控未通过：" + result.message)
+}
+```
 
 ---
 
-## @drawdown Module
+## 回撤计算模块 (drawdown)
 
-Drawdown calculation and monitoring.
+**包路径**: `username/alpha/src/drawdown`
 
-### Types
+### 核心类型
 
-#### DrawdownInfo
+#### DrawdownInfo (回撤信息)
 
-```mbt
+```moonbit
 pub struct DrawdownInfo {
-  peak : Float
-  trough : Float
-  peak_date : String
-  trough_date : String
-  drawdown : Float
-  duration : Int
-  recovered : Bool
+  peak : Float          // 峰值
+  trough : Float        // 谷底
+  peak_date : String    // 峰值日期
+  trough_date : String  // 谷底日期
+  drawdown : Float      // 回撤幅度（负值）
+  duration : Int        // 回撤持续天数
+  recovered : Bool      // 是否已恢复
 }
 ```
 
-#### DrawdownLevel
+**Trait 实现**: `Eq`, `Show`, `ToJson`
 
-```mbt
+#### DrawdownLevel (回撤级别)
+
+```moonbit
 pub enum DrawdownLevel {
-  Normal, Minor, Moderate, Significant, Severe
+  Normal       // 正常（回撤 < 5%）
+  Minor        // 轻度（5% - 10%）
+  Moderate     // 中度（10% - 20%）
+  Significant  // 显著（20% - 30%）
+  Severe       // 严重（> 30%）
 }
 ```
 
-#### DrawdownAlert
+#### DrawdownAlert (回撤预警配置)
 
-```mbt
+```moonbit
 pub struct DrawdownAlert {
-  warning_threshold : Float
-  critical_threshold : Float
-  max_threshold : Float
+  warning_threshold : Float   // 预警阈值（如 -0.05）
+  critical_threshold : Float  // 临界阈值（如 -0.10）
+  max_threshold : Float       // 最大阈值（如 -0.20）
 }
 ```
 
-#### DrawdownMonitor
+#### DrawdownMonitor (回撤监控器)
 
-```mbt
+```moonbit
 pub struct DrawdownMonitor {
   mut peak_value : Float
   mut peak_date : String
@@ -341,132 +703,239 @@ pub struct DrawdownMonitor {
 }
 ```
 
-### Functions
+**方法**:
+- `update(value, date)` - 更新监控器
+- `get_drawdown()` - 获取当前回撤
+- `get_alert_level()` - 获取预警级别
+- `is_alert_triggered()` - 是否触发预警
+- `get_info()` - 获取回撤详情
+- `reset()` - 重置监控器
+
+### 回撤计算函数
 
 #### calculate_max_drawdown
 
-```mbt
-pub fn calculate_max_drawdown(values : Array[Float]) -> Float
+```moonbit
+pub fn calculate_max_drawdown(Array[Float]) -> Float
+```
+
+计算序列的最大回撤值。
+
+**参数**: `values` - 净值/价格序列
+
+**返回**: 最大回撤（负值）
+
+**示例**:
+```moonbit
+let equity_curve = [1.0, 1.1, 1.05, 1.2, 0.9, 1.0]
+let max_dd = drawdown::calculate_max_drawdown(equity_curve)
+// 输出：-0.25 (从 1.2 跌到 0.9，回撤 25%)
 ```
 
 #### calculate_max_drawdown_detailed
 
-```mbt
-pub fn calculate_max_drawdown_detailed(
-  values : Array[Float],
-  dates : Array[String],
-) -> DrawdownInfo?
+```moonbit
+pub fn calculate_max_drawdown_detailed(Array[Float], Array[String]) -> DrawdownInfo?
 ```
 
-#### calculate_drawdown_series
+计算最大回撤并返回详细信息。
 
-```mbt
-pub fn calculate_drawdown_series(values : Array[Float]) -> Array[Float]
-```
+**参数**:
+- `values` - 净值/价格序列
+- `dates` - 对应的日期序列
+
+**返回**: `DrawdownInfo` 结构体，包含峰值、谷底、日期等详细信息
 
 #### calculate_current_drawdown
 
-```mbt
-pub fn calculate_current_drawdown(values : Array[Float]) -> Float
+```moonbit
+pub fn calculate_current_drawdown(Array[Float]) -> Float
 ```
+
+计算当前回撤（序列最后一个值相对于历史峰值的回撤）。
+
+#### calculate_drawdown_series
+
+```moonbit
+pub fn calculate_drawdown_series(Array[Float]) -> Array[Float]
+```
+
+计算每个时间点的回撤，返回回撤序列。
+
+**返回**: 与输入等长的回撤数组
+
+#### calculate_drawdown_from_klines
+
+```moonbit
+pub fn calculate_drawdown_from_klines(Array[@data.KLine]) -> Float
+```
+
+直接从 K 线序列计算最大回撤（使用收盘价）。
+
+#### find_top_drawdowns
+
+```moonbit
+pub fn find_top_drawdowns(Array[Float], Array[String], Int) -> Array[DrawdownInfo]
+```
+
+找出前 N 个最大的回撤事件。
+
+**参数**:
+- `values` - 净值序列
+- `dates` - 日期序列
+- `n` - 返回数量
+
+**返回**: `DrawdownInfo` 数组，按回撤幅度排序
+
+### 回撤统计函数
 
 #### get_drawdown_stats
 
-```mbt
-pub fn get_drawdown_stats(values : Array[Float]) -> DrawdownStats
+```moonbit
+pub fn get_drawdown_stats(Array[Float]) -> DrawdownStats
 ```
 
-#### create_monitor
+获取回撤统计信息。
 
-```mbt
-pub fn create_monitor(
-  warning_threshold : Float,
-  critical_threshold : Float,
-) -> DrawdownMonitor
+**返回**:
+```moonbit
+pub struct DrawdownStats {
+  max_drawdown : Float     // 最大回撤
+  current_drawdown : Float // 当前回撤
+  avg_drawdown : Float     // 平均回撤
+  drawdown_count : Int     // 回撤事件次数
+}
 ```
 
-#### classify_drawdown
-
-```mbt
-pub fn classify_drawdown(drawdown : Float) -> DrawdownLevel
-```
-
-#### default_alert_config
-
-```mbt
-pub fn default_alert_config() -> DrawdownAlert
-```
+### 回撤预警函数
 
 #### check_drawdown_alert
 
-```mbt
-pub fn check_drawdown_alert(
-  drawdown : Float,
-  config : DrawdownAlert,
-) -> String
+```moonbit
+pub fn check_drawdown_alert(Float, DrawdownAlert) -> String
 ```
 
-### DrawdownMonitor Methods
+检查当前回撤是否触发预警。
 
-- `update(value, date) -> Unit`
-- `get_drawdown() -> Float`
-- `get_info() -> DrawdownInfo`
-- `is_alert_triggered() -> Bool`
-- `get_alert_level() -> String`
-- `reset() -> Unit`
+**参数**:
+- `current_drawdown` - 当前回撤值
+- `alert_config` - 预警配置
+
+**返回**: 预警级别字符串 ("normal", "warning", "critical", "max")
+
+#### classify_drawdown
+
+```moonbit
+pub fn classify_drawdown(Float) -> DrawdownLevel
+```
+
+将回撤值分类到对应的级别。
+
+#### default_alert_config
+
+```moonbit
+pub fn default_alert_config() -> DrawdownAlert
+```
+
+获取默认预警配置：
+- warning: -5%
+- critical: -10%
+- max: -20%
+
+#### create_monitor
+
+```moonbit
+pub fn create_monitor(Float, Float) -> DrawdownMonitor
+```
+
+创建回撤监控器。
+
+**参数**:
+- `warning_threshold` - 预警阈值
+- `critical_threshold` - 临界阈值
+
+**使用示例**:
+```moonbit
+// 创建监控器
+let mut monitor = drawdown::create_monitor(-0.05, -0.10)
+
+// 更新监控
+monitor.update(1.0, "2024-01-01")
+monitor.update(1.1, "2024-01-02")
+monitor.update(0.95, "2024-01-03")  // 回撤触发
+
+// 检查状态
+if monitor.is_alert_triggered() {
+  io::println("预警触发：" + monitor.get_alert_level())
+}
+```
 
 ---
 
-## @strategy Module
+## 策略引擎模块 (strategy)
 
-Strategy engine and built-in strategies.
+**包路径**: `username/alpha/src/strategy`
 
-### Types
+### 核心类型
 
-#### Action
+#### Action (交易动作)
 
-```mbt
+```moonbit
 pub enum Action {
-  Buy, Sell, Hold
+  Buy
+  Sell
+  Hold
 }
 ```
 
-#### Signal
+**Trait 实现**: `Eq`, `Show`, `ToJson`
 
-```mbt
+#### Signal (交易信号)
+
+```moonbit
 pub struct Signal {
-  stock : StockCode
-  action : Action
-  price : Float
-  timestamp : String
-  strength : Float
+  stock : String        // 股票代码
+  action : Action       // 交易动作
+  price : Float         // 信号价格
+  timestamp : String    // 时间戳
+  strength : Float      // 信号强度 (0.0 - 1.0)
 }
 ```
 
-#### StrategyContext
+**构造方法**:
+- `Signal::buy(stock, price, timestamp, strength)`
+- `Signal::sell(stock, price, timestamp, strength)`
+- `Signal::hold(stock, price, timestamp)`
+- `Signal::with_action(stock, action, price, timestamp, strength)`
 
-```mbt
+**Trait 实现**: `Show`, `ToJson`
+
+#### StrategyContext (策略上下文)
+
+```moonbit
 pub struct StrategyContext {
-  capital : Float
-  position : Float
-  current_price : Float
-  last_signal : Signal?
+  capital : Float         // 可用资金
+  position : Float        // 当前仓位
+  current_price : Float   // 当前价格
+  last_signal : Signal?   // 上一个信号
 }
 ```
 
-#### Strategy
+**Trait 实现**: `Show`, `ToJson`
 
-```mbt
+#### Strategy (策略)
+
+```moonbit
 pub struct Strategy {
   name : String
   on_init : (StrategyContext) -> Unit
-  on_bar : (KLine, StrategyContext, Array[Float]) -> Signal
+  on_bar : (@data.KLine, StrategyContext, Array[Float]) -> Signal
 }
 ```
 
-#### StrategyEngine
+#### StrategyEngine (策略引擎)
 
-```mbt
+```moonbit
 pub struct StrategyEngine {
   capital : Float
   position : Float
@@ -476,87 +945,168 @@ pub struct StrategyEngine {
 }
 ```
 
-#### BacktestConfig
+#### StrategyResult (策略结果)
 
-```mbt
+```moonbit
+pub struct StrategyResult {
+  signal : Signal
+  executed : Bool
+  exec_price : Float
+  exec_volume : Float
+}
+```
+
+**Trait 实现**: `Show`, `ToJson`
+
+### 策略引擎函数
+
+#### create_strategy_engine
+
+```moonbit
+pub fn create_strategy_engine(Float) -> StrategyEngine
+```
+
+创建策略引擎。
+
+**参数**: `initial_capital` - 初始资金
+
+#### process_bar
+
+```moonbit
+pub fn process_bar(StrategyEngine, Strategy, @data.KLine, Array[Float]) -> StrategyResult
+```
+
+处理单根 K 线，生成交易信号。
+
+**参数**:
+- `engine` - 策略引擎
+- `strategy` - 策略实例
+- `kline` - K 线数据
+- `indicator_values` - 指标值数组（可选）
+
+**返回**: `StrategyResult`
+
+#### get_engine_stats
+
+```moonbit
+pub fn get_engine_stats(StrategyEngine) -> (Float, Float, Int)
+```
+
+获取引擎统计信息。
+
+**返回**: `(总盈亏，当前仓位，信号数量)`
+
+#### default_backtest_config
+
+```moonbit
+pub fn default_backtest_config() -> BacktestConfig
+```
+
+获取默认回测配置：
+```moonbit
 pub struct BacktestConfig {
   start_date : String
   end_date : String
   initial_capital : Float
   commission_rate : Float
   slippage : Float
-  benchmark : StockCode?
+  benchmark : String?
 }
 ```
 
-### Functions
+**示例 - 定义策略**:
+```moonbit
+// 简单的均线交叉策略
+pub fn ma_cross_strategy() -> Strategy {
+  Strategy {
+    name: "MA Cross",
+    on_init: fn(ctx) {
+      // 初始化逻辑
+      io::println("策略初始化")
+    },
+    on_bar: fn(kline, ctx, indicators) {
+      let ma5 = indicators[0]
+      let ma20 = indicators[1]
 
-#### create_strategy
-
-```mbt
-pub fn create_strategy(
-  name : String,
-  on_init : (StrategyContext) -> Unit,
-  on_bar : (KLine, StrategyContext, Array[Float]) -> Signal,
-) -> Strategy
+      if ma5 > ma20 && ctx.position == 0.0 {
+        Signal::buy(kline.code, kline.close, kline.date, 0.8)
+      } else if ma5 < ma20 && ctx.position > 0.0 {
+        Signal::sell(kline.code, kline.close, kline.date, 0.8)
+      } else {
+        Signal::hold(kline.code, kline.close, kline.date)
+      }
+    }
+  }
+}
 ```
-
-#### create_ma_cross_strategy
-
-```mbt
-pub fn create_ma_cross_strategy(
-  fast_period : Int,
-  slow_period : Int,
-) -> MaCrossStrategy
-```
-
-#### default_backtest_config
-
-```mbt
-pub fn default_backtest_config() -> BacktestConfig
-```
-
-### Signal Functions
-
-- `Signal::buy(stock, price, timestamp, strength) -> Signal`
-- `Signal::sell(stock, price, timestamp, strength) -> Signal`
-- `Signal::hold(stock, price, timestamp) -> Signal`
-- `Signal::with_action(stock, action, price, timestamp, strength) -> Signal`
-
-### StrategyEngine Functions
-
-- `create_strategy_engine(initial_capital : Float) -> StrategyEngine`
-- `process_bar(engine, strategy, kline, close_history) -> (StrategyResult, StrategyEngine)`
-- `execute_signal(engine, result, volume) -> (StrategyEngine, Bool)`
-- `get_engine_stats(engine) -> (Float, Float, Int)`
-- `get_portfolio_value(engine) -> Float`
-- `get_total_return(engine, initial_capital) -> Float`
-- `get_trade_count(engine) -> Int`
 
 ---
 
-## @backtest Module
+## 回测引擎模块 (backtest)
 
-Backtest engine and result reporting.
+**包路径**: `username/alpha/src/backtest`
 
-### Types
+### 核心类型
 
-#### Trade
+#### BacktestEngine (回测引擎)
 
-```mbt
-pub struct Trade {
-  stock : StockCode
-  action : Action
-  price : Float
-  quantity : Float
-  timestamp : String
-  commission : Float
+```moonbit
+pub struct BacktestEngine {
+  config : @strategy.BacktestConfig
+  portfolio : @portfolio.Portfolio
+  risk_engine : @risk.RiskEngine
+  trades : Array[Trade]
+  equity_curve : Array[EquityPoint]
+  current_date : String
+  current_equity : Float
+  peak_equity : Float
+  max_drawdown : Float
 }
 ```
 
-#### EquityPoint
+#### BacktestResult (回测结果)
 
-```mbt
+```moonbit
+pub struct BacktestResult {
+  initial_capital : Float     // 初始资金
+  final_capital : Float       // 最终资金
+  total_return : Float        // 总收益率
+  max_drawdown : Float        // 最大回撤
+  sharpe_ratio : Float        // 夏普比率
+  total_trades : Int          // 总交易数
+  equity_curve : Array[EquityPoint]
+  trades : Array[Trade]
+  stats : BacktestStats
+}
+```
+
+**Trait 实现**: `Show`, `ToJson`
+
+#### BacktestStats (回测统计)
+
+```moonbit
+pub struct BacktestStats {
+  total_return : Float       // 总收益率
+  annual_return : Float      // 年化收益率
+  max_drawdown : Float       // 最大回撤
+  sharpe_ratio : Float       // 夏普比率
+  sortino_ratio : Float      // 索提诺比率
+  win_rate : Float           // 胜率
+  profit_factor : Float      // 盈亏比
+  total_trades : Int         // 总交易数
+  winning_trades : Int       // 盈利交易数
+  losing_trades : Int        // 亏损交易数
+  avg_win : Float            // 平均盈利
+  avg_loss : Float           // 平均亏损
+  avg_trade_duration : Float // 平均持仓时间
+}
+```
+
+**Trait 实现**: `Show`, `ToJson`
+
+#### EquityPoint (权益点)
+
+```moonbit
 pub struct EquityPoint {
   date : String
   equity : Float
@@ -566,53 +1116,26 @@ pub struct EquityPoint {
 }
 ```
 
-#### BacktestStats
+**Trait 实现**: `Show`, `ToJson`
 
-```mbt
-pub struct BacktestStats {
-  total_return : Float
-  annual_return : Float
-  max_drawdown : Float
-  sharpe_ratio : Float
-  sortino_ratio : Float
-  win_rate : Float
-  profit_factor : Float
-  total_trades : Int
-  winning_trades : Int
-  losing_trades : Int
-  avg_win : Float
-  avg_loss : Float
-  avg_trade_duration : Float
+#### Trade (交易记录)
+
+```moonbit
+pub struct Trade {
+  stock : String
+  action : @strategy.Action
+  price : Float
+  quantity : Float
+  timestamp : String
+  commission : Float
 }
 ```
 
-#### BacktestResult
+**Trait 实现**: `Show`, `ToJson`
 
-```mbt
-pub struct BacktestResult {
-  initial_capital : Float
-  final_capital : Float
-  total_return : Float
-  max_drawdown : Float
-  sharpe_ratio : Float
-  total_trades : Int
-  equity_curve : Array[EquityPoint]
-  trades : Array[Trade]
-  stats : BacktestStats
-}
-```
+#### ReportConfig (报告配置)
 
-#### ReportFormat
-
-```mbt
-pub enum ReportFormat {
-  Html, Text
-}
-```
-
-#### ReportConfig
-
-```mbt
+```moonbit
 pub struct ReportConfig {
   title : String
   author : String
@@ -624,534 +1147,203 @@ pub struct ReportConfig {
 }
 ```
 
-### Functions
+#### ReportFormat (报告格式)
+
+```moonbit
+pub enum ReportFormat {
+  Html
+  Text
+}
+```
+
+### 回测引擎函数
 
 #### create_backtest_engine
 
-```mbt
-pub fn create_backtest_engine(config : BacktestConfig) -> BacktestEngine
+```moonbit
+pub fn create_backtest_engine(@strategy.BacktestConfig) -> BacktestEngine
 ```
+
+创建回测引擎实例。
 
 #### run_backtest
 
-```mbt
-pub fn run_backtest(
-  engine : BacktestEngine,
-  klines : Array[KLine],
-  strategy : Strategy,
-) -> BacktestResult
+```moonbit
+pub fn run_backtest(BacktestEngine, Array[@data.KLine], @strategy.Strategy) -> BacktestResult
 ```
+
+运行回测。
+
+**参数**:
+- `engine` - 回测引擎
+- `klines` - K 线数据
+- `strategy` - 策略实例
+
+**返回**: `BacktestResult`
+
+### 报告生成函数
 
 #### generate_report
 
-```mbt
-pub fn generate_report(
-  result : BacktestResult,
-  config : ReportConfig,
-) -> String
+```moonbit
+pub fn generate_report(BacktestResult, ReportConfig) -> String
 ```
+
+生成报告字符串。
 
 #### print_report
 
-```mbt
-pub fn print_report(
-  result : BacktestResult,
-  format? : ReportFormat = ReportFormat::Text,
-) -> Unit
+```moonbit
+pub fn print_report(BacktestResult, ReportFormat) -> Unit
 ```
+
+打印报告到控制台。
+
+#### save_report_to_file
+
+```moonbit
+pub fn save_report_to_file(BacktestResult, String, ReportFormat) -> Result[Unit, String]
+```
+
+保存报告到文件。
+
+### 辅助函数
+
+#### action_to_string
+
+```moonbit
+pub fn action_to_string(@strategy.Action) -> String
+```
+
+将 Action 转换为字符串。
 
 #### default_report_config
 
-```mbt
+```moonbit
 pub fn default_report_config() -> ReportConfig
 ```
 
----
+获取默认报告配置。
 
-## @server Module
+#### create_trade_log
 
-HTTP API server for quantitative drawdown framework.
+```moonbit
+pub fn create_trade_log() -> TradeLog
+```
 
-### Types
+创建交易日志。
 
-#### ApiResponse
+**TradeLog 方法**:
+- `add(date, stock, action, price, quantity, pnl?, commentary)` - 添加日志条目
 
-Generic API response wrapper.
-
-```mbt
-pub(all) enum ApiResponse[T] {
-  Success(T)
-  Error(ApiError)
+**使用示例**:
+```moonbit
+// 配置回测
+let config = @strategy.BacktestConfig {
+  start_date: "2023-01-01",
+  end_date: "2023-12-31",
+  initial_capital: 1_000_000.0,
+  commission_rate: 0.0003,
+  slippage: 0.001,
+  benchmark: None,
 }
-```
 
-#### ApiError
+// 创建引擎
+let engine = backtest::create_backtest_engine(config)
 
-API error information.
+// 加载数据
+let klines = data::load_klines_from_csv("data/sh.600000.csv")
 
-```mbt
-pub(all) struct ApiError {
-  code : Int          // HTTP status code
-  message : String    // Error message
-  details : String?   // Optional error details
-} derive(Show)
-```
+// 运行回测
+let result = backtest::run_backtest(engine, klines, my_strategy)
 
-#### StockInfo
+// 打印结果
+backtest::print_report(result, backtest::ReportFormat::Text)
 
-Stock information.
-
-```mbt
-pub(all) struct StockInfo {
-  code : String       // Stock code (e.g., "sh.600000")
-  name : String       // Stock name
-  exchange : String   // Exchange (sh/sz)
-  market : String     // Market type
-} derive(Show)
-```
-
-#### KLineData
-
-K-line data with stock code.
-
-```mbt
-pub(all) struct KLineData {
-  stock_code : String
-  klines : Array[@data.KLine]
-} derive(Show)
-```
-
-#### DrawdownResult
-
-Drawdown analysis result.
-
-```mbt
-pub(all) struct DrawdownResult {
-  stock_code : String
-  start_date : String
-  end_date : String
-  max_drawdown : Float
-  peak : Float
-  trough : Float
-  peak_date : String
-  trough_date : String
-  duration : Int
-  drawdown_series : Array[DrawdownPoint]
+// 保存 HTML 报告
+match backtest::save_report_to_file(result, "report.html", backtest::ReportFormat::Html) {
+  Ok(_) => io::println("报告已保存"),
+  Err(e) => io::println("保存失败：" + e)
 }
+
+// 访问详细统计
+io::println("总收益率：" + String::from_float(result.stats.total_return * 100) + "%")
+io::println("夏普比率：" + String::from_float(result.stats.sharpe_ratio))
+io::println("最大回撤：" + String::from_float(result.stats.max_drawdown * 100) + "%")
+io::println("胜率：" + String::from_float(result.stats.win_rate * 100) + "%")
 ```
-
-#### DrawdownPoint
-
-Single drawdown point.
-
-```mbt
-pub(all) struct DrawdownPoint {
-  date : String
-  value : Float
-  drawdown : Float
-}
-```
-
-#### PortfolioDrawdownResult
-
-Portfolio drawdown result.
-
-```mbt
-pub(all) struct PortfolioDrawdownResult {
-  max_drawdown : Float
-  current_drawdown : Float
-  peak_date : String
-  peak_value : Float
-  drawdown_series : Array[DrawdownPoint]
-  positions : Array[PositionInfo]
-}
-```
-
-#### PositionInfo
-
-Position information.
-
-```mbt
-pub(all) struct PositionInfo {
-  stock_code : String
-  quantity : Float
-  avg_price : Float
-  current_price : Float
-  market_value : Float
-  pnl : Float
-  pnl_percent : Float
-}
-```
-
-#### BacktestRequest
-
-Backtest request parameters.
-
-```mbt
-pub(all) struct BacktestRequest {
-  stock_code : String
-  strategy : String
-  start_date : String
-  end_date : String
-  initial_capital : Float
-  commission_rate : Float
-  slippage : Float
-}
-```
-
-#### BacktestResponse
-
-Backtest response with full results.
-
-```mbt
-pub(all) struct BacktestResponse {
-  request_id : String
-  status : String
-  result : @backtest.BacktestResult?
-  error : String?
-}
-```
-
-### API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/stocks/:code/klines` | GET | Get K-line data for stock |
-| `/api/stocks/:code/drawdown` | GET | Analyze stock drawdown |
-| `/api/portfolio/drawdown` | GET | Analyze portfolio drawdown |
-| `/api/backtest` | POST | Run backtest |
-| `/api/backtest/:id` | GET | Get backtest results |
-| `/api/strategies` | GET | List available strategies |
 
 ---
 
-## Index
+## 完整使用示例
 
-### A
-- Action (type)
-- atr() - Calculate Average True Range
-- avg_trade_duration (field)
-- amount (field)
-- action (field)
-- add() - Add entry to trade log
-- add_rule() - Add risk rule to engine
-- annual_return (field)
-- author (field)
-- action_to_string() - Convert action to string
-- avg_loss (field)
-- avg_win (field)
+### 回测单个策略
 
-### B
-- BacktestConfig (type)
-- BacktestEngine (type)
-- BacktestResult (type)
-- BacktestStats (type)
-- bollinger_bands() - Calculate Bollinger Bands
-- buy() - Buy stock or add to position
+```moonbit
+import username/alpha/src/data
+import username/alpha/src/strategy
+import username/alpha/src/backtest
+import username/alpha/src/indicator
 
-### C
-- calculate_current_drawdown() - Calculate current drawdown from peak
-- calculate_drawdown_series() - Calculate drawdown at each point
-- calculate_max_drawdown() - Calculate maximum drawdown
-- calculate_max_drawdown_detailed() - Calculate max drawdown with details
-- calculate_stats_with_state() - Calculate backtest statistics
-- check() - Evaluate risk rules
-- check_drawdown_alert() - Check drawdown against thresholds
-- classify_drawdown() - Classify drawdown severity
-- close (field)
-- code (field)
-- commission (field)
-- commission_rate (field)
-- commentary (field)
-- config (field)
-- create_backtest_engine() - Create backtest engine
-- create_ma_cross_strategy() - Create MA crossover strategy
-- create_monitor() - Create drawdown monitor
-- create_momentum_strategy() - Create momentum strategy
-- create_portfolio() - Create new portfolio
-- create_risk_engine() - Create risk engine
-- create_strategy() - Create strategy
-- create_trade_log() - Create empty trade log
-- current_date (field)
-- current_drawdown (field)
-- current_equity (field)
-- current_price (field)
+fn main {
+  // 1. 加载数据
+  let klines = match data::load_klines_from_csv("data/sh.600000.csv") {
+    Ok(d) => d,
+    Err(e) => {
+      io::println("加载数据失败：" + e)
+      return
+    }
+  }
 
-### D
-- daily_loss_limit_rule() - Daily loss limit risk rule
-- date (field)
-- default_alert_config() - Default alert configuration
-- default_backtest_config() - Default backtest configuration
-- default_report_config() - Default report configuration
-- default_rules() - Default risk rules
-- drawdown (field)
-- DrawdownAlert (type)
-- DrawdownInfo (type)
-- DrawdownLevel (type)
-- DrawdownMonitor (type)
-- drawdown_count (field)
+  // 2. 计算指标
+  let closes = klines.map(fn(k) { k.close })
+  let ma5 = indicator::sma(closes, 5)
+  let ma20 = indicator::sma(closes, 20)
 
-### E
-- ema() - Calculate Exponential Moving Average
-- end_date (field)
-- entries (field)
-- equity (field)
-- EquityPoint (type)
-- execute_signal() - Execute trading signal
-- executed (field)
-- exec_price (field)
-- exec_volume (field)
-- extract_stock_code_from_filename() - Extract stock code from filename
+  // 3. 定义策略
+  let strategy = Strategy {
+    name: "MA Cross",
+    on_init: fn(_) { io::println("策略启动") },
+    on_bar: fn(kline, ctx, _) {
+      let idx = klines.index_of(kline)
+      if ma5[idx] > ma20[idx] && ctx.position == 0.0 {
+        Signal::buy(kline.code, kline.close, kline.date, 0.8)
+      } else if ma5[idx] < ma20[idx] && ctx.position > 0.0 {
+        Signal::sell(kline.code, kline.close, kline.date, 0.8)
+      } else {
+        Signal::hold(kline.code, kline.close, kline.date)
+      }
+    }
+  }
 
-### F
-- fast_period (field)
-- final_capital (field)
-- format() - Report format
-- format_pct() - Format percentage
-- Frequency (type)
+  // 4. 配置回测
+  let config = strategy::default_backtest_config()
+  let engine = backtest::create_backtest_engine(config)
 
-### G
-- generate_report() - Generate backtest report
-- generate_result_with_state() - Generate backtest result
-- get_alert_level() - Get alert level
-- get_drawdown() - Get current drawdown
-- get_drawdown_stats() - Get drawdown statistics
-- get_engine_stats() - Get engine statistics
-- get_info() - Get drawdown info
-- get_portfolio_value() - Get portfolio value
-- get_total_return() - Get total return
-- get_trade_count() - Get trade count
+  // 5. 运行回测
+  let result = backtest::run_backtest(engine, klines, strategy)
 
-### H
-- high (field)
+  // 6. 输出报告
+  backtest::print_report(result, backtest::ReportFormat::Text)
+}
+```
 
-### I
-- include_equity_curve (field)
-- include_stats (field)
-- include_trades (field)
-- initial_capital (field)
-- is_alert_triggered() - Check if alert triggered
-- is_overbought() - Check if overbought
-- is_oversold() - Check if oversold
+---
 
-### K
-- kline_to_csv_line() - Convert KLine to CSV
-- KLine (type)
+## 附录
 
-### L
-- last_alert_level (field)
-- last_price (field)
-- last_signal (field)
-- losing_trades (field)
-- low (field)
+### 错误处理约定
 
-### M
-- macd() - Calculate MACD indicator
-- ma_cross.mbt - MA Crossover Strategy
-- max_drawdown (field)
-- max_drawdown_rule() - Max drawdown risk rule
-- momentum.mbt - Momentum Strategy
-- max_threshold (field)
+- 所有可能失败的函数返回 `Result[T, String]`
+- `Ok(value)` 表示成功
+- `Err(message)` 表示失败，包含错误信息
 
-### N
-- name (field)
+### 数值精度
 
-### O
-- OHLCV (type)
-- on_bar (field)
-- on_init (field)
-- open (field)
-- oversold_threshold (field)
-- overbought_threshold (field)
+- 价格相关计算使用 `Float` 类型
+- 百分比值用小数表示（如 0.05 表示 5%）
+- 回撤值为负数（如 -0.1 表示回撤 10%）
 
-### P
-- parse_csv_content() - Parse CSV content to KLines
-- peak (field)
-- peak_date (field)
-- peak_equity (field)
-- peak_value (field)
-- period (field)
-- position (field)
-- position_limit_rule() - Position limit risk rule
-- position_ratio (field)
-- position_value (field)
-- positions (field)
-- Portfolio (type)
-- Position (type)
-- print_report() - Print report to stdout
-- process_bar() - Process bar through strategy
-- profit_factor (field)
-- pnl() - Calculate position P&L
-- pnl_pct() - Calculate position P&L percentage
+### 日期格式
 
-### Q
-- quantity (field)
-
-### R
-- ReportConfig (type)
-- ReportFormat (type)
-- risk_action_allow() - Create Allow action
-- risk_action_reduce_position() - Create ReducePosition action
-- risk_action_reject() - Create Reject action
-- risk_action_stop_trading() - Create StopTrading action
-- risk_result_fail() - Create failing RiskResult
-- risk_result_pass() - Create passing RiskResult
-- RiskAction (type)
-- RiskEngine (type)
-- RiskResult (type)
-- RiskRule (type)
-- rsi() - Calculate Relative Strength Index
-- run_backtest() - Run backtest on data
-- rules (field)
-
-### S
-- sell() - Sell stock or reduce position
-- sharpe_ratio (field)
-- Signal (type)
-- single_stock_limit_rule() - Single stock position limit rule
-- slippage (field)
-- sma() - Calculate Simple Moving Average
-- sortino_ratio (field)
-- start_date (field)
-- stats (field)
-- std_dev (field)
-- stop_loss_rule() - Stop loss risk rule
-- stopped (field)
-- Strategy (type)
-- StrategyContext (type)
-- StrategyEngine (type)
-- StrategyInfo (type)
-- StrategyResult (type)
-- stock (field)
-- StockCode (type)
-- strength (field)
-
-### T
-- take_profit_rule() - Take profit risk rule
-- text (field)
-- time (field)
-- timestamp (field)
-- title (field)
-- total_capital (field)
-- total_pnl() - Get total portfolio P&L
-- total_pnl_pct() - Get total portfolio P&L percentage
-- total_position_value (field)
-- total_return (field)
-- total_trades (field)
-- total_value() - Get total portfolio value
-- Trade (type)
-- TradeLog (type)
-- TradeLogEntry (type)
-- trades (field)
-- trough (field)
-- trough_date (field)
-
-### U
-- update() - Update monitor with new value
-- update_prices() - Update position prices
-- upper_band (field)
-
-### V
-- value() - Calculate position value
-- violations (field)
-- volume (field)
-
-### W
-- warning_threshold (field)
-- win_rate (field)
-- winning_trades (field)
-
-### B
-- BacktestConfig (type)
-- BacktestEngine (type)
-- BacktestResult (type)
-- BacktestStats (type)
-- bollinger_bands()
-
-### C
-- calculate_current_drawdown()
-- calculate_drawdown_series()
-- calculate_max_drawdown()
-- calculate_max_drawdown_detailed()
-- check_drawdown_alert()
-- classify_drawdown()
-- create_backtest_engine()
-- create_ma_cross_strategy()
-- create_monitor()
-- create_portfolio()
-- create_risk_engine()
-- create_strategy()
-
-### D
-- daily_loss_limit_rule()
-- default_alert_config()
-- default_backtest_config()
-- default_report_config()
-- default_rules()
-- DrawdownAlert (type)
-- DrawdownInfo (type)
-- DrawdownLevel (type)
-- DrawdownMonitor (type)
-
-### E
-- ema()
-- EquityPoint (type)
-- execute_signal()
-- extract_stock_code_from_filename()
-
-### F
-- Frequency (type)
-
-### G
-- generate_report()
-- get_alert_level()
-- get_drawdown_stats()
-- get_engine_stats()
-- get_portfolio_value()
-- get_total_return()
-- get_trade_count()
-
-### K
-- kline_to_csv_line()
-- KLine (type)
-
-### M
-- macd()
-- max_drawdown_rule()
-
-### P
-- parse_csv_content()
-- position_limit_rule()
-- Portfolio (type)
-- Position (type)
-- print_report()
-- process_bar()
-
-### R
-- ReportConfig (type)
-- ReportFormat (type)
-- RiskAction (type)
-- RiskEngine (type)
-- RiskResult (type)
-- RiskRule (type)
-- rsi()
-- run_backtest()
-
-### S
-- Signal (type)
-- single_stock_limit_rule()
-- sma()
-- stop_loss_rule()
-- Strategy (type)
-- StrategyContext (type)
-- StrategyEngine (type)
-- StockCode (type)
-
-### T
-- take_profit_rule()
-- Trade (type)
-
-### Update (2026-03-27)
-- Added comprehensive docstrings to all public APIs
-- Created README.mbt.md for each package
-- Generated this API reference documentation
+所有日期字符串使用 `YYYY-MM-DD` 格式。

@@ -28,14 +28,13 @@ test "StrategyResult - field assertions" {
   }
   let result = @strategy.StrategyResult::{
     signal,
-    executed: true,
-    exec_price: 10.5,
-    exec_volume: 1000.0,
   }
   // json_inspect disabled for struct types - use field assertions instead
-  assert_true(result.executed == true)
-  assert_true(result.exec_price == 10.5)
-  assert_true(result.exec_volume == 1000.0)
+  let is_buy = match result.signal.action {
+    @strategy.Action::Buy => true
+    _ => false
+  }
+  assert_true(is_buy)
 }
 
 ///|
@@ -131,7 +130,6 @@ test "process_bar - field assertions" {
   )
   // json_inspect disabled for StrategyResult struct - use field assertions
   assert_true(result.signal.action == @strategy.Action::Hold)
-  assert_true(result.executed == false)
 }
 
 ///|
@@ -238,8 +236,6 @@ test "process_bar - generates signal from strategy" {
   assert_true(result.signal.action == @strategy.Action::Buy)
   assert_true(result.signal.price == 10.8)
   assert_true(result.signal.strength == 1.0)
-  assert_true(result.executed == false)
-  assert_true(result.exec_price == 0.0)
 }
 
 ///|

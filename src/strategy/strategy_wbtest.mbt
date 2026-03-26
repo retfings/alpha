@@ -114,13 +114,12 @@ test "StrategyResult creation" {
   }
   let result = StrategyResult::{
     signal,
-    executed: true,
-    exec_price: 10.5,
-    exec_volume: 1000.0,
   }
-  assert_true(result.executed)
-  assert_true(result.exec_price == 10.5)
-  assert_true(result.exec_volume == 1000.0)
+  let is_buy = match result.signal.action {
+    Action::Buy => true
+    _ => false
+  }
+  assert_true(is_buy)
 }
 
 ///|
@@ -159,7 +158,6 @@ test "process_bar - field assertions" {
   let result = process_bar(engine, buy_strategy, kline, close_history)
   // json_inspect disabled for struct types - use field assertions
   assert_true(result.signal.action == Action::Buy)
-  assert_true(result.executed == false)
 }
 
 ///|

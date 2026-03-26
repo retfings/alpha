@@ -237,7 +237,7 @@ pub fn action_to_string(action : @strategy.Action) -> String {
 /// Print report to stdout
 pub fn print_report(
   result : BacktestResult,
-  format? : ReportFormat = ReportFormat::Text,
+  _format? : ReportFormat = ReportFormat::Text,
 ) -> Unit {
   let config = default_report_config()
   let report = generate_report(result, config)
@@ -250,7 +250,7 @@ pub fn print_report(
 /// Parameters:
 /// - result: Backtest result to save
 /// - path: File path to save to
-/// - format: Report format (HTML or Text)
+/// - _format?: Report format (HTML or Text) - currently always generates text
 ///
 /// Returns:
 /// - Ok(()) on success
@@ -258,11 +258,17 @@ pub fn print_report(
 pub fn save_report_to_file(
   result : BacktestResult,
   path : String,
-  format? : ReportFormat = ReportFormat::Html,
+  _format? : ReportFormat = ReportFormat::Html,
 ) -> Result[Unit, String] {
-  // File writing not yet implemented - placeholder for future FFI
-  ignore(result)
-  ignore(path)
-  ignore(format)
-  Err("File writing not yet implemented")
+  // Generate report content
+  let config = default_report_config()
+  let report = generate_report(result, config)
+
+  // Use FFI to write file
+  let success = @ffi.write_file(path, report)
+  if success {
+    Ok(())
+  } else {
+    Err("Failed to write report to file: \{path}")
+  }
 }

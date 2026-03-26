@@ -233,9 +233,9 @@ pub fn run_backtest(
 /// Generate backtest result with mutable state
 fn generate_result_with_state(
   engine : BacktestEngine,
-  current_date : String,
-  current_equity : Float,
-  peak_equity : Float,
+  _current_date : String,
+  _current_equity : Float,
+  _peak_equity : Float,
   max_drawdown : Float,
   trades : Array[Trade],
   equity_curve : Array[EquityPoint],
@@ -378,18 +378,6 @@ fn calculate_stats_core(
     },
     avg_trade_duration: 0.0,
   }
-}
-
-///|
-/// Calculate backtest statistics (convenience wrapper)
-fn calculate_stats(engine : BacktestEngine) -> BacktestStats {
-  calculate_stats_core(
-    engine.config.initial_capital,
-    engine.portfolio,
-    engine.equity_curve,
-    engine.trades,
-    engine.max_drawdown,
-  )
 }
 
 ///|

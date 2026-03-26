@@ -19,11 +19,11 @@ pub fn default_report_config() -> ReportConfig
 
 pub fn generate_report(BacktestResult, ReportConfig) -> String
 
-pub fn print_report(BacktestResult, format? : ReportFormat) -> Unit
+pub fn print_report(BacktestResult, _format? : ReportFormat) -> Unit
 
 pub fn run_backtest(BacktestEngine, Array[@data.KLine], @strategy.Strategy) -> BacktestResult
 
-pub fn save_report_to_file(BacktestResult, String, format? : ReportFormat) -> Result[Unit, String]
+pub fn save_report_to_file(BacktestResult, String, _format? : ReportFormat) -> Result[Unit, String]
 
 // Errors
 

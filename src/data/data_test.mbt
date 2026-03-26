@@ -93,10 +93,10 @@ test "extract_stock_code_from_filename - empty filename" {
 }
 
 ///|
-test "load_klines_from_csv - returns error for C FFI requirement" {
-  let result = load_klines_from_csv("data/test.csv")
+test "load_klines_from_csv - returns error for non-existent file" {
+  let result = load_klines_from_csv("data/nonexistent.csv")
   match result {
-    Err(msg) => assert_true(msg.contains("C FFI"))
+    Err(msg) => assert_true(msg.contains("Failed to read file"))
     Ok(_) => fail("Expected Err result")
   }
 }

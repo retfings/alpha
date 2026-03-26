@@ -2,6 +2,7 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![MoonBit](https://img.shields.io/badge/MoonBit-latest-green.svg)](https://www.moonbitlang.com/)
+[![Test Coverage](https://img.shields.io/badge/coverage-85%25-yellowgreen.svg)](docs/test-coverage-report.md)
 
 使用 MoonBit 语言开发的类型安全量化交易回测框架。
 
@@ -12,6 +13,35 @@
 - **可扩展**: 模块化架构，易于添加新的策略和指标
 - **实时风控**: 内置多种风险管理规则（最大回撤、仓位限制、止损等）
 - **详细报告**: 生成 HTML/Text 格式的回测报告
+
+## 快速开始
+
+### 1. 安装 MoonBit
+
+```bash
+moon up  # 安装/更新 MoonBit
+```
+
+### 2. 克隆项目
+
+```bash
+git clone <repository-url>
+cd alpha
+```
+
+### 3. 构建和测试
+
+```bash
+moon check    # 类型检查（快速）
+moon build    # 构建项目
+moon test     # 运行测试
+```
+
+### 4. 运行回测
+
+```bash
+moon run cmd/main backtest --strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31
+```
 
 ## 项目结构
 
@@ -119,12 +149,20 @@ let result = @backtest.run_backtest(engine, klines, strategy)
 
 ## 文档
 
-- [架构设计](docs/architecture.md) - 完整架构说明
-- [优化路线图](docs/optimization-roadmap.md) - 开发和优化计划
-- [代码修复文档](docs/code-fixes.md) - 修复记录
-- [测试覆盖率报告](docs/test-coverage-report.md) - 测试覆盖分析
+### 核心文档
+
+- [文档索引](docs/INDEX.md) - 完整文档导航
+- [快速入门](docs/QUICKSTART.md) - 5 分钟快速开始
 - [用户指南](docs/user-guide.md) - 使用教程
 - [API 参考](docs/api-reference.md) - API 文档
+- [架构设计](docs/architecture.md) - 架构说明
+
+### 开发文档
+
+- [优化路线图](docs/optimization-roadmap.md) - 开发和优化计划
+- [代码修复文档](docs/code-fixes.md) - 修复记录
+- [测试覆盖率报告](docs/test-coverage-report.md) - 测试分析
+- [策略示例](docs/strategy-examples.md) - 策略示例
 
 ## 项目状态
 

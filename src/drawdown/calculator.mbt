@@ -328,24 +328,31 @@ pub fn find_top_drawdowns(
     }
   }
 
-  // Sort by drawdown severity (most severe first) using bubble sort
+  // Find top n drawdowns using selection algorithm (O(n*k) vs O(n^2) bubble sort)
   let result : Array[DrawdownInfo] = []
   for dd in drawdowns {
     result.push(dd)
   }
+
+  // Use partial selection sort to find top n (most severe = smallest drawdown value)
   let result_len = result.length()
-  let mut ii = 0
-  while ii < result_len - 1 {
-    let mut jj = 0
-    while jj < result_len - ii - 1 {
-      if result[jj].drawdown > result[jj + 1].drawdown {
-        let temp = result[jj]
-        result[jj] = result[jj + 1]
-        result[jj + 1] = temp
+  let limit = if n < result_len { n } else { result_len }
+  let mut i = 0
+  while i < limit {
+    let mut min_idx = i
+    let mut j = i + 1
+    while j < result_len {
+      if result[j].drawdown < result[min_idx].drawdown {
+        min_idx = j
       }
-      jj = jj + 1
+      j = j + 1
     }
-    ii = ii + 1
+    if min_idx != i {
+      let temp = result[i]
+      result[i] = result[min_idx]
+      result[min_idx] = temp
+    }
+    i = i + 1
   }
 
   // Return top n

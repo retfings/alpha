@@ -1294,3 +1294,202 @@ test "generate_html_report produces valid HTML" {
   assert_true(html.has_prefix("<!DOCTYPE html>"))
   assert_true(html.has_suffix("</body>\n</html>\n"))
 }
+
+///|
+test "unit: create_trade_log returns empty log" {
+  let log = @backtest.create_trade_log()
+  // Just verify it can be created
+  assert_true(log.entries.length() == 0)
+}
+
+///|
+test "unit: TradeLog add single entry" {
+  let log = @backtest.create_trade_log()
+  @backtest.TradeLog::add(log, "2024-01-01", "sh.600000", "BUY", 10.5, 1000.0, None, "Initial position")
+  assert_true(log.entries.length() == 1)
+  assert_true(log.entries[0].date == "2024-01-01")
+  assert_true(log.entries[0].stock == "sh.600000")
+  assert_true(log.entries[0].action == "BUY")
+  assert_true(log.entries[0].price > 10.4 && log.entries[0].price < 10.6)
+  assert_true(log.entries[0].quantity > 999.0 && log.entries[0].quantity < 1001.0)
+}
+
+///|
+test "unit: TradeLog add multiple entries" {
+  let log = @backtest.create_trade_log()
+  @backtest.TradeLog::add(log, "2024-01-01", "sh.600000", "BUY", 10.5, 1000.0, None, "Buy")
+  @backtest.TradeLog::add(log, "2024-01-02", "sh.600000", "SELL", 11.0, 500.0, Some(500.0), "Partial sell")
+  @backtest.TradeLog::add(log, "2024-01-03", "sh.600000", "SELL", 11.5, 500.0, Some(750.0), "Close position")
+  assert_true(log.entries.length() == 3)
+  assert_true(log.entries[0].action == "BUY")
+  assert_true(log.entries[1].action == "SELL")
+  assert_true(log.entries[2].action == "SELL")
+}
+
+///|
+test "unit: TradeLog with PnL tracking" {
+  let log = @backtest.create_trade_log()
+  @backtest.TradeLog::add(log, "2024-01-01", "sh.600000", "BUY", 10.0, 1000.0, None, "")
+  @backtest.TradeLog::add(log, "2024-01-02", "sh.600000", "SELL", 12.0, 1000.0, Some(2000.0), "")
+  assert_true(log.entries.length() == 2)
+  match log.entries[1].pnl {
+    Some(pnl) => assert_true(pnl > 1999.0 && pnl < 2001.0)
+    None => assert_true(false)
+  }
+}
+
+///|
+test "unit: TradeLog without PnL" {
+  let log = @backtest.create_trade_log()
+  @backtest.TradeLog::add(log, "2024-01-01", "sh.600000", "BUY", 10.0, 1000.0, None, "")
+  assert_true(log.entries[0].pnl == None)
+}
+
+///|
+test "boundary: backtest with zero initial capital" {
+  let config = @strategy.BacktestConfig::{
+    start_date: "2024-01-01",
+    end_date: "2024-01-05",
+    initial_capital: Float::from_double(0.0),
+    commission_rate: Float::from_double(0.0003),
+    slippage: Float::from_double(0.001),
+    benchmark: None,
+  }
+  let engine = @backtest.create_backtest_engine(config)
+  // Should not crash, but may have undefined behavior
+  // Just verify engine was created
+  assert_true(engine.config.initial_capital == Float::from_double(0.0))
+}
+
+///|
+test "boundary: backtest with very small initial capital" {
+  let config = @strategy.BacktestConfig::{
+    start_date: "2024-01-01",
+    end_date: "2024-01-05",
+    initial_capital: Float::from_double(0.01),
+    commission_rate: Float::from_double(0.0003),
+    slippage: Float::from_double(0.001),
+    benchmark: None,
+  }
+  let engine = @backtest.create_backtest_engine(config)
+  // Should handle small capital gracefully
+  assert_true(engine.config.initial_capital > Float::from_double(0.0) && engine.config.initial_capital < Float::from_double(0.02))
+}
+
+///|
+test "boundary: extreme drawdown 100 percent" {
+  // Test BacktestStats with extreme drawdown
+  let stats = @backtest.BacktestStats::{
+    total_return: -1.0,
+    annual_return: -1.0,
+    max_drawdown: -1.0,  // 100% drawdown
+    sharpe_ratio: -999.0,
+    sortino_ratio: -999.0,
+    win_rate: 0.0,
+    profit_factor: 0.0,
+    total_trades: 100,
+    winning_trades: 0,
+    losing_trades: 100,
+    avg_win: 0.0,
+    avg_loss: -1000.0,
+    avg_trade_duration: 1.0,
+  }
+  assert_true(stats.max_drawdown == -1.0)
+  assert_true(stats.win_rate == 0.0)
+  assert_true(stats.total_trades == 100)
+}
+
+///|
+test "boundary: extreme drawdown over 100 percent" {
+  // Test with drawdown exceeding 100% (leveraged positions)
+  let stats = @backtest.BacktestStats::{
+    total_return: -2.0,  // -200%
+    annual_return: -2.0,
+    max_drawdown: -1.5,  // -150%
+    sharpe_ratio: -5.0,
+    sortino_ratio: -5.0,
+    win_rate: 0.0,
+    profit_factor: 0.0,
+    total_trades: 50,
+    winning_trades: 0,
+    losing_trades: 50,
+    avg_win: 0.0,
+    avg_loss: -2000.0,
+    avg_trade_duration: 1.0,
+  }
+  assert_true(stats.max_drawdown < -1.0)
+  assert_true(stats.total_return < -1.0)
+}
+
+///|
+test "boundary: very high win rate" {
+  let stats = @backtest.BacktestStats::{
+    total_return: 10.0,
+    annual_return: 10.0,
+    max_drawdown: -0.01,
+    sharpe_ratio: 10.0,
+    sortino_ratio: 10.0,
+    win_rate: 1.0,  // 100% win rate
+    profit_factor: 999.0,
+    total_trades: 100,
+    winning_trades: 100,
+    losing_trades: 0,
+    avg_win: 1000.0,
+    avg_loss: 0.0,
+    avg_trade_duration: 1.0,
+  }
+  assert_true(stats.win_rate == 1.0)
+  assert_true(stats.winning_trades == stats.total_trades)
+}
+
+///|
+test "boundary: zero trades" {
+  let stats = @backtest.BacktestStats::{
+    total_return: 0.0,
+    annual_return: 0.0,
+    max_drawdown: 0.0,
+    sharpe_ratio: 0.0,
+    sortino_ratio: 0.0,
+    win_rate: 0.5,  // Default when no trades
+    profit_factor: 1.0,
+    total_trades: 0,
+    winning_trades: 0,
+    losing_trades: 0,
+    avg_win: 0.0,
+    avg_loss: 0.0,
+    avg_trade_duration: 0.0,
+  }
+  assert_true(stats.total_trades == 0)
+  assert_true(stats.winning_trades == 0)
+  assert_true(stats.losing_trades == 0)
+}
+
+///|
+test "boundary: very large numbers" {
+  let large_capital = Float::from_double(1000000000.0)  // 1 billion
+  let config = @strategy.BacktestConfig::{
+    start_date: "2024-01-01",
+    end_date: "2024-01-05",
+    initial_capital: large_capital,
+    commission_rate: Float::from_double(0.0003),
+    slippage: Float::from_double(0.001),
+    benchmark: None,
+  }
+  let engine = @backtest.create_backtest_engine(config)
+  // Just verify engine can be created with large capital
+  inspect(engine.config.initial_capital, content="1000000000")
+}
+
+///|
+test "boundary: negative equity edge case" {
+  // Test equity point with negative drawdown
+  let point = @backtest.EquityPoint::{
+    date: "2024-01-01",
+    equity: 50000.0,
+    drawdown: -0.5,  // 50% drawdown
+    position: 25000.0,
+    cash: 25000.0,
+  }
+  assert_true(point.drawdown < 0.0)
+  assert_true(point.drawdown > -1.0)
+}

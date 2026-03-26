@@ -441,3 +441,401 @@ test "obv - single kline" {
   assert_true(result.length() == 1)
   assert_true(result[0] == 1000000.0)
 }
+
+///|
+test "sma - empty array" {
+  let prices : Array[Float] = []
+  let result = sma(prices, 5)
+  assert_true(result.length() == 0)
+}
+
+///|
+test "ema - empty array" {
+  let prices : Array[Float] = []
+  let result = ema(prices, 5)
+  assert_true(result.length() == 0)
+}
+
+///|
+test "rsi - empty array" {
+  let prices : Array[Float] = []
+  let result = rsi(prices, 14)
+  assert_true(result.length() == 0)
+}
+
+///|
+test "macd - empty array" {
+  let prices : Array[Float] = []
+  let (macd_line, signal_line, histogram) = macd(prices, 12, 26, 9)
+  assert_true(macd_line.length() == 0)
+  assert_true(signal_line.length() == 0)
+  assert_true(histogram.length() == 0)
+}
+
+///|
+test "bollinger_bands - empty array" {
+  let prices : Array[Float] = []
+  let (middle, upper, lower) = bollinger_bands(prices, 20, 2.0)
+  assert_true(middle.length() == 0)
+  assert_true(upper.length() == 0)
+  assert_true(lower.length() == 0)
+}
+
+///|
+test "atr - empty klines" {
+  let klines : Array[@data.KLine] = []
+  let result = atr(klines, 14)
+  assert_true(result.length() == 0)
+}
+
+///|
+test "kdj - empty klines" {
+  let klines : Array[@data.KLine] = []
+  let (k_line, d_line, j_line) = kdj(klines, 9, 3, 3)
+  assert_true(k_line.length() == 0)
+  assert_true(d_line.length() == 0)
+  assert_true(j_line.length() == 0)
+}
+
+///|
+test "cci - empty klines" {
+  let klines : Array[@data.KLine] = []
+  let result = cci(klines, 20)
+  assert_true(result.length() == 0)
+}
+
+///|
+test "williams_r - empty klines" {
+  let klines : Array[@data.KLine] = []
+  let result = williams_r(klines, 14)
+  assert_true(result.length() == 0)
+}
+
+///|
+test "sma - period equals array length" {
+  let prices : Array[Float] = [10.0, 20.0, 30.0, 40.0, 50.0]
+  let result = sma(prices, 5)
+  assert_true(result.length() == 5)
+  // Only last element should have valid SMA
+  assert_true(result[4] > 29.9 && result[4] < 30.1)
+}
+
+///|
+test "ema - period equals array length" {
+  let prices : Array[Float] = [10.0, 20.0, 30.0, 40.0, 50.0]
+  let result = ema(prices, 5)
+  assert_true(result.length() == 5)
+  // Only last element should have valid EMA
+  assert_true(result[4] > 0.0)
+}
+
+///|
+test "rsi - all gains (should approach 100)" {
+  let prices : Array[Float] = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]
+  let result = rsi(prices, 3)
+  assert_true(result.length() == 7)
+  // Last RSI should be high (approaching 100)
+  assert_true(result[6] > 90.0 && result[6] <= 100.0)
+}
+
+///|
+test "rsi - all losses (should approach 0)" {
+  let prices : Array[Float] = [16.0, 15.0, 14.0, 13.0, 12.0, 11.0, 10.0]
+  let result = rsi(prices, 3)
+  assert_true(result.length() == 7)
+  // Last RSI should be low (approaching 0)
+  assert_true(result[6] >= 0.0 && result[6] < 10.0)
+}
+
+///|
+test "bollinger_bands - band ordering (lower <= middle <= upper)" {
+  let prices : Array[Float] = [
+    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0,
+    23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0,
+  ]
+  // Function returns (upper, middle, lower)
+  let (upper, middle, lower) = bollinger_bands(prices, 10, 2.0)
+  assert_true(middle.length() == 20)
+  assert_true(upper.length() == 20)
+  assert_true(lower.length() == 20)
+  // Verify band ordering for all valid values
+  let mut i = 9 // Start from first valid value
+  while i < 20 {
+    assert_true(lower[i] <= middle[i])
+    assert_true(middle[i] <= upper[i])
+    i = i + 1
+  }
+}
+
+///|
+test "kdj - value ranges (K, D: 0-100, J can exceed)" {
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1100000.0, 12100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1200000.0, 13800000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1300000.0, 15600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1400000.0, 17500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 12.5, 13.5, 12.0, 13.0, 1500000.0, 19500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 13.0, 14.0, 12.5, 13.5, 1600000.0, 21600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 13.5, 14.5, 13.0, 14.0, 1700000.0, 23800000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 14.0, 15.0, 13.5, 14.5, 1800000.0, 26100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 14.5, 15.5, 14.0, 15.0, 1900000.0, 28500000.0, 0.05,
+    ),
+  ]
+  let (k_line, d_line, j_line) = kdj(klines, 9, 3, 3)
+  assert_true(k_line.length() == 10)
+  assert_true(d_line.length() == 10)
+  assert_true(j_line.length() == 10)
+  // K and D should be in 0-100 range
+  let mut i = 0
+  while i < 10 {
+    assert_true(k_line[i] >= 0.0 && k_line[i] <= 100.0)
+    assert_true(d_line[i] >= 0.0 && d_line[i] <= 100.0)
+    i = i + 1
+  }
+}
+
+///|
+test "williams_r - value range (should be -100 to 0)" {
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1100000.0, 12100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1200000.0, 13800000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1300000.0, 15600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1400000.0, 17500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 12.5, 13.5, 12.0, 13.0, 1500000.0, 19500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 13.0, 14.0, 12.5, 13.5, 1600000.0, 21600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 13.5, 14.5, 13.0, 14.0, 1700000.0, 23800000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 14.0, 15.0, 13.5, 14.5, 1800000.0, 26100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 14.5, 15.5, 14.0, 15.0, 1900000.0, 28500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-11", 15.0, 16.0, 14.5, 15.5, 2000000.0, 31000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-12", 15.5, 16.5, 15.0, 16.0, 2100000.0, 33600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-13", 16.0, 17.0, 15.5, 16.5, 2200000.0, 36300000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-14", 16.5, 17.5, 16.0, 17.0, 2300000.0, 39100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-15", 17.0, 18.0, 16.5, 17.5, 2400000.0, 42000000.0, 0.05,
+    ),
+  ]
+  let result = williams_r(klines, 14)
+  assert_true(result.length() == 15)
+  // Williams %R should be in -100 to 0 range
+  let mut i = 0
+  while i < 15 {
+    assert_true(result[i] >= -100.0 && result[i] <= 0.0)
+    i = i + 1
+  }
+}
+
+///|
+test "obv - trending up (volume accumulation)" {
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1100000.0, 12100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1200000.0, 13800000.0, 0.05,
+    ),
+  ]
+  let result = obv(klines)
+  assert_true(result.length() == 3)
+  // OBV should accumulate as prices rise
+  assert_true(result[0] == 1000000.0)
+  assert_true(result[1] == 2100000.0)
+  assert_true(result[2] == 3300000.0)
+}
+
+///|
+test "obv - trending down (volume subtraction)" {
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 11.0, 12.0, 10.5, 11.5, 1000000.0, 11500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 10.5, 1100000.0, 11550000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.0, 11.0, 9.5, 10.0, 1200000.0, 12000000.0, 0.05,
+    ),
+  ]
+  let result = obv(klines)
+  assert_true(result.length() == 3)
+  // OBV should decrease as prices fall
+  assert_true(result[0] == 1000000.0)
+  assert_true(result[1] == -100000.0) // 1000000 - 1100000
+  assert_true(result[2] == -1300000.0) // -100000 - 1200000
+}
+
+///|
+test "macd - histogram sign indicates momentum" {
+  let prices : Array[Float] = [
+    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0,
+  ]
+  let (macd_line, signal_line, histogram) = macd(prices, 3, 6, 3)
+  assert_true(macd_line.length() == 11)
+  assert_true(signal_line.length() == 11)
+  assert_true(histogram.length() == 11)
+  // In uptrend, MACD should be positive and histogram should show momentum
+  assert_true(macd_line[10] > 0.0)
+}
+
+///|
+test "atr - increasing volatility" {
+  let klines_low_vol = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.2, 9.8, 10.1, 1000000.0, 10100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.1, 10.3, 9.9, 10.2, 1000000.0, 10200000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.2, 10.4, 10.0, 10.3, 1000000.0, 10300000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.3, 10.5, 10.1, 10.4, 1000000.0, 10400000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 10.4, 10.6, 10.2, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+  ]
+  let klines_high_vol = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 12.0, 8.0, 11.0, 1000000.0, 11000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 11.0, 13.0, 9.0, 12.0, 1000000.0, 12000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 12.0, 14.0, 10.0, 13.0, 1000000.0, 13000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 13.0, 15.0, 11.0, 14.0, 1000000.0, 14000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 14.0, 16.0, 12.0, 15.0, 1000000.0, 15000000.0, 0.05,
+    ),
+  ]
+  let atr_low = atr(klines_low_vol, 3)
+  let atr_high = atr(klines_high_vol, 3)
+  // High volatility should produce higher ATR values
+  assert_true(atr_low[4] < atr_high[4])
+}
+
+///|
+test "cci - trend identification" {
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.5, 11.5, 10.0, 11.0, 1100000.0, 12100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 11.0, 12.0, 10.5, 11.5, 1200000.0, 13800000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 11.5, 12.5, 11.0, 12.0, 1300000.0, 15600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 13.0, 11.5, 12.5, 1400000.0, 17500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 12.5, 13.5, 12.0, 13.0, 1500000.0, 19500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 13.0, 14.0, 12.5, 13.5, 1600000.0, 21600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 13.5, 14.5, 13.0, 14.0, 1700000.0, 23800000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 14.0, 15.0, 13.5, 14.5, 1800000.0, 26100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 14.5, 15.5, 14.0, 15.0, 1900000.0, 28500000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-11", 15.0, 16.0, 14.5, 15.5, 2000000.0, 31000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-12", 15.5, 16.5, 15.0, 16.0, 2100000.0, 33600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-13", 16.0, 17.0, 15.5, 16.5, 2200000.0, 36300000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-14", 16.5, 17.5, 16.0, 17.0, 2300000.0, 39100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-15", 17.0, 18.0, 16.5, 17.5, 2400000.0, 42000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-16", 17.5, 18.5, 17.0, 18.0, 2500000.0, 45000000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-17", 18.0, 19.0, 17.5, 18.5, 2600000.0, 48100000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-18", 18.5, 19.5, 18.0, 19.0, 2700000.0, 51300000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-19", 19.0, 20.0, 18.5, 19.5, 2800000.0, 54600000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-20", 19.5, 20.5, 19.0, 20.0, 2900000.0, 58000000.0, 0.05,
+    ),
+  ]
+  let result = cci(klines, 14)
+  assert_true(result.length() == 20)
+  // CCI should show positive values in uptrend
+  assert_true(result[19] > 0.0)
+}
