@@ -6,7 +6,7 @@ pub(all) enum Action {
   Buy
   Sell
   Hold
-} derive(Eq, Show)
+} derive(Eq, Show, ToJson)
 
 ///|
 /// Trading signal
@@ -16,7 +16,7 @@ pub(all) struct Signal {
   price : Float
   timestamp : String
   strength : Float
-}
+} derive(ToJson, Show)
 
 ///|
 /// Strategy context (passed to strategy during execution)
@@ -30,10 +30,10 @@ pub(all) struct StrategyContext {
 ///|
 /// Strategy type as a record of functions
 /// This is an alternative to using traits
-pub struct Strategy {
+pub(all) struct Strategy {
   name : String
   on_init : (StrategyContext) -> Unit
-  on_bar : (@data.KLine, StrategyContext) -> Signal
+  on_bar : (@data.KLine, StrategyContext, Array[Float]) -> Signal
 }
 
 ///|
@@ -67,4 +67,48 @@ pub fn default_backtest_config() -> BacktestConfig {
     slippage: 0.001,
     benchmark: None,
   }
+}
+
+///|
+/// Create a buy signal
+pub fn Signal::buy(
+  stock : @data.StockCode,
+  price : Float,
+  timestamp : String,
+  strength : Float,
+) -> Signal {
+  Signal::{ stock, action: Action::Buy, price, timestamp, strength }
+}
+
+///|
+/// Create a sell signal
+pub fn Signal::sell(
+  stock : @data.StockCode,
+  price : Float,
+  timestamp : String,
+  strength : Float,
+) -> Signal {
+  Signal::{ stock, action: Action::Sell, price, timestamp, strength }
+}
+
+///|
+/// Create a hold signal
+pub fn Signal::hold(
+  stock : @data.StockCode,
+  price : Float,
+  timestamp : String,
+) -> Signal {
+  Signal::{ stock, action: Action::Hold, price, timestamp, strength: 0.0 }
+}
+
+///|
+/// Create a signal with custom action
+pub fn Signal::with_action(
+  stock : @data.StockCode,
+  action : Action,
+  price : Float,
+  timestamp : String,
+  strength : Float,
+) -> Signal {
+  Signal::{ stock, action, price, timestamp, strength }
 }
