@@ -13,11 +13,7 @@ test "create_ma_cross_strategy - different periods" {
   let strategy = create_ma_cross_strategy(10, 50)
   assert_true(strategy.fast_period == 10)
   assert_true(strategy.slow_period == 50)
-  json_inspect({
-    name: strategy.name,
-    fast: strategy.fast_period,
-    slow: strategy.slow_period,
-  })
+  json_inspect((strategy.name, strategy.fast_period, strategy.slow_period))
 }
 
 ///|
@@ -87,11 +83,7 @@ test "MaCrossStrategy::on_bar - golden cross detection" {
     signal.action == @strategy.Action::Buy ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect({
-    action: signal.action.to_string(),
-    strength: signal.strength,
-    price: signal.price,
-  })
+  json_inspect((signal.action.to_string(), signal.strength, signal.price))
 }
 
 ///|
@@ -117,11 +109,7 @@ test "MaCrossStrategy::on_bar - death cross detection" {
     signal.action == @strategy.Action::Sell ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect({
-    action: signal.action.to_string(),
-    strength: signal.strength,
-    price: signal.price,
-  })
+  json_inspect((signal.action.to_string(), signal.strength, signal.price))
 }
 
 ///|

@@ -15,12 +15,7 @@ test "create_momentum_strategy - custom thresholds" {
   assert_true(strategy.rsi_period == 21)
   assert_true(strategy.overbought_threshold == 80.0)
   assert_true(strategy.oversold_threshold == 20.0)
-  json_inspect({
-    name: strategy.name,
-    period: strategy.rsi_period,
-    overbought: strategy.overbought_threshold,
-    oversold: strategy.oversold_threshold,
-  })
+  json_inspect((strategy.name, strategy.rsi_period, strategy.overbought_threshold, strategy.oversold_threshold))
 }
 
 ///|
@@ -88,11 +83,7 @@ test "MomentumStrategy::on_bar - oversold scenario (Buy signal)" {
     signal.action == @strategy.Action::Buy ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect({
-    action: signal.action.to_string(),
-    strength: signal.strength,
-    price: signal.price,
-  })
+  json_inspect((signal.action.to_string(), signal.strength, signal.price))
 }
 
 ///|
@@ -118,11 +109,7 @@ test "MomentumStrategy::on_bar - overbought scenario (Sell signal)" {
     signal.action == @strategy.Action::Sell ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect({
-    action: signal.action.to_string(),
-    strength: signal.strength,
-    price: signal.price,
-  })
+  json_inspect((signal.action.to_string(), signal.strength, signal.price))
 }
 
 ///|
@@ -135,7 +122,7 @@ test "MomentumStrategy::is_oversold - detection" {
   ]
   let is_oversold = strategy.is_oversold(declining_history)
   // Should detect oversold condition
-  json_inspect({ is_oversold, })
+  json_inspect(("is_oversold", is_oversold))
 }
 
 ///|
@@ -147,7 +134,7 @@ test "MomentumStrategy::is_overbought - detection" {
     19.0, 20.0, 21.0, 22.0, 23.0, 24.0,
   ]
   let is_overbought = strategy.is_overbought(rising_history)
-  json_inspect({ is_overbought, })
+  json_inspect(("is_overbought", is_overbought))
 }
 
 ///|
@@ -160,7 +147,7 @@ test "MomentumStrategy::get_current_rsi - value check" {
   let rsi = strategy.get_current_rsi(history)
   // RSI should be between 0 and 100
   assert_true(rsi >= 0.0 && rsi <= 100.0)
-  json_inspect({ rsi, })
+  json_inspect(("rsi", rsi))
 }
 
 ///|
