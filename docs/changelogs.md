@@ -3,6 +3,30 @@
 Automated log of file changes from git commits.
 
 ## [2026-03-27 03:09:00] 0ad8430
+## [2026-03-27 06:11:17] 74a09d5
+
+**Author:** DevUser
+
+**Commit:** fix: resolve syntax errors in risk/rules.mbt documentation examples
+
+**Changed files:**
+- `docs/api-reference.md`
+- `docs/architecture.md`
+- `docs/changelogs.md`
+- `docs/code-quality-review.md`
+- `docs/test-coverage-report.md`
+- `script/requirements.txt`
+- `script/server.py`
+- `script/start-server.sh`
+- `src/backtest/engine.mbt`
+- `src/data/data_wbtest.mbt`
+- `src/risk/moon.pkg`
+- `src/risk/rules.mbt`
+- `src/strategy/pkg.generated.mbti`
+
+---
+
+
 
 **Author:** Unknown
 
