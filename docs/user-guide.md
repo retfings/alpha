@@ -4,6 +4,17 @@
 
 MoonBit Drawdown is a quantitative drawdown analysis framework built with MoonBit. It provides tools for backtesting trading strategies, calculating drawdown metrics, and managing risk controls.
 
+### Key Features
+
+- **Strategy Backtesting**: Test trading strategies on historical data
+- **Drawdown Analysis**: Calculate and monitor drawdown metrics
+- **Risk Management**: Built-in risk rules and controls
+- **Technical Indicators**: MA, RSI, MACD, Bollinger Bands, ATR
+- **Multiple Strategies**: MA Crossover, RSI Momentum, Mean Reversion
+- **Report Generation**: HTML and text report formats
+
+---
+
 ## Installation
 
 ### Prerequisites
@@ -251,14 +262,65 @@ Drawdown values are expressed as negative percentages:
 
 ## Best Practices
 
-1. **Always validate data** before running backtests
-2. **Start with small datasets** when testing new strategies
-3. **Use realistic commission and slippage** rates
-4. **Set appropriate risk limits** before live trading
-5. **Review drawdown periods** carefully before deploying capital
+### Development Workflow
+
+1. **Set up your environment**
+   ```bash
+   moon update
+   git config core.hooksPath .githooks
+   ```
+
+2. **Download data for testing**
+   ```bash
+   python script/download_data.py --stocks sh.600000 --days 100
+   ```
+
+3. **Develop your strategy**
+   - Create strategy in `src/strategy/builtins/your_strategy.mbt`
+   - Add comprehensive docstrings
+   - Write unit tests
+
+4. **Test your changes**
+   ```bash
+   moon check     # Type check
+   moon test      # Run all tests
+   moon fmt       # Format code
+   ```
+
+5. **Run backtests**
+   ```bash
+   moon run cmd/main backtest --strategy your_strategy --stock sh.600000
+   ```
+
+6. **Review results and iterate**
+   - Analyze drawdown metrics
+   - Check trade log
+   - Adjust parameters as needed
+
+### Common Commands Reference
+
+| Command | Description | When to Use |
+|---------|-------------|-------------|
+| `moon check` | Type check without building | After every code change |
+| `moon build` | Build the project | Before running or testing |
+| `moon test` | Run all tests | After code changes |
+| `moon test --update` | Update snapshot tests | When expected outputs change |
+| `moon fmt` | Format code | Before committing |
+| `moon info` | Generate .mbti files | Before committing |
+| `moon run cmd/main ...` | Run CLI commands | For backtesting/analysis |
+
+### Code Style Guidelines
+
+- Use descriptive names for functions and variables
+- Add docstrings to all public APIs
+- Keep functions focused and single-purpose
+- Use pattern matching for enum handling
+- Handle edge cases explicitly
+
+---
 
 ## See Also
 
-- [Architecture Documentation](architecture.md)
-- [Strategy Examples](strategy-examples.md)
-- [API Reference](api-reference.md)
+- [Architecture Documentation](architecture.md) - System architecture and design
+- [Strategy Examples](strategy-examples.md) - Example strategies and patterns
+- [API Reference](api-reference.md) - Complete API documentation

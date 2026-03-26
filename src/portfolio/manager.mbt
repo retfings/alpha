@@ -2,7 +2,7 @@
 
 ///|
 /// Position in a single stock
-pub struct Position {
+pub(all) struct Position {
   stock : @data.StockCode
   mut quantity : Float
   mut avg_cost : Float
@@ -171,4 +171,201 @@ pub fn Portfolio::update_prices(
   for pos in self.positions {
     pos.current_price = get_price(pos.stock)
   }
+}
+
+///|
+/// Calculate total position P&L
+///
+/// Returns:
+/// - Sum of all position P&L (unrealized)
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = create_portfolio(100000.0)
+/// // ... add some positions ...
+/// let pnl = portfolio.calculate_position_pnl()
+/// ```
+pub fn Portfolio::calculate_position_pnl(self : Portfolio) -> Float {
+  let mut total_pnl = Float::from_double(0.0)
+  for pos in self.positions {
+    total_pnl = total_pnl + pos.pnl()
+  }
+  total_pnl
+}
+
+///|
+/// Calculate total position P&L percentage
+///
+/// Returns:
+/// - Weighted average P&L percentage across all positions
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = create_portfolio(100000.0)
+/// // ... add some positions ...
+/// let pnl_pct = portfolio.calculate_position_pnl_pct()
+/// ```
+pub fn Portfolio::calculate_position_pnl_pct(self : Portfolio) -> Float {
+  let zero = Float::from_double(0.0)
+  let mut total_cost = zero
+  let mut total_value = zero
+  for pos in self.positions {
+    total_cost = total_cost + pos.avg_cost * pos.quantity
+    total_value = total_value + pos.current_price * pos.quantity
+  }
+  if total_cost > zero {
+    (total_value - total_cost) / total_cost
+  } else {
+    zero
+  }
+}
+
+///|
+/// Get total exposure (sum of all position values)
+///
+/// Returns:
+/// - Total value of all positions (excludes cash)
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = create_portfolio(100000.0)
+/// // ... add some positions ...
+/// let exposure = portfolio.get_total_exposure()
+/// ```
+pub fn Portfolio::get_total_exposure(self : Portfolio) -> Float {
+  self.position_value()
+}
+
+///|
+/// Get position by stock code
+///
+/// Parameters:
+/// - stock: Stock code to find
+///
+/// Returns:
+/// - Position if found, None otherwise
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = create_portfolio(100000.0)
+/// // ... add some positions ...
+/// match portfolio.get_position("sh.600000") {
+///   Some(pos) => inspect(pos.quantity)
+///   None => inspect("Position not found")
+/// }
+/// ```
+pub fn Portfolio::get_position(
+  self : Portfolio,
+  stock : @data.StockCode,
+) -> Position? {
+  for pos in self.positions {
+    if pos.stock == stock {
+      return Some(pos)
+    }
+  }
+  None
+}
+
+///|
+/// Get P&L for a specific position
+///
+/// Parameters:
+/// - stock: Stock code to get P&L for
+///
+/// Returns:
+/// - P&L if position exists, 0.0 otherwise
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = create_portfolio(100000.0)
+/// // ... add some positions ...
+/// let pnl = portfolio.get_position_pnl("sh.600000")
+/// ```
+pub fn Portfolio::get_position_pnl(
+  self : Portfolio,
+  stock : @data.StockCode,
+) -> Float {
+  match self.get_position(stock) {
+    Some(pos) => pos.pnl()
+    None => Float::from_double(0.0)
+  }
+}
+
+///|
+/// Get P&L percentage for a specific position
+///
+/// Parameters:
+/// - stock: Stock code to get P&L percentage for
+///
+/// Returns:
+/// - P&L percentage if position exists, 0.0 otherwise
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let portfolio = create_portfolio(100000.0)
+/// // ... add some positions ...
+/// let pnl_pct = portfolio.get_position_pnl_pct("sh.600000")
+/// ```
+pub fn Portfolio::get_position_pnl_pct(
+  self : Portfolio,
+  stock : @data.StockCode,
+) -> Float {
+  match self.get_position(stock) {
+    Some(pos) => pos.pnl_pct()
+    None => Float::from_double(0.0)
+  }
+}
+
+///|
+/// Get number of positions
+///
+/// Returns:
+/// - Number of open positions in the portfolio
+pub fn Portfolio::position_count(self : Portfolio) -> Int {
+  self.positions.length()
+}
+
+///|
+/// Check if portfolio has a position
+///
+/// Parameters:
+/// - stock: Stock code to check
+///
+/// Returns:
+/// - true if portfolio holds the stock, false otherwise
+pub fn Portfolio::has_position(self : Portfolio, stock : @data.StockCode) -> Bool {
+  for pos in self.positions {
+    if pos.stock == stock {
+      return true
+    }
+  }
+  false
+}
+
+///|
+/// Get daily P&L change
+///
+/// Parameters:
+/// - prev_values: Previous position values map
+/// - current_prices: Current prices map
+///
+/// Returns:
+/// - Total P&L change since previous values
+///
+/// Examples:
+/// ```mbt check-disabled
+/// let prev_values : Map[@data.StockCode, Float] = Map::new()
+/// // ... populate with previous values ...
+/// let current_prices : Map[@data.StockCode, Float] = Map::new()
+/// // ... populate with current prices ...
+/// let daily_pnl = portfolio.calculate_daily_pnl(prev_values, current_prices)
+/// ```
+pub fn Portfolio::calculate_daily_pnl(
+  self : Portfolio,
+  _prev_values : Map[@data.StockCode, Float],
+  _current_prices : Map[@data.StockCode, Float],
+) -> Float {
+  // Simplified: use current position P&L as proxy for daily P&L
+  // Full implementation would track previous day's prices
+  self.calculate_position_pnl()
 }

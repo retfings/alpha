@@ -668,6 +668,163 @@ pub fn default_report_config() -> ReportConfig
 
 ---
 
+## @server Module
+
+HTTP API server for quantitative drawdown framework.
+
+### Types
+
+#### ApiResponse
+
+Generic API response wrapper.
+
+```mbt
+pub(all) enum ApiResponse[T] {
+  Success(T)
+  Error(ApiError)
+}
+```
+
+#### ApiError
+
+API error information.
+
+```mbt
+pub(all) struct ApiError {
+  code : Int          // HTTP status code
+  message : String    // Error message
+  details : String?   // Optional error details
+} derive(Show)
+```
+
+#### StockInfo
+
+Stock information.
+
+```mbt
+pub(all) struct StockInfo {
+  code : String       // Stock code (e.g., "sh.600000")
+  name : String       // Stock name
+  exchange : String   // Exchange (sh/sz)
+  market : String     // Market type
+} derive(Show)
+```
+
+#### KLineData
+
+K-line data with stock code.
+
+```mbt
+pub(all) struct KLineData {
+  stock_code : String
+  klines : Array[@data.KLine]
+} derive(Show)
+```
+
+#### DrawdownResult
+
+Drawdown analysis result.
+
+```mbt
+pub(all) struct DrawdownResult {
+  stock_code : String
+  start_date : String
+  end_date : String
+  max_drawdown : Float
+  peak : Float
+  trough : Float
+  peak_date : String
+  trough_date : String
+  duration : Int
+  drawdown_series : Array[DrawdownPoint]
+}
+```
+
+#### DrawdownPoint
+
+Single drawdown point.
+
+```mbt
+pub(all) struct DrawdownPoint {
+  date : String
+  value : Float
+  drawdown : Float
+}
+```
+
+#### PortfolioDrawdownResult
+
+Portfolio drawdown result.
+
+```mbt
+pub(all) struct PortfolioDrawdownResult {
+  max_drawdown : Float
+  current_drawdown : Float
+  peak_date : String
+  peak_value : Float
+  drawdown_series : Array[DrawdownPoint]
+  positions : Array[PositionInfo]
+}
+```
+
+#### PositionInfo
+
+Position information.
+
+```mbt
+pub(all) struct PositionInfo {
+  stock_code : String
+  quantity : Float
+  avg_price : Float
+  current_price : Float
+  market_value : Float
+  pnl : Float
+  pnl_percent : Float
+}
+```
+
+#### BacktestRequest
+
+Backtest request parameters.
+
+```mbt
+pub(all) struct BacktestRequest {
+  stock_code : String
+  strategy : String
+  start_date : String
+  end_date : String
+  initial_capital : Float
+  commission_rate : Float
+  slippage : Float
+}
+```
+
+#### BacktestResponse
+
+Backtest response with full results.
+
+```mbt
+pub(all) struct BacktestResponse {
+  request_id : String
+  status : String
+  result : @backtest.BacktestResult?
+  error : String?
+}
+```
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stocks/:code/klines` | GET | Get K-line data for stock |
+| `/api/stocks/:code/drawdown` | GET | Analyze stock drawdown |
+| `/api/portfolio/drawdown` | GET | Analyze portfolio drawdown |
+| `/api/backtest` | POST | Run backtest |
+| `/api/backtest/:id` | GET | Get backtest results |
+| `/api/strategies` | GET | List available strategies |
+
+---
+
 ## Index
 
 ### A

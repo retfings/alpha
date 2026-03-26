@@ -1,6 +1,6 @@
 import {
-  "username/alpha/src/data" @data,
-  "username/alpha/src/drawdown" @drawdown,
+  "username/alpha/src/data",
+  "username/alpha/src/drawdown",
 }
 
 options(

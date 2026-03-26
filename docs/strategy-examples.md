@@ -197,187 +197,109 @@ moon run cmd/main backtest \
 
 ## Example 3: Mean Reversion Strategy
 
-A contrarian strategy that buys when price deviates significantly below its mean and sells when it reverts.
+A contrarian strategy using Bollinger Bands to identify when price deviates significantly from its mean.
+
+### Strategy Logic
+
+- **Buy Signal**: Price drops below lower Bollinger Band (oversold)
+- **Sell Signal**: Price touches or crosses above middle band (mean reversion)
+- **Hold**: Price within bands
+
+### Implementation
 
 ```moonbit
-/// Mean Reversion Strategy
+/// Mean Reversion Strategy using Bollinger Bands
 ///
-/// Buy when price drops below lower band
-/// Sell when price reverts to mean or exceeds upper band
+/// Buy when price drops below lower band (oversold)
+/// Sell when price reverts to mean (middle band)
 
 pub fn create_mean_reversion_strategy(
-  lookback_period : Int,
-  std_dev_multiplier : Float,
+  lookback_period : Int,     // Typically 20
+  std_dev_multiplier : Float, // Typically 2.0
 ) -> @strategy.Strategy {
-
-  let mut upper_band = 0.0
-  let mut lower_band = 0.0
-  let mut mean = 0.0
-
   Strategy::{
-    name: "Mean Reversion (\\{lookback_period}d, \\{std_dev_multiplier}σ)",
+    name: "Mean Reversion Bollinger (" + lookback_period.to_string() + ")",
     on_init: fn(ctx) {
-      upper_band = 0.0
-      lower_band = 0.0
-      mean = 0.0
+      // No initialization needed
     },
-    on_bar: fn(kline, ctx) {
+    on_bar: fn(kline, ctx, close_history) {
+      if close_history.length() < lookback_period {
+        return @strategy.Signal::hold(kline.code, kline.close, kline.date)
+      }
+
       // Calculate Bollinger Bands
-      let bands = calculate_bollinger_bands(kline, lookback_period, std_dev_multiplier)
-      mean = bands.mean
-      upper_band = bands.upper
-      lower_band = bands.lower
+      let (upper, middle, lower) = @indicator.bollinger_bands(
+        close_history, lookback_period, std_dev_multiplier
+      )
+
+      let current_price = kline.close
+      let current_upper = upper[upper.length() - 1]
+      let current_middle = middle[middle.length() - 1]
+      let current_lower = lower[lower.length() - 1]
 
       // Determine action
-      let signal_action = if kline.close < lower_band {
-        // Price below lower band - BUY (oversold)
-        @strategy.Action::Buy
-      } else if kline.close > mean {
-        // Price above mean - SELL (take profit)
-        @strategy.Action::Sell
+      let (action, strength) = if current_price < current_lower {
+        // Price below lower band - oversold, BUY
+        (@strategy.Action::Buy, 0.8)
+      } else if current_price > current_middle {
+        // Price above mean - take profit, SELL
+        (@strategy.Action::Sell, 0.6)
       } else {
         // Within bands - HOLD
-        @strategy.Action::Hold
+        (@strategy.Action::Hold, 0.0)
       }
 
-      Signal::{
+      @strategy.Signal::{
         stock: kline.code,
-        action: signal_action,
-        price: kline.close,
+        action: action,
+        price: current_price,
         timestamp: kline.date,
-        strength: calculate_distance_from_mean(kline.close, mean, bands.std_dev),
+        strength: strength,
       }
     },
   }
 }
-
-// Helper type for Bollinger Bands
-struct BollingerBands {
-  upper : Float
-  mean : Float
-  lower : Float
-  std_dev : Float
-}
-
-// Helper function: Calculate Bollinger Bands
-fn calculate_bollinger_bands(
-  kline : @data.KLine,
-  period : Int,
-  multiplier : Float,
-) -> BollingerBands {
-  // In production, calculate from historical data
-  BollingerBands::{
-    upper: kline.close,
-    mean: kline.close,
-    lower: kline.close,
-    std_dev: 0.0,
-  }
-}
-
-// Helper function: Calculate distance from mean in standard deviations
-fn calculate_distance_from_mean(price : Float, mean : Float, std_dev : Float) -> Float {
-  if std_dev == 0.0 {
-    0.5
-  } else {
-    let distance = Float::abs(price - mean) / std_dev
-    if distance > 1.0 { 1.0 } else { distance }
-  }
-}
-
-// Usage:
-// let strategy = create_mean_reversion_strategy(20, 2.0)
-// - 20-day lookback
-// - 2 standard deviation bands
 ```
 
-## Example 4: RSI Overbought/Oversold Strategy
-
-Uses the Relative Strength Index (RSI) to identify overbought and oversold conditions.
+### Usage Example
 
 ```moonbit
-/// RSI Strategy
-///
-/// Buy when RSI drops below oversold threshold
-/// Sell when RSI rises above overbought threshold
+// Create strategy with 20-day Bollinger Bands, 2 std dev
+let strategy = create_mean_reversion_strategy(20, 2.0)
 
-pub fn create_rsi_strategy(
-  rsi_period : Int,
-  oversold_threshold : Float,
-  overbought_threshold : Float,
-) -> @strategy.Strategy {
-
-  let mut rsi_value = 0.0
-  let mut in_position = false
-
-  Strategy::{
-    name: "RSI (\\{rsi_period})",
-    on_init: fn(ctx) {
-      rsi_value = 0.0
-      in_position = false
-    },
-    on_bar: fn(kline, ctx) {
-      // Calculate RSI
-      rsi_value = calculate_rsi(kline, rsi_period)
-
-      // Determine action
-      let signal_action = if rsi_value < oversold_threshold && !in_position {
-        // Oversold - BUY
-        in_position = true
-        @strategy.Action::Buy
-      } else if rsi_value > overbought_threshold && in_position {
-        // Overbought - SELL
-        in_position = false
-        @strategy.Action::Sell
-      } else {
-        @strategy.Action::Hold
-      }
-
-      Signal::{
-        stock: kline.code,
-        action: signal_action,
-        price: kline.close,
-        timestamp: kline.date,
-        strength: calculate_rsi_strength(rsi_value, oversold_threshold, overbought_threshold),
-      }
-    },
-  }
-}
-
-// Helper function: Calculate RSI
-fn calculate_rsi(kline : @data.KLine, period : Int) -> Float {
-  // In production, calculate from historical price data
-  // RSI = 100 - (100 / (1 + RS))
-  // RS = Average gain / Average loss over period
-  50.0  // Neutral RSI placeholder
-}
-
-// Helper function: Calculate signal strength based on RSI extremity
-fn calculate_rsi_strength(
-  rsi : Float,
-  oversold : Float,
-  overbought : Float,
-) -> Float {
-  if rsi < oversold {
-    // More oversold = stronger buy signal
-    (oversold - rsi) / oversold
-  } else if rsi > overbought {
-    // More overbought = stronger sell signal
-    (rsi - overbought) / (100.0 - overbought)
-  } else {
-    0.5
-  }
-}
-
-// Usage:
-// let strategy = create_rsi_strategy(14, 30.0, 70.0)
-// - 14-day RSI
-// - Oversold below 30
-// - Overbought above 70
+// Run backtest
+let config = @strategy.default_backtest_config()
+let engine = @backtest.create_backtest_engine(config)
+let result = @backtest.run_backtest(engine, klines, strategy)
 ```
 
-## Example 5: Multi-Strategy Composite
+### Bollinger Bands Interpretation
 
-Combine multiple strategies into a single composite strategy with weighted signals.
+| Price Position | Signal | Interpretation |
+|----------------|--------|----------------|
+| Below Lower Band | Buy | Oversold, likely to rebound |
+| Above Middle Band | Sell | Overbought, take profits |
+| Between Bands | Hold | Normal fluctuation |
+
+### Tips
+
+- **Band Width**: Narrow bands indicate low volatility (potential breakout). Wide bands indicate high volatility.
+- **Squeeze**: When bands contract tightly, a significant price move often follows.
+- **Trend Confirmation**: In strong trends, price can "walk the band" - stay near upper/lower band for extended periods.
+
+---
+
+## Example 4: Multi-Strategy Composite
+
+Combine multiple strategies into a single composite strategy with weighted voting for more robust signals.
+
+### Strategy Logic
+
+- Collect signals from multiple component strategies
+- Apply weights to each signal based on confidence
+- Generate composite action based on weighted voting
+
+### Implementation
 
 ```moonbit
 /// Composite Strategy
@@ -386,101 +308,123 @@ Combine multiple strategies into a single composite strategy with weighted signa
 
 pub fn create_composite_strategy(
   strategies : Array[@strategy.Strategy],
-  weights : Array[Float],
+  weights : Array[Float],  // Should sum to 1.0
 ) -> @strategy.Strategy {
-
   Strategy::{
-    name: "Composite (\\{strategies.length()} strategies)",
+    name: "Composite (" + strategies.length().to_string() + " strategies)",
     on_init: fn(ctx) {
       // Initialize all component strategies
-      for (i, strat) in strategies.iter_enumerated() {
+      for strat in strategies {
         strat.on_init(ctx)
       }
     },
-    on_bar: fn(kline, ctx) {
-      // Collect weighted signals from all strategies
-      let mut buy_score = 0.0
-      let mut sell_score = 0.0
-      let mut total_weight = 0.0
+    on_bar: fn(kline, ctx, close_history) {
+      var buy_score = 0.0
+      var sell_score = 0.0
+      var total_weight = 0.0
 
       for (i, strat) in strategies.iter_enumerated() {
-        let signal = strat.on_bar(kline, ctx)
+        let signal = strat.on_bar(kline, ctx, close_history)
         let weight = weights[i]
         total_weight = total_weight + weight
 
         match signal.action {
-          @strategy.Action::Buy => buy_score = buy_score + weight
-          @strategy.Action::Sell => sell_score = sell_score + weight
-          @strategy.Action::Hold => ignore(())
+          @strategy.Action::Buy => buy_score = buy_score + weight * signal.strength
+          @strategy.Action::Sell => sell_score = sell_score + weight * signal.strength
+          @strategy.Action::Hold => ()
         }
       }
 
       // Determine composite action
-      let normalized_buy = buy_score / total_weight
-      let normalized_sell = sell_score / total_weight
-
-      let composite_action = if normalized_buy > 0.6 {
+      let composite_action = if buy_score > 0.6 {
         @strategy.Action::Buy
-      } else if normalized_sell > 0.6 {
+      } else if sell_score > 0.6 {
         @strategy.Action::Sell
       } else {
         @strategy.Action::Hold
       }
 
-      Signal::{
+      @strategy.Signal::{
         stock: kline.code,
         action: composite_action,
         price: kline.close,
         timestamp: kline.date,
-        strength: Float::max(normalized_buy, normalized_sell),
+        strength: Float::max(buy_score, sell_score),
       }
     },
   }
 }
-
-// Usage:
-// let ma_strategy = create_ma_cross_strategy(5, 20)
-// let momentum_strategy = create_momentum_strategy(20, 0.05, -0.03)
-// let rsi_strategy = create_rsi_strategy(14, 30.0, 70.0)
-//
-// let composite = create_composite_strategy(
-//   [ma_strategy, momentum_strategy, rsi_strategy],
-//   [0.4, 0.35, 0.25]  // Weights sum to 1.0
-// )
 ```
+
+### Usage Example
+
+```moonbit
+// Create component strategies
+let ma_strategy = @strategy.builtins.create_ma_cross_strategy(10, 30)
+let momentum_strategy = @strategy.builtins.create_momentum_strategy(14, 70.0, 30.0)
+
+// Create composite with equal weights
+let composite = create_composite_strategy(
+  [ma_strategy, momentum_strategy],
+  [0.5, 0.5]  // Equal weighting
+)
+
+// Run backtest
+let config = @strategy.default_backtest_config()
+let engine = @backtest.create_backtest_engine(config)
+let result = @backtest.run_backtest(engine, klines, composite)
+```
+
+### Benefits of Composite Strategies
+
+| Benefit | Description |
+|---------|-------------|
+| Diversification | Reduces reliance on any single strategy |
+| Smoother Equity | Multiple uncorrelated strategies reduce volatility |
+| Robustness | Less prone to overfitting |
+
+### Tips
+
+- **Weight Optimization**: Start with equal weights, then adjust based on historical performance.
+- **Correlation**: Combine strategies with low correlation for best diversification benefits.
+- **Rebalancing**: Consider periodic weight rebalancing based on recent performance.
+
+---
 
 ## Strategy Development Guidelines
 
 ### Best Practices
 
-1. **Always initialize state** in `on_init`
-2. **Use StrategyContext** for accessing portfolio state
-3. **Return consistent signal strength** values (0.0 - 1.0)
-4. **Handle edge cases** (insufficient data, missing prices)
-5. **Document parameters** and their effects
+1. **Always initialize state** in `on_init` if your strategy maintains internal state
+2. **Use StrategyContext** for accessing portfolio state (capital, position, etc.)
+3. **Return consistent signal strength** values between 0.0 and 1.0
+4. **Handle edge cases** like insufficient data or missing prices
+5. **Document parameters** and their expected ranges
+6. **Test with various market conditions** (bull, bear, sideways)
 
 ### Signal Strength Guidelines
 
-| Strength | Interpretation |
-|----------|----------------|
-| 0.0 - 0.3 | Weak signal |
-| 0.3 - 0.6 | Moderate signal |
-| 0.6 - 0.8 | Strong signal |
-| 0.8 - 1.0 | Very strong signal |
+| Strength | Interpretation | When to Use |
+|----------|----------------|-------------|
+| 0.0 - 0.3 | Weak signal | Low confidence, borderline conditions |
+| 0.3 - 0.6 | Moderate signal | Standard signal conditions met |
+| 0.6 - 0.8 | Strong signal | Multiple indicators confirm |
+| 0.8 - 1.0 | Very strong signal | Extreme conditions, high conviction |
 
 ### Testing Your Strategy
 
-Create tests alongside your strategy:
+Create unit tests for your strategy:
 
 ```moonbit
-/// Test MA crossover strategy
 @test fn test_ma_cross_buy_signal {
-  let strategy = create_ma_cross_strategy(5, 20)
+  let strategy = @strategy.builtins.create_ma_cross_strategy(5, 20)
+  let klines = create_test_klines()  // Create test data with crossover
   let ctx = create_test_context()
-  let kline = create_test_kline()
+  let close_history = klines.map(fn(k) { k.close })
 
-  let signal = strategy.on_bar(kline, ctx)
+  let signal = strategy.on_bar(klines.last(), ctx, close_history)
   assert_eq(signal.action, @strategy.Action::Buy)
+  assert_true(signal.strength > 0.0)
 }
 ```
 
@@ -490,16 +434,32 @@ Always pair strategies with appropriate risk rules:
 
 ```moonbit
 // Create strategy
-let strategy = create_ma_cross_strategy(5, 20)
+let strategy = @strategy.builtins.create_ma_cross_strategy(10, 30)
 
-// Create risk engine with rules
-let risk_engine = @risk.create_risk_engine()
-risk_engine.add_rule(@risk.max_drawdown_rule(0.20))  // 20% max drawdown
-risk_engine.add_rule(@risk.position_limit_rule(0.95)) // 95% max position
+// Create backtest engine with risk management
+let config = @strategy.default_backtest_config()
+let mut engine = @backtest.create_backtest_engine(config)
+
+// Add risk rules
+engine.risk_engine.add_rule(@risk.max_drawdown_rule(0.20))     // 20% max DD
+engine.risk_engine.add_rule(@risk.position_limit_rule(0.95))    // 95% max position
+engine.risk_engine.add_rule(@risk.daily_loss_limit_rule(0.05))  // 5% daily loss
 
 // Run backtest with risk controls
-let result = @backtest.run_backtest_with_risk(strategy, data, config, risk_engine)
+let result = @backtest.run_backtest(engine, klines, strategy)
 ```
+
+### Common Pitfalls to Avoid
+
+| Pitfall | Description | Solution |
+|---------|-------------|----------|
+| Look-ahead Bias | Using future data in signal generation | Only use data available at signal time |
+| Overfitting | Too closely fitted to historical data | Test on out-of-sample data |
+| Ignoring Costs | Not including commission/slippage | Use realistic cost assumptions |
+| Survivorship Bias | Testing only on surviving stocks | Include delisted stocks in tests |
+| Data Snooping | Testing too many parameters | Use walk-forward analysis |
+
+---
 
 ## See Also
 

@@ -12,25 +12,25 @@ pub enum Command {
 }
 
 ///|
-/// Parse command line arguments
-fn parse_args(args : Array[String]) -> Command {
+/// Parse command line arguments (reserved for future C FFI implementation)
+fn _parse_args(args : Array[String]) -> Command {
   if args.length() == 0 {
     return Command::Help
   }
 
   match args[0] {
     "help" => Command::Help
-    "analyze" => parse_analyze_args(args)
-    "backtest" => parse_backtest_args(args)
-    "monitor" => parse_monitor_args(args)
-    "report" => parse_report_args(args)
+    "analyze" => _parse_analyze_args(args)
+    "backtest" => _parse_backtest_args(args)
+    "monitor" => _parse_monitor_args(args)
+    "report" => _parse_report_args(args)
     "list-strategies" => Command::ListStrategies
     _ => Command::Help
   }
 }
 
 ///|
-fn parse_analyze_args(args : Array[String]) -> Command {
+fn _parse_analyze_args(args : Array[String]) -> Command {
   let mut stock = ""
   let mut metric = "max_drawdown"
 
@@ -51,7 +51,7 @@ fn parse_analyze_args(args : Array[String]) -> Command {
 }
 
 ///|
-fn parse_backtest_args(args : Array[String]) -> Command {
+fn _parse_backtest_args(args : Array[String]) -> Command {
   let mut strategy = "ma_cross"
   let mut stock = ""
   let mut start = ""
@@ -80,7 +80,7 @@ fn parse_backtest_args(args : Array[String]) -> Command {
 }
 
 ///|
-fn parse_monitor_args(args : Array[String]) -> Command {
+fn _parse_monitor_args(args : Array[String]) -> Command {
   let mut stock = ""
 
   let mut i = 1
@@ -97,7 +97,7 @@ fn parse_monitor_args(args : Array[String]) -> Command {
 }
 
 ///|
-fn parse_report_args(args : Array[String]) -> Command {
+fn _parse_report_args(args : Array[String]) -> Command {
   let mut output = "text"
 
   let mut i = 1
@@ -139,7 +139,7 @@ fn print_help() -> Unit {
 
 ///|
 /// Print available strategies
-fn print_strategies() -> Unit {
+fn _print_strategies() -> Unit {
   println("Available Strategies:")
   println("")
   println("  1. ma_cross")
@@ -155,7 +155,7 @@ fn print_strategies() -> Unit {
 
 ///|
 /// Run analysis command
-fn run_analyze(stock : String, metric : String) -> Unit {
+fn _run_analyze(stock : String, metric : String) -> Unit {
   if stock == "" {
     println("Error: --stock is required for analyze command")
     println("Usage: moon run cmd/main analyze --stock sh.600000")
@@ -187,7 +187,7 @@ fn run_analyze(stock : String, metric : String) -> Unit {
 
 ///|
 /// Run backtest command
-fn run_backtest(
+fn _run_backtest(
   strategy : String,
   stock : String,
   start : String,
@@ -244,7 +244,7 @@ fn run_backtest(
 
 ///|
 /// Run monitor command
-fn run_monitor(stock : String) -> Unit {
+fn _run_monitor(stock : String) -> Unit {
   if stock == "" {
     println("Error: --stock is required for monitor command")
     println("Usage: moon run cmd/main monitor --stock sh.600000")
@@ -265,7 +265,7 @@ fn run_monitor(stock : String) -> Unit {
 
 ///|
 /// Run report command
-fn run_report(format : String) -> Unit {
+fn _run_report(format : String) -> Unit {
   let valid_formats = ["text", "html", "json", "pdf"]
   let mut found = false
   let mut i = 0
@@ -296,26 +296,11 @@ fn run_report(format : String) -> Unit {
 ///|
 /// Main entry point
 fn main {
-  // Get command line arguments
-  let args = sys::get_args()
-
-  // Skip "cmd/main" from args array
-  let mut cmd_args = []
-  let mut i = 1
-  while i < args.length() {
-    cmd_args.push(args[i])
-    i = i + 1
-  }
-
-  // Parse and execute command
-  let command = parse_args(cmd_args)
-
-  match command {
-    Command::Help => print_help(),
-    Command::Analyze(stock, metric) => run_analyze(stock, metric),
-    Command::Backtest(strategy, stock, start, end) => run_backtest(strategy, stock, start, end),
-    Command::Monitor(stock) => run_monitor(stock),
-    Command::Report(format) => run_report(format),
-    Command::ListStrategies => print_strategies(),
-  }
+  // Demo mode: display help message
+  // Note: MoonBit does not currently support command-line argument parsing
+  // Arguments would need to be passed via environment variables or config files
+  print_help()
+  println("")
+  println("Note: Full CLI argument parsing requires external configuration.")
+  println("This is a placeholder demonstrating the framework structure.")
 }
