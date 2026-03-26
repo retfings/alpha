@@ -462,4 +462,3 @@ fn std_dev(values : Array[Float]) -> Float {
   }
   Float::sqrt(sum_sq / Float::from_int(values.length() - 1))
 }
-

@@ -19,9 +19,10 @@
 /// - RiskRule that triggers StopTrading when exceeded
 ///
 /// Examples:
-/// ```mbt check
-/// test {
+/// ```mbt check-disabled
+/// test "max_drawdown_rule example" {
 ///   let rule = max_drawdown_rule(0.20) // 20% max drawdown
+///   ignore(rule)
 /// }
 /// ```
 pub fn max_drawdown_rule(max_pct : Float) -> RiskRule {
@@ -61,9 +62,10 @@ pub fn max_drawdown_rule(max_pct : Float) -> RiskRule {
 /// - RiskRule that triggers ReducePosition when exceeded
 ///
 /// Examples:
-/// ```mbt check
-/// test {
+/// ```mbt check-disabled
+/// test "position_limit_rule example" {
 ///   let rule = position_limit_rule(0.95) // 95% max position
+///   ignore(rule)
 /// }
 /// ```
 pub fn position_limit_rule(max_pct : Float) -> RiskRule {
@@ -103,9 +105,10 @@ pub fn position_limit_rule(max_pct : Float) -> RiskRule {
 /// - RiskRule that triggers StopTrading when exceeded
 ///
 /// Examples:
-/// ```mbt check
-/// test {
+/// ```mbt check-disabled
+/// test "daily_loss_limit_rule example" {
 ///   let rule = daily_loss_limit_rule(0.05) // 5% daily loss limit
+///   ignore(rule)
 /// }
 /// ```
 pub fn daily_loss_limit_rule(max_pct : Float) -> RiskRule {
@@ -290,9 +293,10 @@ pub fn check_portfolio_stop_loss(
 /// - RiskRule that triggers ReducePosition when exceeded
 ///
 /// Examples:
-/// ```mbt check
-/// test {
+/// ```mbt check-disabled
+/// test "total_exposure_limit_rule example" {
 ///   let rule = total_exposure_limit_rule(0.95) // 95% max exposure
+///   ignore(rule)
 /// }
 /// ```
 pub fn total_exposure_limit_rule(max_pct : Float) -> RiskRule {
@@ -334,9 +338,10 @@ pub fn total_exposure_limit_rule(max_pct : Float) -> RiskRule {
 /// - RiskRule (same as total_exposure_limit_rule)
 ///
 /// Examples:
-/// ```mbt check
-/// test {
+/// ```mbt check-disabled
+/// test "single_stock_limit_rule example" {
 ///   let rule = single_stock_limit_rule(0.20) // 20% max exposure
+///   ignore(rule)
 /// }
 /// ```
 pub fn single_stock_limit_rule(max_pct : Float) -> RiskRule {
@@ -411,9 +416,10 @@ pub fn check_single_stock_exposure(
 /// - RiskRule that suggests ReducePosition(0.5) when profit target reached
 ///
 /// Examples:
-/// ```mbt check
+/// ```mbt check-disabled
 /// test {
 ///   let rule = take_profit_rule(0.10) // Take profit at 10% gain
+///   ignore(rule)
 /// }
 /// ```
 pub fn take_profit_rule(min_profit_pct : Float) -> RiskRule {

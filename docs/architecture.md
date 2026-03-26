@@ -160,21 +160,22 @@ alpha/
 #### 1. 数据类型定义 (`src/data/types.mbt`)
 
 ```moonbit
-pub type KLine = {
-  date: String,
-  time: Option[String],     // 分钟级别数据需要
-  open: Float,
-  high: Float,
-  low: Float,
-  close: Float,
-  volume: Float,
-  amount: Float,
-  turn: Float,
+pub struct KLine {
+  code : String
+  date : String
+  time : String?
+  open : Float
+  high : Float
+  low : Float
+  close : Float
+  volume : Float
+  amount : Float
+  turn : Float
 }
 
 pub type StockCode = String  // 格式："sh.600000"
 
-pub type TimeSeries[T] = List[(Int64, T)]  // 时间序列
+pub type TimeSeries[T] = Array[(Int64, T)]  // 时间序列
 
 pub enum Frequency {
   Daily,
@@ -190,108 +191,176 @@ pub enum Frequency {
 #### 2. 回撤计算 (`src/drawdown/calculator.mbt`)
 
 ```moonbit
-pub type DrawdownInfo = {
-  peak: Float,           // 峰值
-  trough: Float,         // 谷底
-  peak_date: String,     // 峰值日期
-  trough_date: String,   // 谷底日期
-  drawdown: Float,       // 回撤幅度（百分比）
-  duration: Int,         // 回撤持续天数
-  recovered: Bool,       // 是否已恢复
+pub struct DrawdownInfo {
+  peak : Float          // 峰值
+  trough : Float        // 谷底
+  peak_date : String    // 峰值日期
+  trough_date : String  // 谷底日期
+  drawdown : Float      // 回撤幅度（百分比）
+  duration : Int        // 回撤持续天数
+  recovered : Bool      // 是否已恢复
 }
 
-pub fn calculate_max_drawdown(values: List[Float]) -> DrawdownInfo
-pub fn calculate_drawdown_series(values: List[Float]) -> List[Float]
-pub fn calculate_current_drawdown(values: List[Float]) -> Float
-pub fn find_top_drawdowns(values: List[Float], n: Int) -> List[DrawdownInfo]
+pub struct DrawdownAlert {
+  warning_threshold : Float    // 预警阈值（如 -0.05）
+  critical_threshold : Float   // 临界阈值（如 -0.10）
+  max_threshold : Float        // 最大阈值（如 -0.20）
+}
+
+pub struct DrawdownMonitor {
+  mut peak_value : Float
+  mut peak_date : String
+  mut current_value : Float
+  mut current_drawdown : Float
+  warning_threshold : Float
+  critical_threshold : Float
+  mut alert_triggered : Bool
+  mut last_alert_level : String
+}
+
+pub enum DrawdownLevel {
+  Normal       // 正常（回撤 < 5%）
+  Minor        // 轻度（5% - 10%）
+  Moderate     // 中度（10% - 20%）
+  Significant  // 显著（20% - 30%）
+  Severe       // 严重（> 30%）
+}
+
+pub fn calculate_max_drawdown(Array[Float]) -> Float
+pub fn calculate_max_drawdown_detailed(Array[Float], Array[String]) -> DrawdownInfo?
+pub fn calculate_drawdown_series(Array[Float]) -> Array[Float]
+pub fn calculate_current_drawdown(Array[Float]) -> Float
+pub fn find_top_drawdowns(Array[Float], Array[String], Int) -> Array[DrawdownInfo]
+pub fn get_drawdown_stats(Array[Float]) -> DrawdownStats
+pub fn check_drawdown_alert(Float, DrawdownAlert) -> String
+pub fn classify_drawdown(Float) -> DrawdownLevel
+pub fn create_monitor(Float, Float) -> DrawdownMonitor
+pub fn default_alert_config() -> DrawdownAlert
+```
+
+#### 2.5 投资组合 (`src/portfolio/manager.mbt`)
+
+```moonbit
+pub struct Position {
+  stock : String           // 股票代码
+  mut quantity : Float     // 持仓数量
+  mut avg_cost : Float     // 平均成本
+  mut current_price : Float // 当前价格
+}
+
+pub struct Portfolio {
+  positions : Array[Position]  // 持仓列表
+  mut cash : Float             // 现金
+  initial_capital : Float      // 初始资金
+}
+
+// Portfolio 方法
+pub fn Portfolio::buy(String, Float, Float) -> Bool
+pub fn Portfolio::sell(String, Float, Float) -> Bool
+pub fn Portfolio::get_position(String) -> Position?
+pub fn Portfolio::has_position(String) -> Bool
+pub fn Portfolio::position_count() -> Int
+pub fn Portfolio::total_value() -> Float
+pub fn Portfolio::position_value() -> Float
+pub fn Portfolio::position_ratio() -> Float
+pub fn Portfolio::get_total_exposure() -> Float
+pub fn Portfolio::total_pnl() -> Float
+pub fn Portfolio::total_pnl_pct() -> Float
+pub fn Portfolio::calculate_position_pnl() -> Float
+pub fn Portfolio::calculate_daily_pnl(Map[String, Float], Map[String, Float]) -> Float
+pub fn Portfolio::update_prices((String) -> Float) -> Unit
+
+pub fn create_portfolio(Float) -> Portfolio
 ```
 
 #### 3. 策略接口 (`src/strategy/types.mbt`)
 
 ```moonbit
-pub type Signal = {
-  stock: StockCode,
-  action: Action,
-  price: Float,
-  timestamp: String,
-  strength: Float,      // 信号强度 0.0 - 1.0
+pub struct Signal {
+  stock : String
+  action : Action
+  price : Float
+  timestamp : String
+  strength : Float      // 信号强度 0.0 - 1.0
 }
 
 pub enum Action {
-  Buy,
-  Sell,
-  Hold,
+  Buy
+  Sell
+  Hold
 }
 
-pub trait Strategy {
-  fn name: String
-  fn on_bar: (self, kline: KLine, ctx: StrategyContext) -> Signal
-  fn on_init: (self, ctx: StrategyContext) -> Unit
+pub struct Strategy {
+  name : String
+  on_init : (StrategyContext) -> Unit
+  on_bar : (KLine, StrategyContext, Array[Float]) -> Signal
 }
 
-pub type StrategyContext = {
-  capital: Float,
-  position: Position,
-  market_data: Map[StockCode, KLine],
-  indicators: Map[String, IndicatorValue],
+pub struct StrategyContext {
+  capital : Float
+  position : Float
+  current_price : Float
+  last_signal : Signal?
 }
 ```
 
 #### 4. 风控规则 (`src/risk/rules.mbt`)
 
 ```moonbit
-pub type RiskRule = {
-  name: String,
-  check: (Portfolio) -> RiskResult,
+pub struct RiskRule {
+  name : String
+  priority : Int
+  check_fn : (Float, Float, Float) -> RiskResult
 }
 
-pub type RiskResult = {
-  passed: Bool,
-  message: String,
-  action: RiskAction,
+pub struct RiskResult {
+  passed : Bool
+  message : String
+  action : RiskAction
 }
 
 pub enum RiskAction {
-  Allow,
-  Reject,
-  ReducePosition(Float),  // 建议减仓比例
-  StopTrading,
+  Allow
+  Reject
+  ReducePosition(Float)  // 建议减仓比例
+  StopTrading
 }
 
 // 内置风控规则
-pub fn max_drawdown_rule(max_pct: Float) -> RiskRule
-pub fn position_limit_rule(max_pct: Float) -> RiskRule
-pub fn stop_loss_rule(stop_pct: Float) -> RiskRule
-pub fn single_stock_limit_rule(max_pct: Float) -> RiskRule
+pub fn max_drawdown_rule(Float) -> RiskRule
+pub fn position_limit_rule(Float) -> RiskRule
+pub fn stop_loss_rule(String, Float) -> RiskRule
+pub fn single_stock_limit_rule(Float) -> RiskRule
 ```
 
 #### 5. 回测引擎 (`src/backtest/engine.mbt`)
 
 ```moonbit
-pub type BacktestConfig = {
-  start_date: String,
-  end_date: String,
-  initial_capital: Float,
-  commission_rate: Float,
-  slippage: Float,
-  benchmark: Option[StockCode],
+pub struct BacktestConfig {
+  start_date : String
+  end_date : String
+  initial_capital : Float
+  commission_rate : Float
+  slippage : Float
+  benchmark : String?
 }
 
-pub type BacktestResult = {
-  total_return: Float,
-  annual_return: Float,
-  max_drawdown: Float,
-  sharpe_ratio: Float,
-  win_rate: Float,
-  total_trades: Int,
-  equity_curve: List[EquityPoint],
-  trades: List[Trade],
+pub struct BacktestResult {
+  initial_capital : Float
+  final_capital : Float
+  total_return : Float
+  max_drawdown : Float
+  sharpe_ratio : Float
+  total_trades : Int
+  equity_curve : Array[EquityPoint]
+  trades : Array[Trade]
+  stats : BacktestStats
 }
 
 pub fn run_backtest(
-  strategy: Strategy,
-  data: Map[StockCode, List[KLine]],
-  config: BacktestConfig,
+  BacktestEngine,
+  Array[KLine],
+  Strategy
 ) -> BacktestResult
 ```
 
@@ -358,19 +427,21 @@ GET  /api/portfolio/drawdown     # 计算组合回撤
 
 ## 实现优先级
 
-1. **Phase 1 - 基础框架**
-   - 数据类型定义
-   - CSV 数据加载器
-   - 基础回撤计算器
-   - 简单 CLI 命令
+### 已完成阶段
 
-2. **Phase 2 - 策略引擎**
-   - 策略接口定义
-   - 回测引擎核心
-   - 1-2 个内置策略示例
-   - 回测报告生成
+1. **Phase 1 - 基础框架** ✅
+   - 数据类型定义 (`src/data/types.mbt`)
+   - CSV 数据加载器 (`src/data/loader.mbt`)
+   - 基础回撤计算器 (`src/drawdown/calculator.mbt`)
+   - 简单 CLI 命令 (`cmd/main/main.mbt`)
 
-3. **Phase 3 - 风控系统** （已完成）
+2. **Phase 2 - 策略引擎** ✅
+   - 策略接口定义 (`src/strategy/types.mbt`)
+   - 回测引擎核心 (`src/backtest/engine.mbt`)
+   - 内置策略：均线交叉、动量策略 (`src/strategy/builtins/`)
+   - 回测报告生成 (`src/backtest/report.mbt`)
+
+3. **Phase 3 - 风控系统** ✅
    - 风控规则引擎 (`src/risk/types.mbt`)
      - `RiskEngine` - 风控引擎状态管理
      - `RiskRule` - 规则定义（名称、优先级、检查函数）
@@ -389,10 +460,14 @@ GET  /api/portfolio/drawdown     # 计算组合回撤
    - 测试覆盖 (`src/risk/rules_test.mbt`)
      - 14 个单元测试覆盖所有规则与引擎功能
 
-4. **Phase 4 - HTTP 服务器**
+### 进行中阶段
+
+4. **Phase 4 - HTTP 服务器** 🚧
    - 简单 HTTP API 服务器
    - RESTful API 实现
    - 与核心引擎集成
+
+### 计划中阶段
 
 5. **Phase 5 - Web 界面**
    - 静态页面框架

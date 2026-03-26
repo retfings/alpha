@@ -81,9 +81,6 @@ pub struct StrategyInfo {
 
 pub(all) struct StrategyResult {
   signal : Signal
-  executed : Bool
-  exec_price : Float
-  exec_volume : Float
 }
 pub impl Show for StrategyResult
 pub impl ToJson for StrategyResult

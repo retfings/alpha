@@ -950,13 +950,12 @@ pub struct StrategyEngine {
 ```moonbit
 pub struct StrategyResult {
   signal : Signal
-  executed : Bool
-  exec_price : Float
-  exec_volume : Float
 }
 ```
 
 **Trait 实现**: `Show`, `ToJson`
+
+**Note**: 简化版本，仅包含信号信息。执行细节由回测引擎跟踪。
 
 ### 策略引擎函数
 

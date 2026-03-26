@@ -137,10 +137,11 @@ test "parse_kline_line - empty line" {
 
 ///|
 test "parse_kline_line - whitespace in values" {
+  // The parser now trims whitespace, so this should succeed
   let line = "2023-01-01, 10.5,11.0,10.2,10.8,1000000,10500000,0.05"
   match parse_kline_line(line) {
-    None => assert_true(true)
-    Some(_) => fail("Expected None")
+    Some(kline) => assert_true(kline.date == "2023-01-01" && kline.open == 10.5)
+    None => fail("Expected Some after trimming whitespace")
   }
 }
 
