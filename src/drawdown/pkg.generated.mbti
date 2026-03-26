@@ -1,0 +1,84 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/src/drawdown"
+
+import {
+  "username/alpha/src/data",
+}
+
+// Values
+pub fn calculate_current_drawdown(Array[Float]) -> Float
+
+pub fn calculate_drawdown_from_klines(Array[@data.KLine]) -> Float
+
+pub fn calculate_drawdown_series(Array[Float]) -> Array[Float]
+
+pub fn calculate_max_drawdown(Array[Float]) -> Float
+
+pub fn calculate_max_drawdown_detailed(Array[Float], Array[String]) -> DrawdownInfo?
+
+pub fn check_drawdown_alert(Float, DrawdownAlert) -> String
+
+pub fn classify_drawdown(Float) -> DrawdownLevel
+
+pub fn create_monitor(Float, Float) -> DrawdownMonitor
+
+pub fn default_alert_config() -> DrawdownAlert
+
+pub fn get_drawdown_stats(Array[Float]) -> DrawdownStats
+
+// Errors
+
+// Types and methods
+pub struct DrawdownAlert {
+  warning_threshold : Float
+  critical_threshold : Float
+  max_threshold : Float
+}
+
+pub struct DrawdownInfo {
+  peak : Float
+  trough : Float
+  peak_date : String
+  trough_date : String
+  drawdown : Float
+  duration : Int
+  recovered : Bool
+}
+
+pub enum DrawdownLevel {
+  Normal
+  Minor
+  Moderate
+  Significant
+  Severe
+}
+
+pub struct DrawdownMonitor {
+  mut peak_value : Float
+  mut peak_date : String
+  mut current_value : Float
+  mut current_drawdown : Float
+  warning_threshold : Float
+  critical_threshold : Float
+  mut alert_triggered : Bool
+  mut last_alert_level : String
+}
+pub fn DrawdownMonitor::get_alert_level(Self) -> String
+pub fn DrawdownMonitor::get_drawdown(Self) -> Float
+pub fn DrawdownMonitor::get_info(Self) -> DrawdownInfo
+pub fn DrawdownMonitor::is_alert_triggered(Self) -> Bool
+pub fn DrawdownMonitor::reset(Self) -> Unit
+pub fn DrawdownMonitor::update(Self, Float, String) -> Unit
+
+pub struct DrawdownStats {
+  max_drawdown : Float
+  current_drawdown : Float
+  avg_drawdown : Float
+  drawdown_count : Int
+}
+
+// Type aliases
+pub type DrawdownSeries = Array[Float]
+
+// Traits
+

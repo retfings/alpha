@@ -2,7 +2,3 @@ import {
   "username/alpha/src/data" @data,
   "username/alpha/src/drawdown" @drawdown,
 }
-
-options(
-  "is-main": true,
-)

@@ -1,0 +1,40 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/src/portfolio"
+
+// Values
+pub fn create_portfolio(Float) -> Portfolio
+
+// Errors
+
+// Types and methods
+pub struct Portfolio {
+  positions : Array[Position]
+  mut cash : Float
+  initial_capital : Float
+}
+pub fn Portfolio::buy(Self, String, Float, Float) -> Bool
+pub fn Portfolio::position_ratio(Self) -> Float
+pub fn Portfolio::position_value(Self) -> Float
+pub fn Portfolio::sell(Self, String, Float, Float) -> Bool
+pub fn Portfolio::total_pnl(Self) -> Float
+pub fn Portfolio::total_pnl_pct(Self) -> Float
+pub fn Portfolio::total_value(Self) -> Float
+pub fn Portfolio::update_prices(Self, (String) -> Float) -> Unit
+pub impl Show for Portfolio
+
+pub struct Position {
+  stock : String
+  mut quantity : Float
+  mut avg_cost : Float
+  mut current_price : Float
+}
+pub fn Position::pnl(Self) -> Float
+pub fn Position::pnl_pct(Self) -> Float
+pub fn Position::value(Self) -> Float
+pub impl Eq for Position
+pub impl Show for Position
+
+// Type aliases
+
+// Traits
+

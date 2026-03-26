@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/src/indicator"
+
+import {
+  "username/alpha/src/data",
+}
+
+// Values
+pub fn atr(Array[@data.KLine], Int) -> Array[Float]
+
+pub fn bollinger_bands(Array[Float], Int, Float) -> (Array[Float], Array[Float], Array[Float])
+
+pub fn ema(Array[Float], Int) -> Array[Float]
+
+pub fn macd(Array[Float], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
+
+pub fn rsi(Array[Float], Int) -> Array[Float]
+
+pub fn sma(Array[Float], Int) -> Array[Float]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

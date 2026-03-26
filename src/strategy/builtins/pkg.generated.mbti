@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/src/strategy/builtins"
+
+import {
+  "username/alpha/src/data",
+  "username/alpha/src/strategy",
+}
+
+// Values
+pub fn create_ma_cross_strategy(Int, Int) -> MaCrossStrategy
+
+// Errors
+
+// Types and methods
+pub struct MaCrossStrategy {
+  fast_period : Int
+  slow_period : Int
+  name : String
+}
+pub fn MaCrossStrategy::name(Self) -> String
+pub fn MaCrossStrategy::on_bar(Self, @data.KLine, @strategy.StrategyContext, Array[Float]) -> @strategy.Signal
+pub fn MaCrossStrategy::on_init(Self, @strategy.StrategyContext) -> Unit
+
+// Type aliases
+
+// Traits
+

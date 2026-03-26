@@ -1,0 +1,96 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/src/backtest"
+
+import {
+  "username/alpha/src/data",
+  "username/alpha/src/portfolio",
+  "username/alpha/src/risk",
+  "username/alpha/src/strategy",
+}
+
+// Values
+pub fn create_backtest_engine(@strategy.BacktestConfig) -> BacktestEngine
+
+pub fn create_trade_log() -> TradeLog
+
+pub fn run_backtest(BacktestEngine, Array[@data.KLine], @strategy.Strategy) -> BacktestResult
+
+// Errors
+
+// Types and methods
+pub struct BacktestEngine {
+  config : @strategy.BacktestConfig
+  portfolio : @portfolio.Portfolio
+  risk_engine : @risk.RiskEngine
+  trades : Array[Trade]
+  equity_curve : Array[EquityPoint]
+  current_date : String
+  current_equity : Float
+  peak_equity : Float
+  max_drawdown : Float
+}
+
+pub struct BacktestResult {
+  initial_capital : Float
+  final_capital : Float
+  total_return : Float
+  max_drawdown : Float
+  sharpe_ratio : Float
+  total_trades : Int
+  equity_curve : Array[EquityPoint]
+  trades : Array[Trade]
+  stats : BacktestStats
+}
+
+pub struct BacktestStats {
+  total_return : Float
+  annual_return : Float
+  max_drawdown : Float
+  sharpe_ratio : Float
+  sortino_ratio : Float
+  win_rate : Float
+  profit_factor : Float
+  total_trades : Int
+  winning_trades : Int
+  losing_trades : Int
+  avg_win : Float
+  avg_loss : Float
+  avg_trade_duration : Float
+}
+
+pub struct EquityPoint {
+  date : String
+  equity : Float
+  drawdown : Float
+  position : Float
+  cash : Float
+}
+
+pub struct Trade {
+  stock : String
+  action : @strategy.Action
+  price : Float
+  quantity : Float
+  timestamp : String
+  commission : Float
+}
+
+pub struct TradeLog {
+  entries : Array[TradeLogEntry]
+}
+pub fn TradeLog::add(Self, String, String, String, Float, Float, Float?, String) -> Unit
+
+pub struct TradeLogEntry {
+  date : String
+  stock : String
+  action : String
+  price : Float
+  quantity : Float
+  pnl : Float?
+  commentary : String
+}
+
+// Type aliases
+
+// Traits
+

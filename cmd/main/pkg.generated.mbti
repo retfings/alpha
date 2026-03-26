@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/alpha/cmd/main"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub enum Command {
+  Help
+  Analyze(String, String)
+  Backtest(String, String, String, String)
+  Report(String)
+  ListStrategies
+}
+
+// Type aliases
+
+// Traits
+
