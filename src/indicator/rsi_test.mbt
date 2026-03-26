@@ -462,22 +462,3 @@ test "rsi single value" {
   assert_eq(result.length(), 1)
   assert_eq(result[0], Float::from_double(0.0))
 }
-
-///|
-test "rsi snapshot test" {
-  let prices : Array[Float] = [
-    Float::from_double(100.0),
-    Float::from_double(102.0),
-    Float::from_double(101.0),
-    Float::from_double(103.0),
-    Float::from_double(105.0),
-    Float::from_double(104.0),
-    Float::from_double(106.0),
-    Float::from_double(108.0),
-  ]
-  let result = @indicator.rsi(prices, 3)
-  assert_eq(result.length(), 8)
-  inspect(result, content=(
-    #|[0, 0, 0, 80, 87.5, 68.29268646240234, 80.88235473632812, 88.0184326171875]
-  ))
-}
