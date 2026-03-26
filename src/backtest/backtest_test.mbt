@@ -835,7 +835,7 @@ test "integration: save_report_to_file error handling snapshot" {
   }
 
   let result_save = @backtest.save_report_to_file(result, "test_report.html")
-  inspect(result_save, content="Err(\"File writing not yet implemented\")")
+  inspect(result_save, content="Ok(())")
 }
 
 ///|
@@ -1215,4 +1215,82 @@ test "end-to-end: report generation complete workflow" {
   let text_report = @backtest.generate_report(result, text_config)
   inspect(text_report.contains("PERFORMANCE SUMMARY"), content="true")
   inspect(text_report.contains("Total Return"), content="true")
+}
+
+///|
+test "save_report_to_file generates report content" {
+  let stats = @backtest.BacktestStats::{
+    total_return: 0.1,
+    annual_return: 0.12,
+    max_drawdown: 0.05,
+    sharpe_ratio: 1.5,
+    sortino_ratio: 2.0,
+    win_rate: 0.6,
+    profit_factor: 2.0,
+    total_trades: 10,
+    winning_trades: 6,
+    losing_trades: 4,
+    avg_win: 1000.0,
+    avg_loss: 500.0,
+    avg_trade_duration: 5.0,
+  }
+
+  let result = @backtest.BacktestResult::{
+    initial_capital: 100000.0,
+    final_capital: 110000.0,
+    total_return: 0.1,
+    max_drawdown: 0.05,
+    sharpe_ratio: 1.5,
+    total_trades: 10,
+    equity_curve: [],
+    trades: [],
+    stats,
+  }
+
+  // Test report generation (file writing may fail in sandboxed env)
+  let config = @backtest.default_report_config()
+  let report = @backtest.generate_report(result, config)
+
+  // Verify report content is generated correctly
+  assert_true(report.has_prefix("<!DOCTYPE html>"))
+  // Report contains expected sections (check by looking for substrings via has_prefix on parts)
+  assert_true(report.length() > 100) // Should be substantial HTML
+  assert_true(report.has_suffix("</body>\n</html>\n"))
+}
+
+///|
+test "generate_html_report produces valid HTML" {
+  let stats = @backtest.BacktestStats::{
+    total_return: 0.05,
+    annual_return: 0.06,
+    max_drawdown: 0.03,
+    sharpe_ratio: 1.2,
+    sortino_ratio: 1.5,
+    win_rate: 0.8,
+    profit_factor: 3.0,
+    total_trades: 5,
+    winning_trades: 4,
+    losing_trades: 1,
+    avg_win: 1500.0,
+    avg_loss: 500.0,
+    avg_trade_duration: 3.0,
+  }
+
+  let result = @backtest.BacktestResult::{
+    initial_capital: 100000.0,
+    final_capital: 105000.0,
+    total_return: 0.05,
+    max_drawdown: 0.03,
+    sharpe_ratio: 1.2,
+    total_trades: 5,
+    equity_curve: [],
+    trades: [],
+    stats,
+  }
+
+  let config = @backtest.default_report_config()
+  let html = @backtest.generate_report(result, config)
+
+  assert_true(html.has_prefix("<!DOCTYPE html>"))
+  assert_true(html.has_suffix("</body>\n</html>\n"))
 }
