@@ -25,7 +25,7 @@ pub fn create_momentum_strategy(
     rsi_period,
     overbought_threshold,
     oversold_threshold,
-    name: "RSI Momentum (\\{rsi_period})",
+    name: "RSI Momentum (" + rsi_period.to_string() + ")",
   }
 }
 

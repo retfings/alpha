@@ -175,8 +175,8 @@ test "classify_drawdown - zero" {
 ///|
 test "classify_drawdown - positive (gain)" {
   let level = classify_drawdown(0.1)
-  // Positive values are classified by absolute value, 0.1 >= 0.1 so Moderate
-  assert_true(level.to_string().contains("Moderate"))
+  // Positive values are classified as Normal (gains, not drawdowns)
+  assert_true(level.to_string().contains("Normal"))
 }
 
 ///|

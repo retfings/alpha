@@ -17,7 +17,7 @@ pub fn create_ma_cross_strategy(
   MaCrossStrategy::{
     fast_period,
     slow_period,
-    name: "MA Crossover (\\{fast_period}/\\{slow_period})",
+    name: "MA Crossover (" + fast_period.to_string() + "/" + slow_period.to_string() + ")",
   }
 }
 

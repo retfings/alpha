@@ -13,7 +13,7 @@ test "create_ma_cross_strategy - different periods" {
   let strategy = create_ma_cross_strategy(10, 50)
   assert_true(strategy.fast_period == 10)
   assert_true(strategy.slow_period == 50)
-  json_inspect((strategy.name, strategy.fast_period, strategy.slow_period))
+  json_inspect((strategy.name, strategy.fast_period, strategy.slow_period), content=(["MA Crossover (10/50)",10,50]))
 }
 
 ///|
@@ -22,7 +22,7 @@ test "MaCrossStrategy::name - returns correct name" {
   let name = strategy.name()
   assert_true(name.contains("5"))
   assert_true(name.contains("20"))
-  json_inspect(name)
+  json_inspect(name, content=("MA Crossover (5/20)"))
 }
 
 ///|
@@ -59,7 +59,7 @@ test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
   let signal = strategy.on_bar(kline, ctx, history)
   assert_true(signal.action == @strategy.Action::Hold)
   assert_true(signal.strength == 0.0)
-  json_inspect(signal)
+  json_inspect(signal, content=({"stock":"sh.600000","action":"Hold","price":10.199999809265137,"timestamp":"2023-01-01","strength":0}))
 }
 
 ///|
@@ -87,7 +87,7 @@ test "MaCrossStrategy::on_bar - golden cross detection" {
     signal.action == @strategy.Action::Buy ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect((signal.action.to_string(), signal.strength, signal.price))
+  json_inspect((signal.action.to_string(), signal.strength, signal.price), content=(["Hold",0,12.300000190734863]))
 }
 
 ///|
@@ -115,7 +115,7 @@ test "MaCrossStrategy::on_bar - death cross detection" {
     signal.action == @strategy.Action::Sell ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect((signal.action.to_string(), signal.strength, signal.price))
+  json_inspect((signal.action.to_string(), signal.strength, signal.price), content=(["Hold",0,7.800000190734863]))
 }
 
 ///|
@@ -143,5 +143,5 @@ test "MaCrossStrategy::on_bar - snapshot of signal with various histories" {
     (name, signal.action.to_string(), signal.strength)
   })
 
-  json_inspect(results)
+  json_inspect(results, content=([["uptrend","Hold",0],["downtrend","Hold",0],["sideways","Buy",0.008064508438110352]]))
 }
