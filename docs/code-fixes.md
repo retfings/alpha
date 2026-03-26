@@ -294,5 +294,5 @@ pub fn check_single_stock_exposure(
 **主要警告类型**:
 - 未使用包 (unused_package): 2 个（indicator 在 backtest/moon.pkg 中）
 - 未使用变量 (unused_value): 约 15 个（测试文件和策略实现中）
-- 未使用结构体 (struct_never_constructed): 1 个（StrategyInfo）
-- 其他警告：约 22 个（包括 unused_mut, deprecated 等）
+- 未使用结构体 (struct_never_constructed): 2 个（AdjustedKLine, OHLCV）
+- 其他警告：约 21 个（包括 unused_mut, deprecated 等）

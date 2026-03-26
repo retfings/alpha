@@ -70,7 +70,6 @@
 | 移除 StrategyResult 未使用字段 | P1 | `strategy/engine.mbt` |
 | 提取魔法数字为常量 | P1 | `backtest/engine.mbt` |
 | 统一 Portfolio API 命名 | P2 | `portfolio/manager.mbt` |
-| 移除 StrategyInfo 未使用结构体 | P2 | `strategy/types.mbt` |
 | 实现 Sortino 比率计算 | P2 | `backtest/engine.mbt` |
 | 实现交易持续时间统计 | P2 | `backtest/engine.mbt` |
 
@@ -216,7 +215,7 @@
 - [x] 补充 backtest 统计函数测试 (任务 #40) ✅
 - [x] 性能优化：排序算法 (dev-1) ✅
 - [x] 性能优化：SMA 滑动窗口 (dev-1) ✅
-- [ ] 移除未使用代码 (StrategyResult 字段，StrategyInfo)
+- [ ] 移除未使用代码 (StrategyResult 字段)
 - [ ] 提取魔法数字为常量
 
 **交付物**:

@@ -8,25 +8,70 @@
 
 ///|
 /// HTTP Response structure
+/// Represents an HTTP response with status code and body
 pub struct HttpResponse {
+  /// HTTP status code (e.g., 200, 404, 500)
   status_code : Int
+  /// Response body as a string (typically JSON)
   body : String
 } derive(Show, ToJson)
 
 ///|
 /// Create HTTP response
+///
+/// Parameters:
+/// - status_code: HTTP status code (e.g., 200 for success, 404 for not found)
+/// - body: Response body content (typically JSON string)
+///
+/// Returns:
+/// - HttpResponse with the specified status and body
+///
+/// Example:
+/// ```mbt check-disabled
+/// let response = make_response(200, "{\"status\":\"ok\"}")
+/// assert_true(response.status_code == 200)
+/// ```
 pub fn make_response(status_code : Int, body : String) -> HttpResponse {
   HttpResponse::{ status_code, body }
 }
 
 ///|
 /// Convert StringView to String
+///
+/// Parameters:
+/// - sv: StringView to convert
+///
+/// Returns:
+/// - String containing the same content as the StringView
+///
+/// Example:
+/// ```mbt check-disabled
+/// let view = "hello"[:]
+/// let str = string_view_to_string(view)
+/// assert_true(str == "hello")
+/// ```
 pub fn string_view_to_string(sv : StringView) -> String {
   sv.to_string()
 }
 
 ///|
 /// Parse HTTP request path
+///
+/// Extracts the path from an HTTP request string by parsing the first line.
+///
+/// Parameters:
+/// - request: Raw HTTP request string (e.g., "GET /api/stocks HTTP/1.1\n...")
+///
+/// Returns:
+/// - Path string extracted from the request (e.g., "/api/stocks")
+/// - Returns "/" if parsing fails
+///
+/// Example:
+/// ```mbt check-disabled
+/// let request = "GET /api/stocks HTTP/1.1\nHost: localhost\n\n"
+/// let path = parse_request_path(request)
+/// assert_true(path == "/api/stocks")
+/// ```
 pub fn parse_request_path(request : String) -> String {
   let lines = request.split("\n").to_array()
   if lines.length() > 0 {
@@ -40,7 +85,24 @@ pub fn parse_request_path(request : String) -> String {
 }
 
 ///|
-/// Extract stock code from path like /api/stocks/sh.600000/klines or /api/drawdown/sh.600000
+/// Extract stock code from path
+///
+/// Parses stock code from API paths like `/api/stocks/sh.600000/klines` or `/api/drawdown/sh.600000`.
+///
+/// Parameters:
+/// - path: URL path string containing stock code
+///
+/// Returns:
+/// - Some(stock_code) if valid stock code found (format: "market.code" like "sh.600000")
+/// - None if no valid stock code found
+///
+/// Example:
+/// ```mbt check-disabled
+/// let path1 = "/api/stocks/sh.600000/klines"
+/// let path2 = "/api/drawdown/sz.000001"
+/// assert_true(extract_stock_code(path1) == Some("sh.600000"))
+/// assert_true(extract_stock_code(path2) == Some("sz.000001"))
+/// ```
 pub fn extract_stock_code(path : String) -> String? {
   let parts = path.split("/").to_array()
   let mut i = 0
@@ -74,6 +136,21 @@ pub fn extract_stock_code(path : String) -> String? {
 
 ///|
 /// Extract backtest ID from path
+///
+/// Parses backtest ID from API paths like `/api/backtest/bt_001/result`.
+///
+/// Parameters:
+/// - path: URL path string containing backtest ID
+///
+/// Returns:
+/// - Some(backtest_id) if valid ID found
+/// - None if no valid ID found or if path points to "result" keyword
+///
+/// Example:
+/// ```mbt check-disabled
+/// let path = "/api/backtest/bt_001/result"
+/// assert_true(extract_backtest_id(path) == Some("bt_001"))
+/// ```
 pub fn extract_backtest_id(path : String) -> String? {
   let parts = path.split("/").to_array()
   let mut i = 0
@@ -91,6 +168,38 @@ pub fn extract_backtest_id(path : String) -> String? {
 
 ///|
 /// Route request to appropriate handler
+///
+/// Main request routing function that dispatches HTTP requests to appropriate handlers
+/// based on path and HTTP method.
+///
+/// Parameters:
+/// - path: URL path extracted from HTTP request
+/// - http_method: HTTP method (GET, POST, PUT, DELETE, etc.)
+///
+/// Returns:
+/// - HttpResponse with appropriate status code and body
+///
+/// Routes:
+/// - `GET /api/health` - Health check endpoint
+/// - `GET /api/stocks` - List all available stocks
+/// - `GET /api/stocks/{code}` - Get stock information
+/// - `GET /api/stocks/{code}/klines` - Get K-line data
+/// - `POST /api/backtest` - Start new backtest
+/// - `GET /api/backtest/{id}/result` - Get backtest result
+/// - `GET /api/drawdown/{code}` - Get stock drawdown analysis
+/// - `GET /api/portfolio/drawdown` - Get portfolio drawdown
+///
+/// Example:
+/// ```mbt check-disabled
+/// let response1 = route_request("/api/health", "GET")
+/// assert_true(response1.status_code == 200)
+///
+/// let response2 = route_request("/api/stocks", "GET")
+/// assert_true(response2.status_code == 200)
+///
+/// let response3 = route_request("/api/unknown", "GET")
+/// assert_true(response3.status_code == 404)
+/// ```
 pub fn route_request(path : String, http_method : String) -> HttpResponse {
   if path == "/api/health" {
     return make_response(
@@ -336,6 +445,22 @@ fn handle_portfolio_drawdown() -> HttpResponse {
 
 ///|
 /// Handle incoming HTTP request
+///
+/// Main entry point for processing raw HTTP requests. Parses the request to extract
+/// the path and HTTP method, then routes to the appropriate handler.
+///
+/// Parameters:
+/// - request: Raw HTTP request string including headers (e.g., "GET /api/stocks HTTP/1.1\nHost: localhost\n\n")
+///
+/// Returns:
+/// - HttpResponse with appropriate status code and body based on the routed handler
+///
+/// Example:
+/// ```mbt check-disabled
+/// let request = "GET /api/health HTTP/1.1\nHost: localhost\n\n"
+/// let response = handle_request(request)
+/// assert_true(response.status_code == 200)
+/// ```
 pub fn handle_request(request : String) -> HttpResponse {
   let path = parse_request_path(request)
   let lines = request.split("\n").to_array()
@@ -357,26 +482,78 @@ pub fn handle_request(request : String) -> HttpResponse {
 
 ///|
 /// Create HTTP server socket
+///
+/// Parameters:
+/// - port: Port number to bind the server to (e.g., 8080, 3000)
+///
+/// Returns:
+/// - Server file descriptor (non-negative integer) on success
+/// - Negative integer on failure
 #borrow(port)
 extern "c" fn http_server_create(port : Int) -> Int = "moonbit_http_server_create"
 
 ///|
 /// Accept connection and get request
+///
+/// Blocks until an incoming HTTP connection is received, then reads the request.
+///
+/// Parameters:
+/// - server_fd: Server file descriptor returned by http_server_create
+///
+/// Returns:
+/// - Raw HTTP request string including all headers
 #borrow(server_fd)
 extern "c" fn http_server_accept(server_fd : Int) -> String = "moonbit_http_server_accept"
 
 ///|
 /// Send HTTP response
+///
+/// Parameters:
+/// - server_fd: Server file descriptor for the client connection
+/// - response: HTTP response string to send (format: "STATUS_CODE BODY")
+///
+/// Returns:
+/// - 0 on success
+/// - Non-zero on failure
 #borrow(server_fd, response)
 extern "c" fn http_server_respond(server_fd : Int, response : String) -> Int = "moonbit_http_server_respond"
 
 ///|
 /// Close server socket
+///
+/// Parameters:
+/// - server_fd: Server file descriptor to close
+///
+/// Returns:
+/// - 0 on success
+/// - Non-zero on failure
 #borrow(server_fd)
 extern "c" fn http_server_close(server_fd : Int) -> Int = "moonbit_http_server_close"
 
 ///|
 /// Start HTTP server and handle requests
+///
+/// Initializes an HTTP server on the specified port and processes incoming requests
+/// in a synchronous loop. Handles up to 100 requests before shutting down.
+///
+/// Parameters:
+/// - port: Port number to listen on (e.g., 8080 for default, 3000 for alternative)
+///
+/// Behavior:
+/// - Creates server socket and binds to port
+/// - Prints available endpoints to stdout
+/// - Enters request handling loop (max 100 requests)
+/// - For each request: accepts connection, routes to handler, sends response
+/// - Closes server socket on exit
+///
+/// Example:
+/// ```mbt check-disabled
+/// // Start server on port 8080
+/// start_server(8080)
+///
+/// // Start server on custom port
+/// start_server(3000)
+/// ```
 pub fn start_server(port : Int) -> Unit {
   println("Starting HTTP server on port \{port}")
 

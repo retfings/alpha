@@ -56,7 +56,6 @@ src/indicator/
 
 | Type | Location | Issue |
 |------|----------|-------|
-| `StrategyInfo` | `strategy/types.mbt:41` | Never constructed |
 | `AdjustedKLine` | `data/types.mbt:90` | Never constructed |
 | `OHLCV` | `data/types.mbt:114` | Never constructed |
 | `Frequency` variants | `data/types.mbt:13-26` | Only `Daily` potentially used |
@@ -245,7 +244,7 @@ Based on the review, the following areas need additional tests:
 ## 7. Recommended Refactoring Priority
 
 ### P0 - Critical (Fix Immediately)
-1. Remove unused public types from API
+1. Remove unused public types from API (`AdjustedKLine`, `OHLCV`)
 2. Fix `bollinger_bands` efficiency issue
 
 ### P1 - High (Next Sprint)
@@ -271,7 +270,6 @@ Based on the review, the following areas need additional tests:
 | `src/indicator/ma.mbt` | 546 | File too large, no doc examples | P1 |
 | `src/drawdown/calculator.mbt` | 371 | Method conversion needed | P1 |
 | `src/backtest/report.mbt` | 274 | String concatenation verbose | P3 |
-| `src/strategy/types.mbt` | 103 | Unused public type | P0 |
 | `src/data/types.mbt` | 200+ | Unused types | P0 |
 | `src/risk/rules.mbt` | 489 | Good documentation | - |
 | `src/portfolio/manager.mbt` | 405 | Good method style | - |

@@ -115,7 +115,6 @@
 
 #### 未覆盖边界条件
 - [ ] `StrategyResult` 未使用字段测试（executed, exec_price, exec_volume）
-- [ ] `StrategyInfo` 结构体从未使用（警告：struct_never_constructed）
 
 ---
 
@@ -317,7 +316,6 @@
 | backtest | `save_report_to_file` | P0 | 实现 C FFI 后补充 |
 | backtest | `TradeLog` 系列 | P1 | 添加交易日志测试 |
 | backtest | 统计辅助函数 | P1 | 补充 average/std_dev 测试 |
-| strategy | `StrategyInfo` | P2 | 考虑移除或实现 |
 | ffi | 文件读写 | P0 | 实现 C FFI 后补充 |
 
 ### 边界条件缺失

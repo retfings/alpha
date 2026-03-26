@@ -163,6 +163,57 @@ Display help information.
 moon run cmd/main help
 ```
 
+### `serve` - Start HTTP API Server
+
+Start the HTTP API server for programmatic access to the framework's features.
+
+**Syntax:**
+```bash
+moon run cmd/main serve --port <PORT>
+```
+
+**Options:**
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--port` | Port number to listen on | `8080` |
+
+**Examples:**
+```bash
+# Start server on default port 8080
+moon run cmd/main serve
+
+# Start server on custom port
+moon run cmd/main serve --port 3000
+```
+
+**Available API Endpoints:**
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Health check |
+| `/api/stocks` | GET | List available stocks |
+| `/api/stocks/:code` | GET | Get stock info |
+| `/api/stocks/:code/klines` | GET | Get K-line data |
+| `/api/backtest` | POST | Start backtest |
+| `/api/backtest/:id/result` | GET | Get backtest result |
+| `/api/drawdown/:code` | GET | Get drawdown analysis |
+| `/api/portfolio/drawdown` | GET | Get portfolio drawdown |
+
+**Example API Usage:**
+```bash
+# Health check
+curl http://localhost:8080/api/health
+
+# List stocks
+curl http://localhost:8080/api/stocks
+
+# Get stock klines
+curl http://localhost:8080/api/stocks/sh.600000/klines
+
+# Get drawdown analysis
+curl http://localhost:8080/api/drawdown/sh.600000
+```
+
 ---
 
 ## Web Interface
