@@ -28,7 +28,6 @@ fn string_view_to_string(sv : StringView) -> String {
 ///|
 /// Parse HTTP request path
 fn parse_request_path(request : String) -> String {
-  // Extract path from HTTP request line
   let lines = request.split("\n").to_array()
   if lines.length() > 0 {
     let first_line = lines[0]
@@ -48,7 +47,6 @@ fn extract_stock_code(path : String) -> String? {
   while i < parts.length() {
     if parts[i] == "stocks" && i + 1 < parts.length() {
       let candidate = string_view_to_string(parts[i + 1])
-      // Validate it looks like a stock code (contains dot or is alphanumeric)
       if candidate.contains(".") || (candidate.length() > 0 && candidate[0] >= 'a' && candidate[0] <= 'z') {
         return Some(candidate)
       }
@@ -78,17 +76,14 @@ fn extract_backtest_id(path : String) -> String? {
 ///|
 /// Route request to appropriate handler
 fn route_request(path : String, http_method : String) -> HttpResponse {
-  // Health check endpoint
   if path == "/api/health" {
     return make_response(200, "{\"status\":\"ok\",\"service\":\"moonbit-drawdown\"}")
   }
 
-  // List stocks endpoint
   if path == "/api/stocks" && http_method == "GET" {
     return handle_list_stocks()
   }
 
-  // Get stock klines
   if path.contains("/api/stocks/") && path.contains("/klines") {
     match extract_stock_code(path) {
       Some(stock) => { return handle_get_klines(stock) }
@@ -96,20 +91,17 @@ fn route_request(path : String, http_method : String) -> HttpResponse {
     }
   }
 
-  // Get specific stock info
-  if path.starts_with("/api/stocks/") && !path.contains("/klines") {
+  if path.has_prefix("/api/stocks/") && !path.contains("/klines") {
     match extract_stock_code(path) {
       Some(stock) => { return handle_get_stock(stock) }
       None => { return make_response(400, "{\"error\":\"Invalid stock code\"}") }
     }
   }
 
-  // Start backtest
   if path == "/api/backtest" && http_method == "POST" {
     return make_response(200, "{\"status\":\"started\",\"backtest_id\":\"bt_001\"}")
   }
 
-  // Get backtest result
   if path.contains("/api/backtest/") && path.contains("/result") {
     match extract_backtest_id(path) {
       Some(id) => { return handle_get_backtest_result(id) }
@@ -117,21 +109,18 @@ fn route_request(path : String, http_method : String) -> HttpResponse {
     }
   }
 
-  // Get drawdown for stock
-  if path.starts_with("/api/drawdown/") {
+  if path.has_prefix("/api/drawdown/") {
     match extract_stock_code(path) {
       Some(stock) => { return handle_get_drawdown(stock) }
       None => { return make_response(400, "{\"error\":\"Invalid stock code\"}") }
     }
   }
 
-  // Portfolio drawdown
   if path == "/api/portfolio/drawdown" {
     return handle_portfolio_drawdown()
   }
 
-  // 404 for unknown routes
-  make_response(404, "{\"error\":\"Not found\",\"path\":\"" ++ path ++ "\"}")
+  make_response(404, "{\"error\":\"Not found\",\"path\":\"\{path}\"}")
 }
 
 ///|
@@ -143,25 +132,25 @@ fn handle_list_stocks() -> HttpResponse {
 ///|
 /// Handler: Get stock info
 fn handle_get_stock(stock : String) -> HttpResponse {
-  make_response(200, "{\"stock\":{\"code\":\"" ++ stock ++ "\",\"name\":\"Sample Stock\"}}")
+  make_response(200, "{\"stock\":{\"code\":\"\{stock}\",\"name\":\"Sample Stock\"}}")
 }
 
 ///|
 /// Handler: Get klines for stock
 fn handle_get_klines(stock : String) -> HttpResponse {
-  make_response(200, "{\"stock\":\"" ++ stock ++ "\",\"klines\":[{\"date\":\"2024-01-02\",\"close\":10.8}],\"count\":1}")
+  make_response(200, "{\"stock\":\"\{stock}\",\"klines\":[{\"date\":\"2024-01-02\",\"close\":10.8}],\"count\":1}")
 }
 
 ///|
 /// Handler: Get backtest result
 fn handle_get_backtest_result(id : String) -> HttpResponse {
-  make_response(200, "{\"backtest_id\":\"" ++ id ++ "\",\"status\":\"completed\",\"result\":{\"total_return\":0.1245,\"max_drawdown\":-0.0832}}")
+  make_response(200, "{\"backtest_id\":\"\{id}\",\"status\":\"completed\",\"result\":{\"total_return\":0.1245,\"max_drawdown\":-0.0832}}")
 }
 
 ///|
 /// Handler: Get drawdown for stock
 fn handle_get_drawdown(stock : String) -> HttpResponse {
-  make_response(200, "{\"stock\":\"" ++ stock ++ "\",\"drawdown\":{\"current\":-0.0245,\"max\":-0.1523}}")
+  make_response(200, "{\"stock\":\"\{stock}\",\"drawdown\":{\"current\":-0.0245,\"max\":-0.1523}}")
 }
 
 ///|
@@ -208,7 +197,7 @@ extern "c" fn http_server_close(server_fd : Int) -> Int = "moonbit_http_server_c
 ///|
 /// Start HTTP server and handle requests
 pub fn start_server(port : Int) -> Unit {
-  println("Starting HTTP server on port " ++ port.to_string)
+  println("Starting HTTP server on port \{port}")
 
   let server_fd = http_server_create(port)
   if server_fd < 0 {
@@ -216,7 +205,7 @@ pub fn start_server(port : Int) -> Unit {
     return
   }
 
-  println("Server listening on port " ++ port.to_string)
+  println("Server listening on port \{port}")
   println("Endpoints:")
   println("  GET  /api/health              - Health check")
   println("  GET  /api/stocks              - List stocks")
@@ -235,6 +224,6 @@ pub fn start_server(port : Int) -> Unit {
     request_count = request_count + 1
   }
 
-  http_server_close(server_fd)
+  let _ = http_server_close(server_fd)
   println("Server stopped")
 }
