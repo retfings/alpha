@@ -12,6 +12,24 @@ pub fn max_drawdown_rule(Float) -> RiskRule
 
 pub fn position_limit_rule(Float) -> RiskRule
 
+pub fn risk_action_allow() -> RiskAction
+
+pub fn risk_action_reduce_position(Float) -> RiskAction
+
+pub fn risk_action_reject() -> RiskAction
+
+pub fn risk_action_stop_trading() -> RiskAction
+
+pub fn risk_result_fail(String, RiskAction) -> RiskResult
+
+pub fn risk_result_pass(String) -> RiskResult
+
+pub fn single_stock_limit_rule(Float) -> RiskRule
+
+pub fn stop_loss_rule(String, Float) -> RiskRule
+
+pub fn take_profit_rule(Float) -> RiskRule
+
 // Errors
 
 // Types and methods
@@ -21,6 +39,8 @@ pub enum RiskAction {
   ReducePosition(Float)
   StopTrading
 }
+pub impl Eq for RiskAction
+pub impl Show for RiskAction
 
 pub struct RiskEngine {
   rules : Array[RiskRule]

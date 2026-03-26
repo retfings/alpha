@@ -99,7 +99,7 @@ test "StrategyContext - field assertions" {
 test "Action enum - json inspection" {
   json_inspect(
     (@strategy.Action::Buy, @strategy.Action::Sell, @strategy.Action::Hold),
-    content=["Buy", "Sell", "Hold"]
+    content=["Buy", "Sell", "Hold"],
   )
 }
 

@@ -1,8 +1,0 @@
-import {
-  "username/alpha/src/data" @data,
-  "username/alpha/src/strategy" @strategy,
-  "username/alpha/src/backtest" @backtest,
-  "username/alpha/src/drawdown" @drawdown,
-}
-
-warn-error false

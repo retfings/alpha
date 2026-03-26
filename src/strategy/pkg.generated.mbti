@@ -12,7 +12,7 @@ pub fn default_backtest_config() -> BacktestConfig
 
 pub fn get_engine_stats(StrategyEngine) -> (Float, Float, Int)
 
-pub fn process_bar(StrategyEngine, Strategy, @data.KLine) -> StrategyResult
+pub fn process_bar(StrategyEngine, Strategy, @data.KLine, Array[Float]) -> StrategyResult
 
 // Errors
 
@@ -24,6 +24,7 @@ pub(all) enum Action {
 }
 pub impl Eq for Action
 pub impl Show for Action
+pub impl ToJson for Action
 
 pub(all) struct BacktestConfig {
   start_date : String
@@ -41,11 +42,17 @@ pub(all) struct Signal {
   timestamp : String
   strength : Float
 }
+pub fn Signal::buy(String, Float, String, Float) -> Self
+pub fn Signal::hold(String, Float, String) -> Self
+pub fn Signal::sell(String, Float, String, Float) -> Self
+pub fn Signal::with_action(String, Action, Float, String, Float) -> Self
+pub impl Show for Signal
+pub impl ToJson for Signal
 
-pub struct Strategy {
+pub(all) struct Strategy {
   name : String
   on_init : (StrategyContext) -> Unit
-  on_bar : (@data.KLine, StrategyContext) -> Signal
+  on_bar : (@data.KLine, StrategyContext, Array[Float]) -> Signal
 }
 
 pub(all) struct StrategyContext {
@@ -54,8 +61,10 @@ pub(all) struct StrategyContext {
   current_price : Float
   last_signal : Signal?
 }
+pub impl Show for StrategyContext
+pub impl ToJson for StrategyContext
 
-pub struct StrategyEngine {
+pub(all) struct StrategyEngine {
   capital : Float
   position : Float
   last_price : Float
@@ -70,12 +79,14 @@ pub struct StrategyInfo {
   version : String
 }
 
-pub struct StrategyResult {
+pub(all) struct StrategyResult {
   signal : Signal
   executed : Bool
   exec_price : Float
   exec_volume : Float
 }
+pub impl Show for StrategyResult
+pub impl ToJson for StrategyResult
 
 // Type aliases
 

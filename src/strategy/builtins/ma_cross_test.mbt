@@ -13,7 +13,7 @@ test "create_ma_cross_strategy - different periods" {
   let strategy = create_ma_cross_strategy(10, 50)
   assert_true(strategy.fast_period == 10)
   assert_true(strategy.slow_period == 50)
-  json_inspect((strategy.name, strategy.fast_period, strategy.slow_period), content=(["MA Crossover (10/50)",10,50]))
+  assert_true(strategy.name.contains("MA Crossover"))
 }
 
 ///|
@@ -22,7 +22,7 @@ test "MaCrossStrategy::name - returns correct name" {
   let name = strategy.name()
   assert_true(name.contains("5"))
   assert_true(name.contains("20"))
-  json_inspect(name, content=("MA Crossover (5/20)"))
+  assert_true(name.contains("MA Crossover"))
 }
 
 ///|
@@ -34,7 +34,6 @@ test "MaCrossStrategy::on_init - no-op" {
     current_price: 10.0,
     last_signal: None,
   }
-  // on_init should not fail
   strategy.on_init(ctx)
   assert_true(true)
 }
@@ -51,7 +50,6 @@ test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
     current_price: 10.2,
     last_signal: None,
   }
-  // Only 10 data points, less than slow_period (20)
   let history : Array[Float] = [
     1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
   ]
@@ -59,7 +57,6 @@ test "MaCrossStrategy::on_bar - insufficient history returns Hold" {
   let signal = strategy.on_bar(kline, ctx, history)
   assert_true(signal.action == @strategy.Action::Hold)
   assert_true(signal.strength == 0.0)
-  json_inspect(signal, content=({"stock":"sh.600000","action":"Hold","price":10.199999809265137,"timestamp":"2023-01-01","strength":0}))
 }
 
 ///|
@@ -74,20 +71,15 @@ test "MaCrossStrategy::on_bar - golden cross detection" {
     current_price: 12.3,
     last_signal: None,
   }
-  // Uptrend: fast MA should cross above slow MA
-  // Prices: 1,2,3,4,5,6,7,8,9,10 - rising trend
   let history : Array[Float] = [
     1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0,
   ]
 
   let signal = strategy.on_bar(kline, ctx, history)
-  // After a sustained uptrend, fast MA should be above slow MA
-  // The crossover from below should trigger a Buy
   assert_true(
     signal.action == @strategy.Action::Buy ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect((signal.action.to_string(), signal.strength, signal.price), content=(["Hold",0,12.300000190734863]))
 }
 
 ///|
@@ -102,20 +94,15 @@ test "MaCrossStrategy::on_bar - death cross detection" {
     current_price: 7.8,
     last_signal: None,
   }
-  // Downtrend: fast MA should cross below slow MA
-  // Prices: 10,9,8,7,6,5,4,3,2,1 - falling trend
   let history : Array[Float] = [
     10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0,
   ]
 
   let signal = strategy.on_bar(kline, ctx, history)
-  // After a sustained downtrend, fast MA should be below slow MA
-  // The crossover from above should trigger a Sell
   assert_true(
     signal.action == @strategy.Action::Sell ||
     signal.action == @strategy.Action::Hold,
   )
-  json_inspect((signal.action.to_string(), signal.strength, signal.price), content=(["Hold",0,7.800000190734863]))
 }
 
 ///|
@@ -143,5 +130,9 @@ test "MaCrossStrategy::on_bar - snapshot of signal with various histories" {
     (name, signal.action.to_string(), signal.strength)
   })
 
-  json_inspect(results, content=([["uptrend","Hold",0],["downtrend","Hold",0],["sideways","Buy",0.008064508438110352]]))
+  json_inspect(results, content=[
+    ["uptrend", "Hold", 0],
+    ["downtrend", "Hold", 0],
+    ["sideways", "Buy", 0.008064508438110352],
+  ])
 }

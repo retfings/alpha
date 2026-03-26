@@ -9,6 +9,8 @@ import {
 // Values
 pub fn create_ma_cross_strategy(Int, Int) -> MaCrossStrategy
 
+pub fn create_momentum_strategy(Int, Float, Float) -> MomentumStrategy
+
 // Errors
 
 // Types and methods
@@ -20,6 +22,19 @@ pub struct MaCrossStrategy {
 pub fn MaCrossStrategy::name(Self) -> String
 pub fn MaCrossStrategy::on_bar(Self, @data.KLine, @strategy.StrategyContext, Array[Float]) -> @strategy.Signal
 pub fn MaCrossStrategy::on_init(Self, @strategy.StrategyContext) -> Unit
+
+pub struct MomentumStrategy {
+  rsi_period : Int
+  overbought_threshold : Float
+  oversold_threshold : Float
+  name : String
+}
+pub fn MomentumStrategy::get_current_rsi(Self, Array[Float]) -> Float
+pub fn MomentumStrategy::is_overbought(Self, Array[Float]) -> Bool
+pub fn MomentumStrategy::is_oversold(Self, Array[Float]) -> Bool
+pub fn MomentumStrategy::name(Self) -> String
+pub fn MomentumStrategy::on_bar(Self, @data.KLine, @strategy.StrategyContext, Array[Float]) -> @strategy.Signal
+pub fn MomentumStrategy::on_init(Self, @strategy.StrategyContext) -> Unit
 
 // Type aliases
 

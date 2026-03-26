@@ -40,7 +40,7 @@ pub struct BacktestEngine {
   max_drawdown : Float
 }
 
-pub struct BacktestResult {
+pub(all) struct BacktestResult {
   initial_capital : Float
   final_capital : Float
   total_return : Float
@@ -51,8 +51,10 @@ pub struct BacktestResult {
   trades : Array[Trade]
   stats : BacktestStats
 }
+pub impl Show for BacktestResult
+pub impl ToJson for BacktestResult
 
-pub struct BacktestStats {
+pub(all) struct BacktestStats {
   total_return : Float
   annual_return : Float
   max_drawdown : Float
@@ -67,14 +69,18 @@ pub struct BacktestStats {
   avg_loss : Float
   avg_trade_duration : Float
 }
+pub impl Show for BacktestStats
+pub impl ToJson for BacktestStats
 
-pub struct EquityPoint {
+pub(all) struct EquityPoint {
   date : String
   equity : Float
   drawdown : Float
   position : Float
   cash : Float
 }
+pub impl Show for EquityPoint
+pub impl ToJson for EquityPoint
 
 pub(all) struct ReportConfig {
   title : String
@@ -90,8 +96,9 @@ pub(all) enum ReportFormat {
   Html
   Text
 }
+pub impl Show for ReportFormat
 
-pub struct Trade {
+pub(all) struct Trade {
   stock : String
   action : @strategy.Action
   price : Float
@@ -99,13 +106,15 @@ pub struct Trade {
   timestamp : String
   commission : Float
 }
+pub impl Show for Trade
+pub impl ToJson for Trade
 
-pub struct TradeLog {
+pub(all) struct TradeLog {
   entries : Array[TradeLogEntry]
 }
 pub fn TradeLog::add(Self, String, String, String, Float, Float, Float?, String) -> Unit
 
-pub struct TradeLogEntry {
+pub(all) struct TradeLogEntry {
   date : String
   stock : String
   action : String

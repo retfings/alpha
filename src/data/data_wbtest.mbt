@@ -166,8 +166,7 @@ test "parse_float - snapshot tests for various formats" {
 test "parse_kline_line - snapshot test" {
   let line = "2023-01-01,10.5,11.0,10.2,10.8,1000000,10500000,0.05"
   match parse_kline_line(line) {
-    Some(kline) =>
-      assert_true(kline.date == "2023-01-01")
+    Some(kline) => assert_true(kline.date == "2023-01-01")
     None => fail("Expected Some kline")
   }
 }
@@ -175,8 +174,7 @@ test "parse_kline_line - snapshot test" {
 ///|
 test "parse_kline_line - edge cases snapshot" {
   let edge_cases = [
-    "2023-01-01,0,0,0,0,0,0,0",
-    "2023-01-01,0.001,0.002,0.0005,0.0015,1,100,0.0001",
+    "2023-01-01,0,0,0,0,0,0,0", "2023-01-01,0.001,0.002,0.0005,0.0015,1,100,0.0001",
     "2023-01-01,999999,1000000,999998,999999.5,999999999,999999999999,0.99",
   ]
   let results = edge_cases.map(fn(line) {
@@ -186,14 +184,8 @@ test "parse_kline_line - edge cases snapshot" {
     }
   })
   json_inspect(results, content=[
-    [
-      ["2023-01-01", 0, 0, 0],
-    ],
-    [
-      ["2023-01-01", 0.0010000000474974513, 0.001500000013038516, 1],
-    ],
-    [
-      ["2023-01-01", 999999, 999999.5, 1000000000],
-    ],
+    [["2023-01-01", 0, 0, 0]],
+    [["2023-01-01", 0.0010000000474974513, 0.001500000013038516, 1]],
+    [["2023-01-01", 999999, 999999.5, 1000000000]],
   ])
 }

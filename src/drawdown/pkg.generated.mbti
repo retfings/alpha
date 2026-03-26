@@ -44,6 +44,9 @@ pub struct DrawdownInfo {
   duration : Int
   recovered : Bool
 }
+pub impl Eq for DrawdownInfo
+pub impl Show for DrawdownInfo
+pub impl ToJson for DrawdownInfo
 
 pub enum DrawdownLevel {
   Normal
@@ -52,6 +55,7 @@ pub enum DrawdownLevel {
   Significant
   Severe
 }
+pub impl Eq for DrawdownLevel
 pub impl Show for DrawdownLevel
 
 pub struct DrawdownMonitor {
