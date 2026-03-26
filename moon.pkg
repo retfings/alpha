@@ -5,4 +5,5 @@ import {
   "username/alpha/src/risk" @risk,
   "username/alpha/src/portfolio" @portfolio,
   "username/alpha/src/backtest" @backtest,
+  "username/alpha/server" @server,
 }

@@ -13,6 +13,7 @@ pub enum Command {
   Monitor(String)
   Report(String)
   ListStrategies
+  Serve(Int)
 }
 
 // Type aliases

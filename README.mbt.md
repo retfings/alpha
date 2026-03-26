@@ -66,7 +66,7 @@ test "KLine basic usage" {
   assert_true(kline.close == 10.8)
   assert_true(kline.high >= kline.low)
 
-  @json.inspect(kline)
+  json_inspect(kline)
 }
 ```
 
@@ -84,7 +84,7 @@ test "StockCode format" {
   assert_true(sh_stock.contains("."))
   assert_true(sz_stock.starts_with("sz."))
 
-  @json.inspect({ "shanghai": sh_stock, "shenzhen": sz_stock })
+  json_inspect({ "shanghai": sh_stock, "shenzhen": sz_stock })
 }
 ```
 
@@ -109,7 +109,7 @@ test "Signal creation" {
   assert_true(buy_signal.action == @strategy.Action::Buy)
   assert_true(sell_signal.action == @strategy.Action::Sell)
 
-  @json.inspect({ "buy": buy_signal, "sell": sell_signal, "hold": hold_signal })
+  json_inspect({ "buy": buy_signal, "sell": sell_signal, "hold": hold_signal })
 }
 ```
 
@@ -145,7 +145,7 @@ test "calculate_max_drawdown_detailed" {
     Some(info) => {
       assert_true(info.peak > 0.0)
       assert_true(info.drawdown < 0.0)
-      @json.inspect(info)
+      json_inspect(info)
     }
     None => fail("Expected drawdown info")
   }
@@ -163,7 +163,7 @@ test "get_drawdown_stats" {
   let stats = @drawdown.get_drawdown_stats(values)
   assert_true(stats.max_drawdown < 0.0)
   assert_true(stats.drawdown_count > 0)
-  @json.inspect(stats)
+  json_inspect(stats)
 }
 ```
 
@@ -183,7 +183,7 @@ test "find_top_drawdowns" {
   let top_drawdowns = @drawdown.find_top_drawdowns(values, dates, 2)
   assert_true(top_drawdowns.length() <= 2)
 
-  @json.inspect(top_drawdowns)
+  json_inspect(top_drawdowns)
 }
 ```
 
@@ -197,7 +197,7 @@ test "create_portfolio" {
   let portfolio = @portfolio.create_portfolio(100000.0)
   assert_true(portfolio.cash == 100000.0)
   assert_true(portfolio.position_count() == 0)
-  @json.inspect({
+  json_inspect({
     "cash": portfolio.cash,
     "total_value": portfolio.total_value(),
   })
@@ -223,7 +223,7 @@ test "Portfolio::buy" {
     None => fail("Position should exist")
   }
 
-  @json.inspect({
+  json_inspect({
     "cash": portfolio.cash,
     "position_value": portfolio.position_value(),
   })
@@ -242,7 +242,7 @@ test "Portfolio::sell" {
   assert_true(success)
   assert_true(portfolio.position_count() == 1)
 
-  @json.inspect({
+  json_inspect({
     "cash": portfolio.cash,
     "remaining_position": portfolio.position_count(),
   })
@@ -264,7 +264,7 @@ test "Portfolio P&L calculation" {
   assert_true(pnl > 0.0)
   assert_true(pnl_pct > 0.0)
 
-  @json.inspect({ "total_pnl": pnl, "total_pnl_pct": pnl_pct * 100.0 })
+  json_inspect({ "total_pnl": pnl, "total_pnl_pct": pnl_pct * 100.0 })
 }
 ```
 
@@ -284,7 +284,7 @@ test "max_drawdown_rule" {
   assert_true(!result2.passed)
   assert_true(result2.action is @risk.RiskAction::StopTrading)
 
-  @json.inspect({ "normal": result1, "triggered": result2 })
+  json_inspect({ "normal": result1, "triggered": result2 })
 }
 ```
 
@@ -301,7 +301,7 @@ test "position_limit_rule" {
   let result2 = rule.check_fn(0.0, 0.98, 0.0)
   assert_true(!result2.passed)
 
-  @json.inspect({ "normal": result1, "triggered": result2 })
+  json_inspect({ "normal": result1, "triggered": result2 })
 }
 ```
 
@@ -319,7 +319,7 @@ test "daily_loss_limit_rule" {
   assert_true(!result2.passed)
   assert_true(result2.action is @risk.RiskAction::StopTrading)
 
-  @json.inspect({ "normal": result1, "triggered": result2 })
+  json_inspect({ "normal": result1, "triggered": result2 })
 }
 ```
 
@@ -340,7 +340,7 @@ test "rule combinators" {
   let result2 = and_rule.check_fn(-0.25, 0.0, -0.03)
   assert_true(!result2.passed)
 
-  @json.inspect({ "and_rule_passed": result1, "and_rule_failed": result2 })
+  json_inspect({ "and_rule_passed": result1, "and_rule_failed": result2 })
 }
 ```
 
@@ -402,6 +402,10 @@ test "atr calculation" {
 # 显示帮助信息
 moon run cmd/main help
 
+# 启动 HTTP 服务器
+moon run cmd/main serve              # 默认端口 8080
+moon run cmd/main serve --port 3000  # 自定义端口
+
 # 分析个股回撤
 moon run cmd/main analyze --stock sh.600000 --metric max_drawdown
 
@@ -417,6 +421,27 @@ moon run cmd/main report --format html
 # 列出可用策略
 moon run cmd/main list-strategies
 ```
+
+### serve 命令详解
+
+`serve` 命令启动 HTTP API 服务器，提供 RESTful API 访问：
+
+```bash
+# 使用默认端口 (8080) 启动
+moon run cmd/main serve
+
+# 指定端口启动
+moon run cmd/main serve --port 3000
+```
+
+启动后，可以通过 HTTP API 访问：
+
+| 端点 | 描述 |
+|------|------|
+| `GET /api/stocks` | 获取股票列表 |
+| `GET /api/stocks/:code/klines` | 获取 K 线数据 |
+| `POST /api/backtest` | 运行回测 |
+| `GET /api/drawdown/:code` | 计算个股回撤 |
 
 ## 测试指南
 

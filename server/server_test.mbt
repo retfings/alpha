@@ -170,3 +170,148 @@ test "handle_request handles POST method" {
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("started"))
 }
+
+///|
+test "route_request health endpoint response body" {
+  let response = route_request("/api/health", "GET")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"status":"ok","service":"moonbit-drawdown"}
+    ),
+  )
+}
+
+///|
+test "route_request list stocks response body" {
+  let response = route_request("/api/stocks", "GET")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"stocks":[{"code":"sh.600000","name":"Ping An Bank"}],"total":1}
+    ),
+  )
+}
+
+///|
+test "route_request get stock info response body" {
+  let response = route_request("/api/stocks/sh.600000", "GET")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"stock":{"code":"sh.600000","name":"Sample Stock"}}
+    ),
+  )
+}
+
+///|
+test "route_request get klines response body" {
+  let response = route_request("/api/stocks/sh.600000/klines", "GET")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"stock":"sh.600000","klines":[{"date":"2024-01-02","close":10.8}],"count":1}
+    ),
+  )
+}
+
+///|
+test "route_request backtest start response body" {
+  let response = route_request("/api/backtest", "POST")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"status":"started","backtest_id":"bt_001"}
+    ),
+  )
+}
+
+///|
+test "route_request backtest result response body" {
+  let response = route_request("/api/backtest/bt_123/result", "GET")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"backtest_id":"bt_123","status":"completed","result":{"total_return":0.1245,"max_drawdown":-0.0832}}
+    ),
+  )
+}
+
+///|
+test "route_request drawdown response body" {
+  let response = route_request("/api/drawdown/sh.600000", "GET")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"stock":"sh.600000","drawdown":{"current":-0.0245,"max":-0.1523}}
+    ),
+  )
+}
+
+///|
+test "route_request portfolio drawdown response body" {
+  let response = route_request("/api/portfolio/drawdown", "GET")
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"portfolio":{"total_drawdown":-0.0532,"max_stock_drawdown":-0.1523}}
+    ),
+  )
+}
+
+///|
+test "route_request 404 response body" {
+  let response = route_request("/api/unknown", "GET")
+  assert_true(response.status_code == 404)
+  inspect(
+    response.body,
+    content=(
+      #|{"error":"Not found","path":"/api/unknown"}
+    ),
+  )
+}
+
+///|
+test "route_request 400 invalid stock code response body" {
+  let response = route_request("/api/stocks//klines", "GET")
+  assert_true(response.status_code == 400)
+  inspect(
+    response.body,
+    content=(
+      #|{"error":"Invalid stock code"}
+    ),
+  )
+}
+
+///|
+test "route_request 400 invalid backtest id response body" {
+  let response = route_request("/api/backtest//result", "GET")
+  assert_true(response.status_code == 400)
+  inspect(
+    response.body,
+    content=(
+      #|{"error":"Invalid backtest ID"}
+    ),
+  )
+}
+
+///|
+test "handle_request full GET health request response" {
+  let request = "GET /api/health HTTP/1.1\nHost: localhost:8080\nUser-Agent: TestClient\n\n"
+  let response = handle_request(request)
+  assert_true(response.status_code == 200)
+  inspect(
+    response.body,
+    content=(
+      #|{"status":"ok","service":"moonbit-drawdown"}
+    ),
+  )
+}

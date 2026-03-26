@@ -72,13 +72,6 @@ pub(all) struct StrategyEngine {
   results : Array[StrategyResult]
 }
 
-pub struct StrategyInfo {
-  name : String
-  description : String
-  author : String
-  version : String
-}
-
 pub(all) struct StrategyResult {
   signal : Signal
 }

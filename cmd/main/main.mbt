@@ -9,6 +9,7 @@ pub enum Command {
   Monitor(String) // stock
   Report(String) // output format
   ListStrategies
+  Serve(Int) // port
 }
 
 ///|
@@ -114,6 +115,23 @@ fn _parse_report_args(args : Array[String]) -> Command {
 }
 
 ///|
+fn _parse_serve_args(args : Array[String]) -> Command {
+  let mut port : Int = 8080
+
+  let mut i = 1
+  while i < args.length() {
+    if args[i] == "--port" && i + 1 < args.length() {
+      port = @strconv.parse_int(args[i + 1]) catch { _ => 8080 }
+      i = i + 2
+    } else {
+      i = i + 1
+    }
+  }
+
+  Command::Serve(port)
+}
+
+///|
 /// Print help message
 fn print_help() -> Unit {
   println("moonbit-drawdown - Quantitative Drawdown Analysis Tool")
@@ -127,6 +145,7 @@ fn print_help() -> Unit {
   println("    monitor           Real-time monitoring mode")
   println("    report            Generate analysis report")
   println("    list-strategies   List available strategies")
+  println("    serve             Start HTTP API server")
   println("    help              Show this help message")
   println("")
   println("EXAMPLES:")
@@ -139,6 +158,7 @@ fn print_help() -> Unit {
   println("    moon run cmd/main monitor --stock sh.600000")
   println("    moon run cmd/main report --format html")
   println("    moon run cmd/main list-strategies")
+  println("    moon run cmd/main serve --port 8080")
 }
 
 ///|
@@ -306,6 +326,28 @@ fn _run_report(format : String) -> Unit {
 }
 
 ///|
+/// Run serve command - start HTTP API server
+fn _run_serve(port : Int) -> Unit {
+  println("Starting HTTP API server on port \{port}...")
+  println("")
+  println("Available endpoints:")
+  println("  GET  /api/health              - Health check")
+  println("  GET  /api/stocks              - List stocks")
+  println("  GET  /api/stocks/:code        - Get stock info")
+  println("  GET  /api/stocks/:code/klines - Get klines")
+  println("  POST /api/backtest            - Start backtest")
+  println("  GET  /api/backtest/:id/result - Get result")
+  println("  GET  /api/drawdown/:code      - Get drawdown")
+  println("  GET  /api/portfolio/drawdown  - Portfolio drawdown")
+  println("")
+  println("Press Ctrl+C to stop")
+  println("")
+
+  // Start the HTTP server
+  @server.start_server(port)
+}
+
+///|
 /// Parse space-separated arguments into Array[String]
 fn _parse_env_args(args_str : String) -> Array[String] {
   args_str
@@ -341,6 +383,7 @@ fn _execute_command(cmd : Command) -> Unit {
     Command::Monitor(stock) => _run_monitor(stock)
     Command::Report(format) => _run_report(format)
     Command::ListStrategies => _print_strategies()
+    Command::Serve(port) => _run_serve(port)
   }
 }
 

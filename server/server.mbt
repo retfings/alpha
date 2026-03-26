@@ -11,23 +11,23 @@
 pub struct HttpResponse {
   status_code : Int
   body : String
-}
+} derive(Show, ToJson)
 
 ///|
 /// Create HTTP response
-fn make_response(status_code : Int, body : String) -> HttpResponse {
+pub fn make_response(status_code : Int, body : String) -> HttpResponse {
   HttpResponse::{ status_code, body }
 }
 
 ///|
 /// Convert StringView to String
-fn string_view_to_string(sv : StringView) -> String {
+pub fn string_view_to_string(sv : StringView) -> String {
   sv.to_string()
 }
 
 ///|
 /// Parse HTTP request path
-fn parse_request_path(request : String) -> String {
+pub fn parse_request_path(request : String) -> String {
   let lines = request.split("\n").to_array()
   if lines.length() > 0 {
     let first_line = lines[0]
@@ -40,15 +40,30 @@ fn parse_request_path(request : String) -> String {
 }
 
 ///|
-/// Extract stock code from path like /api/stocks/sh.600000/klines
-fn extract_stock_code(path : String) -> String? {
+/// Extract stock code from path like /api/stocks/sh.600000/klines or /api/drawdown/sh.600000
+pub fn extract_stock_code(path : String) -> String? {
   let parts = path.split("/").to_array()
   let mut i = 0
   while i < parts.length() {
+    // Check for /api/stocks/{code} pattern
     if parts[i] == "stocks" && i + 1 < parts.length() {
       let candidate = string_view_to_string(parts[i + 1])
-      if candidate.contains(".") ||
-        (candidate.length() > 0 && candidate[0] >= 'a' && candidate[0] <= 'z') {
+      // Skip if it's a keyword or empty
+      if candidate == "klines" || candidate == "compare" || candidate == "" {
+        i = i + 1
+        continue
+      }
+      // Validate stock code format (must contain '.' like sh.600000)
+      if candidate.contains(".") {
+        return Some(candidate)
+      }
+      // Invalid stock code format
+      return None
+    }
+    // Check for /api/drawdown/{code} pattern
+    if parts[i] == "drawdown" && i + 1 < parts.length() {
+      let candidate = string_view_to_string(parts[i + 1])
+      if candidate != "" && candidate.contains(".") {
         return Some(candidate)
       }
     }
@@ -59,7 +74,7 @@ fn extract_stock_code(path : String) -> String? {
 
 ///|
 /// Extract backtest ID from path
-fn extract_backtest_id(path : String) -> String? {
+pub fn extract_backtest_id(path : String) -> String? {
   let parts = path.split("/").to_array()
   let mut i = 0
   while i < parts.length() {
@@ -76,7 +91,7 @@ fn extract_backtest_id(path : String) -> String? {
 
 ///|
 /// Route request to appropriate handler
-fn route_request(path : String, http_method : String) -> HttpResponse {
+pub fn route_request(path : String, http_method : String) -> HttpResponse {
   if path == "/api/health" {
     return make_response(
       200, "{\"status\":\"ok\",\"service\":\"moonbit-drawdown\"}",
