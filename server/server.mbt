@@ -249,6 +249,18 @@ pub fn start_server(port : Int) -> Unit {
   let mut request_count = 0
   while request_count < 100 {
     request_count = request_count + 1
+
+    // Accept incoming connection
+    let request = http_server_accept(server_fd)
+
+    // Handle request and get response
+    let response_obj = handle_request(request)
+
+    // Send response
+    let response_str = "\{response_obj.status_code} \{response_obj.body}"
+    let _ = http_server_respond(server_fd, response_str)
+
+    println("Request \{request_count}: \{response_obj.status_code}")
   }
 
   let _ = http_server_close(server_fd)

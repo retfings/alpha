@@ -5,7 +5,10 @@ import {
   "username/alpha/src/risk" @risk,
   "username/alpha/src/drawdown" @drawdown,
   "username/alpha/src/ffi" @ffi,
-  "username/alpha/src/indicator" @indicator,
   "moonbitlang/core/json",
   "moonbitlang/core/math",
 }
+
+import {
+  "username/alpha/src/indicator" @indicator,
+} for "test"
