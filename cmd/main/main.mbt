@@ -138,7 +138,6 @@ fn print_help() -> Unit {
   println("moonbit-drawdown - Quantitative Drawdown Analysis Tool")
   println("")
   println("USAGE:")
-  println("    moon run cmd/main [COMMAND] [OPTIONS]")
   println("    MOONBIT_CMD=<command> MOONBIT_ARGS=\"<args>\" moon run cmd/main")
   println("")
   println("COMMANDS:")
