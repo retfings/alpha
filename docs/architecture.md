@@ -91,7 +91,8 @@ alpha/
 │   │   └── builtins/          # 内置策略
 │   │       ├── moon.pkg
 │   │       ├── ma_cross.mbt   # 均线交叉策略
-│   │       └── momentum.mbt   # 动量策略
+│   │       ├── momentum.mbt   # 动量策略
+│   │       └── rsi_mean_reversion.mbt # RSI 均值回归策略
 │   │
 │   ├── drawdown/              # 回撤计算核心
 │   │   ├── moon.pkg
@@ -104,7 +105,8 @@ alpha/
 │   │   ├── rules.mbt          # 风控规则（止损、仓位等）
 │   │   ├── engine.mbt         # 风控引擎
 │   │   ├── types.mbt          # 风控类型
-│   │   └── trailing_stop.mbt  # 追踪止损（动态止损）
+│   │   ├── trailing_stop.mbt  # 追踪止损（动态止损）
+│   │   └── kelly_criterion.mbt # 凯利公式仓位优化
 │   │
 │   ├── portfolio/             # 组合管理
 │   │   ├── moon.pkg
@@ -124,13 +126,15 @@ alpha/
 │   │   ├── rsi.mbt            # RSI (Relative Strength Index)
 │   │   ├── williams_r.mbt     # Williams %R
 │   │   ├── bollinger.mbt      # 布林带 (Bollinger Bands)
-│   │   └── vwap.mbt           # VWAP (成交量加权平均价)
+│   │   ├── vwap.mbt           # VWAP (成交量加权平均价)
+│   │   └── ...                # 更多技术指标
 │   │
 │   └── backtest/              # 回测引擎
 │       ├── moon.pkg
 │       ├── engine.mbt         # 回测执行引擎
 │       ├── types.mbt          # 回测配置/结果类型
-│       └── report.mbt         # 回测报告生成
+│       ├── report.mbt         # 回测报告生成
+│       └── walk_forward.mbt   #  walk-forward 分析引擎
 │
 ├── server/                    # HTTP 服务器
 │   ├── moon.pkg
@@ -371,6 +375,105 @@ pub fn run_backtest(
 ) -> BacktestResult
 ```
 
+#### 5.5 Walk-Forward 分析引擎 (`src/backtest/walk_forward.mbt`)
+
+```moonbit
+pub enum WfMode {
+  Rolling    // 滚动窗口模式
+  Anchored   // 锚定增长模式
+}
+
+pub struct WalkForwardConfig {
+  window_size : Int      // 窗口大小（bar 数）
+  step_size : Int        // 滚动步长
+  oos_ratio : Float      // 样本外比例 (0.0-1.0)
+  mode : WfMode          // 滚动或锚定模式
+  min_oos_bars : Int     // 最小样本外 bar 数
+}
+
+pub struct WfResult {
+  window_index : Int
+  in_sample_start : Int
+  in_sample_end : Int
+  oos_start : Int
+  oos_end : Int
+  is_profit : Float      // 样本内收益
+  oos_profit : Float     // 样本外收益
+  is_sharpe : Float      // 样本内夏普比率
+  oos_sharpe : Float     // 样本外夏普比率
+  is_max_dd : Float      // 样本内最大回撤
+  oos_max_dd : Float     // 样本外最大回撤
+  is_trades : Int        // 样本内交易数
+  oos_trades : Int       // 样本外交易数
+}
+
+pub struct WfSummary {
+  total_windows : Int       // 总窗口数
+  successful_windows : Int  // 盈利窗口数
+  avg_is_profit : Float     // 平均样本内收益
+  avg_oos_profit : Float    // 平均样本外收益
+  avg_is_sharpe : Float     // 平均样本内夏普
+  avg_oos_sharpe : Float    // 平均样本外夏普
+  oos_success_rate : Float  // 样本外成功率
+  degradation_ratio : Float // 退化比率 (OOS Sharpe / IS Sharpe)
+  robustness_score : Float  // 稳健性评分 (0-100)
+}
+
+// Walk-Forward 核心函数
+pub fn generate_walk_forward_windows(Int, Int, Int, Float) -> Array[(Int, Int, Int, Int)]
+pub fn generate_anchored_windows(Int, Int, Int, Float) -> Array[(Int, Int, Int, Int)]
+pub fn generate_wf_windows(WalkForwardConfig, Int) -> Array[(Int, Int, Int, Int)]
+pub fn analyze_wf_results(Array[WfResult]) -> WfSummary
+pub fn passes_wf_validation(WfSummary) -> Bool
+pub fn calculate_sharpe(Array[Float], Float) -> Float
+pub fn calculate_max_dd(Array[Float]) -> Float
+pub fn calculate_profit(Array[Float]) -> Float
+```
+
+#### 5.6 凯利公式仓位优化 (`src/risk/kelly_criterion.mbt`)
+
+```moonbit
+pub enum KellyMode {
+  Full      // 全凯利 (100%)
+  Half      // 半凯利 (50%)
+  Quarter   // 四分之一凯利 (25%)
+  Custom    // 自定义比例
+}
+
+// 凯利公式核心计算
+pub fn kelly_fraction(win_rate : Float, win_loss_ratio : Float) -> Float
+// Kelly % = W - [(1 - W) / R]
+
+pub fn half_kelly(win_rate : Float, win_loss_ratio : Float) -> Float
+pub fn quarter_kelly(win_rate : Float, win_loss_ratio : Float) -> Float
+
+pub fn kelly_position_size(
+  win_rate : Float,
+  win_loss_ratio : Float,
+  capital : Float,
+  mode : KellyMode,
+  custom_fraction : Float
+) -> Float
+
+pub fn calculate_win_rate(wins : Int, losses : Int) -> Float
+pub fn calculate_win_loss_ratio(
+  total_wins : Float,
+  total_losses : Float,
+  wins : Int,
+  losses : Int
+) -> Float
+pub fn kelly_from_trades(
+  total_wins : Float,
+  total_losses : Float,
+  wins : Int,
+  losses : Int
+) -> Float
+
+pub fn kelly_with_cap(kelly_value : Float, max_pct : Float) -> Float
+pub fn expected_growth_rate(kelly_fraction : Float, win_rate : Float, win_loss_ratio : Float) -> Float
+pub fn is_strategy_suitable_for_kelly(win_rate : Float, win_loss_ratio : Float) -> Bool
+```
+
 ### CLI 设计 (`cmd/main/main.mbt`)
 
 ```
@@ -445,7 +548,7 @@ GET  /api/portfolio/drawdown     # 计算组合回撤
 2. **Phase 2 - 策略引擎** ✅
    - 策略接口定义 (`src/strategy/types.mbt`)
    - 回测引擎核心 (`src/backtest/engine.mbt`)
-   - 内置策略：均线交叉、动量策略 (`src/strategy/builtins/`)
+   - 内置策略：均线交叉、动量策略、RSI 均值回归 (`src/strategy/builtins/`)
    - 回测报告生成 (`src/backtest/report.mbt`)
 
 3. **Phase 3 - 风控系统** ✅
@@ -461,27 +564,58 @@ GET  /api/portfolio/drawdown     # 计算组合回撤
      - `stop_loss_rule` - 止损规则（触发减仓）
      - `single_stock_limit_rule` - 单股限制规则（触发减仓）
      - `take_profit_rule` - 止盈规则（触发部分减仓）
+   - 追踪止损 (`src/risk/trailing_stop.mbt`)
+     - `TrailingStop` - 动态止损计算
+     - 基于最高价/最低价的追踪止损逻辑
+   - 凯利公式仓位优化 (`src/risk/kelly_criterion.mbt`)
+     - `kelly_fraction` - 凯利公式核心计算
+     - `half_kelly`, `quarter_kelly` - 保守仓位模式
+     - `kelly_position_size` - 根据凯利比例计算仓位
    - 与回测引擎集成 (`src/backtest/engine.mbt`)
      - 回测过程中实时检查风控规则
      - 根据风控结果决定是否执行交易信号
-   - 测试覆盖 (`src/risk/rules_test.mbt`)
-     - 14 个单元测试覆盖所有规则与引擎功能
+   - 测试覆盖 (`src/risk/rules_test.mbt`, `src/risk/trailing_stop_test.mbt`, `src/risk/kelly_criterion_test.mbt`)
+     - 30+ 单元测试覆盖所有规则与引擎功能
 
 4. **Phase 4 - HTTP 服务器** ✅
    - 简单 HTTP API 服务器 (`server/server.mbt`)
    - RESTful API 实现
    - 与核心引擎集成
 
+5. **Phase 5 - 技术指标库** ✅
+   - 移动平均系列：SMA, EMA, MACD
+   - 震荡指标：RSI, KDJ, Williams %R, CCI
+   - 趋势指标：ADX, Aroon
+   - 波动率指标：ATR, Bollinger Bands
+   - 成交量指标：OBV, VWAP
+   - 测试覆盖：800+ 单元测试
+
+6. **Phase 6 - Walk-Forward 分析** ✅
+   - Walk-Forward 分析引擎 (`src/backtest/walk_forward.mbt`)
+     - 滚动窗口模式 (`WfMode::Rolling`)
+     - 锚定增长模式 (`WfMode::Anchored`)
+     - 样本内/样本外自动划分
+     - 稳健性评分系统
+   - 回测统计指标
+     - 夏普比率计算
+     - 最大回撤计算
+     - 收益计算
+   - Walk-Forward 验证标准
+     - 样本外成功率 >= 50%
+     - 退化比率 >= 0.5
+     - 平均样本外收益 > 0
+   - 测试覆盖：20+ 单元测试
+
 ### 进行中阶段
 
-5. **Phase 5 - Web 界面** 🚧
+7. **Phase 7 - Web 界面** 🚧
    - 静态页面框架
    - 图表可视化
    - API 对接
 
 ### 计划中阶段
 
-6. **Phase 6 - 完善与优化**
+8. **Phase 8 - 完善与优化**
    - Parquet 格式支持
    - 更多技术指标
    - 更多内置策略

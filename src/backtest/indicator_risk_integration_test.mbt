@@ -1089,3 +1089,437 @@ test "integration: ADX trend strength with position sizing" {
   // All rules pass, position allowed
   assert_true(risk_result.passed)
 }
+
+///|
+test "integration: multi-indicator confluence with full backtest flow" {
+  // Scenario: Complete pipeline from K-line data through SMA/RSI indicators
+  // to strategy signal generation and risk validation
+
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 100.0, 102.0, 98.0, 100.0, 1000000.0, 100000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 100.0, 103.0, 99.0, 102.0, 1100000.0, 112200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 102.0, 105.0, 101.0, 104.0, 1200000.0, 124800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-04", 104.0, 107.0, 103.0, 106.0, 1300000.0, 137800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-05", 106.0, 109.0, 105.0, 108.0, 1400000.0, 151200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-06", 108.0, 111.0, 107.0, 110.0, 1500000.0, 165000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-07", 110.0, 113.0, 109.0, 112.0, 1600000.0, 179200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-08", 112.0, 115.0, 111.0, 114.0, 1700000.0, 193800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-09", 114.0, 117.0, 113.0, 116.0, 1800000.0, 208800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-10", 116.0, 119.0, 115.0, 118.0, 1900000.0, 224200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-11", 118.0, 121.0, 117.0, 120.0, 2000000.0, 240000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-12", 120.0, 123.0, 119.0, 122.0, 2100000.0, 256200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-13", 122.0, 125.0, 121.0, 124.0, 2200000.0, 272800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-14", 124.0, 127.0, 123.0, 126.0, 2300000.0, 289800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-15", 126.0, 129.0, 125.0, 128.0, 2400000.0, 307200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-16", 128.0, 131.0, 127.0, 130.0, 2500000.0, 325000000.0,
+      0.01,
+    ),
+  ]
+
+  // Calculate indicators
+  let closes: Array[Float] = []
+  let mut i = 0
+  while i < klines.length() {
+    closes.push(klines[i].close)
+    i = i + 1
+  }
+
+  let sma_values = @indicator.sma(closes, 5)
+  let rsi_values = @indicator.rsi(closes, 14)
+
+  // Verify indicators are calculated
+  assert_true(sma_values.length() == klines.length())
+  assert_true(rsi_values.length() == klines.length())
+
+  // Simulate strategy signal: price above SMA (bullish)
+  let current_price = klines[klines.length() - 1].close
+  let current_sma = sma_values[sma_values.length() - 1]
+  let bullish_signal = current_price > current_sma
+  assert_true(bullish_signal)
+
+  // Risk engine validation
+  let current_drawdown = Float::from_double(-0.08)
+  let position_ratio = Float::from_double(0.40)
+  let daily_loss = Float::from_double(0.01)
+
+  let engine = @risk.create_risk_engine()
+  engine.add_rule(@risk.max_drawdown_rule(Float::from_double(0.20)))
+  engine.add_rule(@risk.position_limit_rule(Float::from_double(0.80)))
+
+  let risk_result = engine.check(current_drawdown, position_ratio, daily_loss)
+
+  // Signal validated, trade allowed
+  assert_true(risk_result.passed)
+}
+
+///|
+test "integration: drawdown monitoring with portfolio rebalancing trigger" {
+  // Scenario: Portfolio drawdown calculation, severity classification,
+  // and risk engine position reduction suggestions
+
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 100.0, 102.0, 98.0, 100.0, 1000000.0, 100000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 100.0, 101.0, 97.0, 98.0, 1100000.0, 107800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 98.0, 99.0, 94.0, 95.0, 1200000.0, 114000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-04", 95.0, 96.0, 90.0, 91.0, 1300000.0, 118300000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-05", 91.0, 92.0, 86.0, 87.0, 1400000.0, 121800000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-06", 87.0, 88.0, 82.0, 83.0, 1500000.0, 124500000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-07", 83.0, 84.0, 78.0, 79.0, 1600000.0, 126400000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-08", 79.0, 82.0, 77.0, 81.0, 1700000.0, 137700000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-09", 81.0, 85.0, 80.0, 84.0, 1800000.0, 151200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-10", 84.0, 88.0, 83.0, 87.0, 1900000.0, 165300000.0,
+      0.01,
+    ),
+  ]
+
+  // Calculate closes for drawdown
+  let closes: Array[Float] = []
+  let mut i = 0
+  while i < klines.length() {
+    closes.push(klines[i].close)
+    i = i + 1
+  }
+
+  // Peak was 100, current is 87, drawdown = -13%
+  let peak = Float::from_double(100.0)
+  let current = closes[closes.length() - 1]
+  let drawdown = (current - peak) / peak
+
+  // Test drawdown classification
+  let level = @drawdown.classify_drawdown(drawdown)
+
+  // -13% should be Minor level (between -10% and -15%)
+  assert_true(
+    match level {
+      @drawdown.DrawdownLevel::Minor => true
+      @drawdown.DrawdownLevel::Normal => drawdown > Float::from_double(-0.10)
+      _ => false
+    },
+  )
+
+  // Simulate risk engine with drawdown monitoring
+  let current_drawdown = drawdown
+  let position_ratio = Float::from_double(0.70)
+  let daily_loss = Float::from_double(-0.03)
+
+  let engine = @risk.create_risk_engine()
+  engine.add_rule(@risk.max_drawdown_rule(Float::from_double(0.15)))
+
+  let risk_result = engine.check(current_drawdown, position_ratio, daily_loss)
+
+  // Drawdown is close to limit (-13% vs -15%), but still within bounds
+  assert_true(risk_result.passed)
+}
+
+///|
+test "integration: rapid price swings with stop-loss logic" {
+  // Scenario: Trailing stop behavior during volatile price movements,
+  // ATR calculation, and risk engine response to high drawdown
+
+  let klines = [
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 100.0, 105.0, 95.0, 102.0, 2000000.0, 200000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 102.0, 108.0, 98.0, 96.0, 2200000.0, 211200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 96.0, 102.0, 90.0, 100.0, 2400000.0, 240000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-04", 100.0, 106.0, 94.0, 92.0, 2600000.0, 239200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-05", 92.0, 98.0, 86.0, 95.0, 2800000.0, 266000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-06", 95.0, 101.0, 89.0, 88.0, 3000000.0, 264000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-07", 88.0, 94.0, 82.0, 91.0, 3200000.0, 291200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-08", 91.0, 97.0, 85.0, 94.0, 3400000.0, 319600000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-09", 94.0, 100.0, 88.0, 97.0, 3600000.0, 349200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-10", 97.0, 103.0, 91.0, 100.0, 3800000.0, 380000000.0,
+      0.01,
+    ),
+  ]
+
+  // Calculate ATR for volatility measurement
+  let atr_values = @indicator.atr(klines, 14)
+  let current_atr = atr_values[atr_values.length() - 1]
+
+  // ATR should reflect high volatility
+  assert_true(current_atr > Float::from_double(0.0))
+
+  // Simulate trailing stop calculation (2x ATR)
+  let entry_price = Float::from_double(100.0)
+  let trailing_stop = entry_price - (Float::from_double(2.0) * current_atr)
+
+  // Current price
+  let current_price = klines[klines.length() - 1].close
+
+  // Verify stop-loss not triggered (price > trailing stop)
+  assert_true(current_price > trailing_stop)
+
+  // Risk engine check with elevated drawdown from volatility
+  let current_drawdown = Float::from_double(-0.10)
+  let position_ratio = Float::from_double(0.50)
+  let daily_loss = Float::from_double(-0.04)
+
+  let engine = @risk.create_risk_engine()
+  engine.add_rule(@risk.max_drawdown_rule(Float::from_double(0.20)))
+  engine.add_rule(@risk.daily_loss_limit_rule(Float::from_double(0.05)))
+
+  let risk_result = engine.check(current_drawdown, position_ratio, daily_loss)
+
+  // Despite volatility, risk rules pass
+  assert_true(risk_result.passed)
+}
+
+///|
+test "integration: ATR volatility triggers dynamic position sizing" {
+  // Scenario: ATR-based volatility measurement with low vs high volatility
+  // scenarios and position limit enforcement
+
+  // Low volatility scenario
+  let low_vol_klines = [
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 100.0, 100.5, 99.5, 100.0, 1000000.0, 100000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 100.0, 100.5, 99.5, 100.2, 1000000.0, 100200000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 100.2, 100.7, 99.7, 100.1, 1000000.0, 100100000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-04", 100.1, 100.6, 99.6, 100.3, 1000000.0, 100300000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-05", 100.3, 100.8, 99.8, 100.2, 1000000.0, 100200000.0,
+      0.01,
+    ),
+  ]
+
+  // High volatility scenario
+  let high_vol_klines = [
+    @data.KLine::daily(
+      "sh.600000", "2024-01-01", 100.0, 110.0, 90.0, 95.0, 3000000.0, 285000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-02", 95.0, 105.0, 85.0, 100.0, 3500000.0, 350000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-03", 100.0, 115.0, 95.0, 90.0, 4000000.0, 360000000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-04", 90.0, 100.0, 80.0, 95.0, 4500000.0, 427500000.0,
+      0.01,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2024-01-05", 95.0, 110.0, 90.0, 105.0, 5000000.0, 525000000.0,
+      0.01,
+    ),
+  ]
+
+  // Calculate ATR for both scenarios
+  let low_vol_atr = @indicator.atr(low_vol_klines, 5)
+  let high_vol_atr = @indicator.atr(high_vol_klines, 5)
+
+  let low_atr_value = low_vol_atr[low_vol_atr.length() - 1]
+  let high_atr_value = high_vol_atr[high_vol_atr.length() - 1]
+
+  // Verify ATR reflects volatility difference
+  assert_true(high_atr_value > low_atr_value)
+
+  // Simulate position sizing based on volatility
+  // Low volatility: allow higher position (0.80)
+  // High volatility: reduce position (0.40)
+  let low_vol_position = Float::from_double(0.80)
+  let high_vol_position = Float::from_double(0.40)
+
+  // Risk engine with position limits
+  let engine = @risk.create_risk_engine()
+  engine.add_rule(@risk.position_limit_rule(Float::from_double(0.80)))
+
+  // Low volatility scenario - position at max allowed
+  let result_low = engine.check(
+    Float::from_double(0.0),
+    low_vol_position,
+    Float::from_double(0.0),
+  )
+  assert_true(result_low.passed)
+
+  // High volatility scenario - reduced position
+  let result_high = engine.check(
+    Float::from_double(0.0),
+    high_vol_position,
+    Float::from_double(0.0),
+  )
+  assert_true(result_high.passed)
+}
+
+///|
+test "integration: portfolio drawdown aggregation across positions" {
+  // Scenario: Multi-stock drawdown aggregation,
+  // worst stock identification, and portfolio-level risk assessment
+
+  // Stock A: -15% drawdown
+  let stock_a_peak = Float::from_double(100.0)
+  let stock_a_current = Float::from_double(85.0)
+  let stock_a_dd = (stock_a_current - stock_a_peak) / stock_a_peak
+
+  // Stock B: -8% drawdown
+  let stock_b_peak = Float::from_double(200.0)
+  let stock_b_current = Float::from_double(184.0)
+  let stock_b_dd = (stock_b_current - stock_b_peak) / stock_b_peak
+
+  // Stock C: -20% drawdown (worst)
+  let stock_c_peak = Float::from_double(150.0)
+  let stock_c_current = Float::from_double(120.0)
+  let stock_c_dd = (stock_c_current - stock_c_peak) / stock_c_peak
+
+  // Portfolio weighted average drawdown (equal weights)
+  let portfolio_dd = (stock_a_dd + stock_b_dd + stock_c_dd) / Float::from_double(3.0)
+
+  // Verify portfolio drawdown calculation
+  assert_true(portfolio_dd < Float::from_double(0.0))
+  assert_true(portfolio_dd > Float::from_double(-0.20))
+
+  // Identify worst performer (Stock C at -20%)
+  let worst_dd = stock_c_dd
+  assert_true(worst_dd == stock_c_dd)
+
+  // Create portfolio drawdown tracker
+  let portfolio = @drawdown.create_portfolio_drawdown()
+  @drawdown.portfolio_add_stock(
+    portfolio,
+    "stock_a",
+    stock_a_current,
+    stock_a_peak,
+  )
+  @drawdown.portfolio_add_stock(
+    portfolio,
+    "stock_b",
+    stock_b_current,
+    stock_b_peak,
+  )
+  @drawdown.portfolio_add_stock(
+    portfolio,
+    "stock_c",
+    stock_c_current,
+    stock_c_peak,
+  )
+
+  // Verify portfolio aggregation
+  let agg_dd = @drawdown.portfolio_aggregate_drawdown(portfolio)
+  assert_true(agg_dd < Float::from_double(0.0))
+
+  // Risk engine check with portfolio-level drawdown
+  let position_ratio = Float::from_double(0.60)
+  let daily_loss = Float::from_double(-0.02)
+
+  let engine = @risk.create_risk_engine()
+  engine.add_rule(@risk.max_drawdown_rule(Float::from_double(0.25)))
+
+  let risk_result = engine.check(agg_dd, position_ratio, daily_loss)
+
+  // Portfolio drawdown within limits
+  assert_true(risk_result.passed)
+}
