@@ -211,7 +211,8 @@ test "parse_kline_line - edge cases snapshot" {
   ])
 }
 
-///|\
+///|
+///\
 test "adjust_klines - AdjustType::None" {
   let klines = [
     KLine::daily(
@@ -223,7 +224,8 @@ test "adjust_klines - AdjustType::None" {
   assert_true(result[0].close == klines[0].close)
 }
 
-///|\
+///|
+///\
 test "adjust_klines - AdjustType::Forward" {
   let klines = [
     KLine::daily(
@@ -235,7 +237,8 @@ test "adjust_klines - AdjustType::Forward" {
   assert_true(result[0].close > 10.4 && result[0].close < 10.6)
 }
 
-///|\
+///|
+///\
 test "adjust_klines - AdjustType::Backward" {
   let klines = [
     KLine::daily(
@@ -247,17 +250,32 @@ test "adjust_klines - AdjustType::Backward" {
   assert_true(result[0].close > 20.9 && result[0].close < 21.1)
 }
 
-///|\
+///|
+///\
 test "resample_klines - weekly resampling" {
   // Create 10 days of data spanning 2 weeks
   let daily_klines = [
-    KLine::daily("sh.600000", "2023-01-02", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    KLine::daily("sh.600000", "2023-01-03", 10.5, 11.5, 10.0, 11.0, 1200000.0, 13200000.0, 0.06),
-    KLine::daily("sh.600000", "2023-01-04", 11.0, 12.0, 10.5, 12.0, 1500000.0, 18000000.0, 0.07),
-    KLine::daily("sh.600000", "2023-01-05", 12.0, 12.5, 11.5, 11.8, 1300000.0, 15600000.0, 0.08),
-    KLine::daily("sh.600000", "2023-01-06", 11.8, 12.2, 11.0, 11.5, 1100000.0, 12700000.0, 0.09),
-    KLine::daily("sh.600000", "2023-01-09", 11.5, 12.0, 11.0, 12.0, 1000000.0, 12000000.0, 0.10),
-    KLine::daily("sh.600000", "2023-01-10", 12.0, 13.0, 11.5, 12.5, 1400000.0, 17500000.0, 0.11),
+    KLine::daily(
+      "sh.600000", "2023-01-02", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-01-03", 10.5, 11.5, 10.0, 11.0, 1200000.0, 13200000.0, 0.06,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-01-04", 11.0, 12.0, 10.5, 12.0, 1500000.0, 18000000.0, 0.07,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-01-05", 12.0, 12.5, 11.5, 11.8, 1300000.0, 15600000.0, 0.08,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-01-06", 11.8, 12.2, 11.0, 11.5, 1100000.0, 12700000.0, 0.09,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-01-09", 11.5, 12.0, 11.0, 12.0, 1000000.0, 12000000.0, 0.10,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-01-10", 12.0, 13.0, 11.5, 12.5, 1400000.0, 17500000.0, 0.11,
+    ),
   ]
   let weekly = resample_klines(daily_klines, Frequency::Weekly)
   // Should produce 2 weekly bars
@@ -268,15 +286,26 @@ test "resample_klines - weekly resampling" {
   assert_true(weekly[0].volume > 5000000.0)
 }
 
-///|\
+///|
+///\
 test "resample_klines - monthly resampling" {
   // Create data spanning 2 months
   let daily_klines = [
-    KLine::daily("sh.600000", "2023-01-30", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
-    KLine::daily("sh.600000", "2023-01-31", 10.5, 11.5, 10.0, 11.0, 1200000.0, 13200000.0, 0.06),
-    KLine::daily("sh.600000", "2023-02-01", 11.0, 12.0, 10.5, 12.0, 1500000.0, 18000000.0, 0.07),
-    KLine::daily("sh.600000", "2023-02-02", 12.0, 12.5, 11.5, 11.8, 1300000.0, 15600000.0, 0.08),
-    KLine::daily("sh.600000", "2023-02-03", 11.8, 12.2, 11.0, 11.5, 1100000.0, 12700000.0, 0.09),
+    KLine::daily(
+      "sh.600000", "2023-01-30", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-01-31", 10.5, 11.5, 10.0, 11.0, 1200000.0, 13200000.0, 0.06,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-02-01", 11.0, 12.0, 10.5, 12.0, 1500000.0, 18000000.0, 0.07,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-02-02", 12.0, 12.5, 11.5, 11.8, 1300000.0, 15600000.0, 0.08,
+    ),
+    KLine::daily(
+      "sh.600000", "2023-02-03", 11.8, 12.2, 11.0, 11.5, 1100000.0, 12700000.0, 0.09,
+    ),
   ]
   let monthly = resample_klines(daily_klines, Frequency::Monthly)
   // Should produce 2 monthly bars
@@ -289,17 +318,21 @@ test "resample_klines - monthly resampling" {
   assert_true(monthly[1].close == 11.5)
 }
 
-///|\
+///|
+///\
 test "resample_klines - empty input" {
   let empty : Array[KLine] = []
   let weekly = resample_klines(empty, Frequency::Weekly)
   assert_true(weekly.length() == 0)
 }
 
-///|\
+///|
+///\
 test "resample_klines - single element" {
   let daily_klines = [
-    KLine::daily("sh.600000", "2023-01-02", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05),
+    KLine::daily(
+      "sh.600000", "2023-01-02", 10.0, 11.0, 9.5, 10.5, 1000000.0, 10500000.0, 0.05,
+    ),
   ]
   let weekly = resample_klines(daily_klines, Frequency::Weekly)
   assert_true(weekly.length() == 1)

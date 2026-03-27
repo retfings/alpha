@@ -500,4 +500,3 @@ test "trim_klines_to_range - no overlap" {
 // Note: Tests for adjust_klines and resample_klines require enum variants
 // (AdjustType, Frequency) which are read-only and cannot be constructed
 // in blackbox tests. These are tested in whitebox tests instead.
-

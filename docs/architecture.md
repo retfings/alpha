@@ -113,11 +113,15 @@ alpha/
 │   │
 │   ├── indicator/             # 技术指标库
 │   │   ├── moon.pkg
-│   │   ├── ma.mbt             # 均线类
-│   │   ├── macd.mbt           # MACD
-│   │   ├── rsi.mbt            # RSI
-│   │   ├── bollinger.mbt      # 布林带
-│   │   └── atr.mbt            # ATR
+│   │   ├── ma.mbt             # 移动平均 (MA/SMA/EMA) 和 MACD
+│   │   ├── atr.mbt            # ATR (Average True Range)
+│   │   ├── adx.mbt            # ADX (Average Directional Index)
+│   │   ├── cci.mbt            # CCI (Commodity Channel Index)
+│   │   ├── kdj.mbt            # KDJ (Stochastic Oscillator)
+│   │   ├── obv.mbt            # OBV (On-Balance Volume)
+│   │   ├── rsi.mbt            # RSI (Relative Strength Index)
+│   │   ├── williams_r.mbt     # Williams %R
+│   │   └── bollinger.mbt      # 布林带 (Bollinger Bands)
 │   │
 │   └── backtest/              # 回测引擎
 │       ├── moon.pkg
@@ -460,19 +464,19 @@ GET  /api/portfolio/drawdown     # 计算组合回撤
    - 测试覆盖 (`src/risk/rules_test.mbt`)
      - 14 个单元测试覆盖所有规则与引擎功能
 
-### 进行中阶段
-
-4. **Phase 4 - HTTP 服务器** 🚧
-   - 简单 HTTP API 服务器
+4. **Phase 4 - HTTP 服务器** ✅
+   - 简单 HTTP API 服务器 (`server/server.mbt`)
    - RESTful API 实现
    - 与核心引擎集成
 
-### 计划中阶段
+### 进行中阶段
 
-5. **Phase 5 - Web 界面**
+5. **Phase 5 - Web 界面** 🚧
    - 静态页面框架
    - 图表可视化
    - API 对接
+
+### 计划中阶段
 
 6. **Phase 6 - 完善与优化**
    - Parquet 格式支持

@@ -10,12 +10,21 @@ fn calc_tr(kline : @data.KLine, prev_close : Float) -> Float {
   let hc = Float::abs(kline.high - prev_close)
   let lc = Float::abs(kline.low - prev_close)
   let max_range = if hl > hc { hl } else { hc }
-  if max_range > lc { max_range } else { lc }
+  if max_range > lc {
+    max_range
+  } else {
+    lc
+  }
 }
 
 ///|
 /// Calculate Plus Directional Movement (+DM)
-fn calc_plus_dm(current_high : Float, prev_high : Float, current_low : Float, prev_low : Float) -> Float {
+fn calc_plus_dm(
+  current_high : Float,
+  prev_high : Float,
+  current_low : Float,
+  prev_low : Float,
+) -> Float {
   let up_move = current_high - prev_high
   let down_move = prev_low - current_low
   if up_move > down_move && up_move > Float::from_double(0.0) {
@@ -27,7 +36,12 @@ fn calc_plus_dm(current_high : Float, prev_high : Float, current_low : Float, pr
 
 ///|
 /// Calculate Minus Directional Movement (-DM)
-fn calc_minus_dm(current_high : Float, prev_high : Float, current_low : Float, prev_low : Float) -> Float {
+fn calc_minus_dm(
+  current_high : Float,
+  prev_high : Float,
+  current_low : Float,
+  prev_low : Float,
+) -> Float {
   let up_move = current_high - prev_high
   let down_move = prev_low - current_low
   if down_move > up_move && down_move > Float::from_double(0.0) {
@@ -71,9 +85,19 @@ pub fn adx(klines : Array[@data.KLine], period : Int) -> Array[Float] {
     } else {
       let tr = calc_tr(klines[i], klines[i - 1].close)
       tr_values.push(tr)
-      let pdm = calc_plus_dm(klines[i].high, klines[i - 1].high, klines[i].low, klines[i - 1].low)
+      let pdm = calc_plus_dm(
+        klines[i].high,
+        klines[i - 1].high,
+        klines[i].low,
+        klines[i - 1].low,
+      )
       plus_dm_values.push(pdm)
-      let mdm = calc_minus_dm(klines[i].high, klines[i - 1].high, klines[i].low, klines[i - 1].low)
+      let mdm = calc_minus_dm(
+        klines[i].high,
+        klines[i - 1].high,
+        klines[i].low,
+        klines[i - 1].low,
+      )
       minus_dm_values.push(mdm)
     }
     i = i + 1
@@ -107,12 +131,12 @@ pub fn adx(klines : Array[@data.KLine], period : Int) -> Array[Float] {
   while i < len {
     // Calculate +DI and -DI
     let plus_di = if tr_smooth > Float::from_double(0.0) {
-      (plus_dm_smooth / tr_smooth) * Float::from_double(100.0)
+      plus_dm_smooth / tr_smooth * Float::from_double(100.0)
     } else {
       Float::from_double(0.0)
     }
     let minus_di = if tr_smooth > Float::from_double(0.0) {
-      (minus_dm_smooth / tr_smooth) * Float::from_double(100.0)
+      minus_dm_smooth / tr_smooth * Float::from_double(100.0)
     } else {
       Float::from_double(0.0)
     }
@@ -121,7 +145,7 @@ pub fn adx(klines : Array[@data.KLine], period : Int) -> Array[Float] {
     let di_sum = plus_di + minus_di
     let di_diff = Float::abs(plus_di - minus_di)
     let dx = if di_sum > Float::from_double(0.0) {
-      (di_diff / di_sum) * Float::from_double(100.0)
+      di_diff / di_sum * Float::from_double(100.0)
     } else {
       Float::from_double(0.0)
     }
@@ -132,8 +156,12 @@ pub fn adx(klines : Array[@data.KLine], period : Int) -> Array[Float] {
     if i + 1 < len {
       let period_f = Float::from_int(period)
       tr_smooth = tr_smooth - tr_smooth / period_f + tr_values[i + 1]
-      plus_dm_smooth = plus_dm_smooth - plus_dm_smooth / period_f + plus_dm_values[i + 1]
-      minus_dm_smooth = minus_dm_smooth - minus_dm_smooth / period_f + minus_dm_values[i + 1]
+      plus_dm_smooth = plus_dm_smooth -
+        plus_dm_smooth / period_f +
+        plus_dm_values[i + 1]
+      minus_dm_smooth = minus_dm_smooth -
+        minus_dm_smooth / period_f +
+        minus_dm_values[i + 1]
     }
     i = i + 1
   }
@@ -167,7 +195,12 @@ pub fn plus_di(klines : Array[@data.KLine], period : Int) -> Array[Float] {
     } else {
       let tr = calc_tr(klines[i], klines[i - 1].close)
       tr_values.push(tr)
-      let pdm = calc_plus_dm(klines[i].high, klines[i - 1].high, klines[i].low, klines[i - 1].low)
+      let pdm = calc_plus_dm(
+        klines[i].high,
+        klines[i - 1].high,
+        klines[i].low,
+        klines[i - 1].low,
+      )
       plus_dm_values.push(pdm)
     }
     i = i + 1
@@ -193,7 +226,7 @@ pub fn plus_di(klines : Array[@data.KLine], period : Int) -> Array[Float] {
   i = period
   while i < len {
     let pdi = if tr_smooth > Float::from_double(0.0) {
-      (plus_dm_smooth / tr_smooth) * Float::from_double(100.0)
+      plus_dm_smooth / tr_smooth * Float::from_double(100.0)
     } else {
       Float::from_double(0.0)
     }
@@ -202,7 +235,9 @@ pub fn plus_di(klines : Array[@data.KLine], period : Int) -> Array[Float] {
     if i + 1 < len {
       let period_f = Float::from_int(period)
       tr_smooth = tr_smooth - tr_smooth / period_f + tr_values[i + 1]
-      plus_dm_smooth = plus_dm_smooth - plus_dm_smooth / period_f + plus_dm_values[i + 1]
+      plus_dm_smooth = plus_dm_smooth -
+        plus_dm_smooth / period_f +
+        plus_dm_values[i + 1]
     }
     i = i + 1
   }
@@ -236,7 +271,12 @@ pub fn minus_di(klines : Array[@data.KLine], period : Int) -> Array[Float] {
     } else {
       let tr = calc_tr(klines[i], klines[i - 1].close)
       tr_values.push(tr)
-      let mdm = calc_minus_dm(klines[i].high, klines[i - 1].high, klines[i].low, klines[i - 1].low)
+      let mdm = calc_minus_dm(
+        klines[i].high,
+        klines[i - 1].high,
+        klines[i].low,
+        klines[i - 1].low,
+      )
       minus_dm_values.push(mdm)
     }
     i = i + 1
@@ -262,7 +302,7 @@ pub fn minus_di(klines : Array[@data.KLine], period : Int) -> Array[Float] {
   i = period
   while i < len {
     let mdi = if tr_smooth > Float::from_double(0.0) {
-      (minus_dm_smooth / tr_smooth) * Float::from_double(100.0)
+      minus_dm_smooth / tr_smooth * Float::from_double(100.0)
     } else {
       Float::from_double(0.0)
     }
@@ -271,7 +311,9 @@ pub fn minus_di(klines : Array[@data.KLine], period : Int) -> Array[Float] {
     if i + 1 < len {
       let period_f = Float::from_int(period)
       tr_smooth = tr_smooth - tr_smooth / period_f + tr_values[i + 1]
-      minus_dm_smooth = minus_dm_smooth - minus_dm_smooth / period_f + minus_dm_values[i + 1]
+      minus_dm_smooth = minus_dm_smooth -
+        minus_dm_smooth / period_f +
+        minus_dm_values[i + 1]
     }
     i = i + 1
   }

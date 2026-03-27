@@ -410,6 +410,406 @@ test "atr calculation" {
 }
 ```
 
+#### 相对强弱指数 (RSI)
+
+```mbt check-disabled
+///|
+test "rsi calculation" {
+  let prices : Array[Float] = [
+    Float::from_double(100.0),
+    Float::from_double(102.0),
+    Float::from_double(101.0),
+    Float::from_double(103.0),
+    Float::from_double(105.0),
+    Float::from_double(104.0),
+    Float::from_double(106.0),
+    Float::from_double(108.0),
+    Float::from_double(107.0),
+    Float::from_double(109.0),
+    Float::from_double(110.0),
+    Float::from_double(111.0),
+    Float::from_double(112.0),
+    Float::from_double(113.0),
+    Float::from_double(114.0),
+  ]
+
+  let rsi_values = @indicator.rsi(prices, 14)
+  let last_rsi = rsi_values[rsi_values.length() - 1]
+
+  // RSI should be between 0 and 100
+  assert_true(last_rsi > Float::from_double(0.0))
+  assert_true(last_rsi < Float::from_double(100.0))
+
+  // Check overbought/oversold helpers
+  assert_true(!@indicator.is_overbought(last_rsi, Float::from_double(70.0)))
+  assert_true(!@indicator.is_oversold(last_rsi, Float::from_double(30.0)))
+
+  @json.inspect(rsi_values)
+}
+```
+
+#### 平均趋向指数 (ADX)
+
+```mbt check-disabled
+///|
+test "adx calculation" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 11.3, 11.8, 11.1, 11.6, 1300.0, 13000.0, 0.062,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 11.6, 12.0, 11.4, 11.9, 1400.0, 14000.0, 0.065,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 11.9, 12.3, 11.7, 12.1, 1350.0, 13500.0, 0.063,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 12.1, 12.5, 11.9, 12.4, 1500.0, 15000.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 12.4, 12.8, 12.2, 12.6, 1450.0, 14500.0, 0.066,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-11", 12.6, 13.0, 12.4, 12.8, 1600.0, 16000.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-12", 12.8, 13.2, 12.6, 13.0, 1550.0, 15500.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-13", 13.0, 13.4, 12.8, 13.2, 1700.0, 17000.0, 0.072,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-14", 13.2, 13.6, 13.0, 13.4, 1650.0, 16500.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-15", 13.4, 13.8, 13.2, 13.6, 1800.0, 18000.0, 0.075,
+    ),
+  ]
+
+  let adx_values = @indicator.adx(klines, 14)
+  let last_adx = adx_values[adx_values.length() - 1]
+
+  // ADX should be non-negative
+  assert_true(last_adx >= Float::from_double(0.0))
+
+  // Check trend strength helper
+  assert_true(!@indicator.is_strong_trend(last_adx, Float::from_double(25.0)))
+
+  @json.inspect(adx_values)
+}
+```
+
+#### 商品通道指数 (CCI)
+
+```mbt check-disabled
+///|
+test "cci calculation" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 11.3, 11.8, 11.1, 11.6, 1300.0, 13000.0, 0.062,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 11.6, 12.0, 11.4, 11.9, 1400.0, 14000.0, 0.065,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 11.9, 12.3, 11.7, 12.1, 1350.0, 13500.0, 0.063,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 12.1, 12.5, 11.9, 12.4, 1500.0, 15000.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 12.4, 12.8, 12.2, 12.6, 1450.0, 14500.0, 0.066,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-11", 12.6, 13.0, 12.4, 12.8, 1600.0, 16000.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-12", 12.8, 13.2, 12.6, 13.0, 1550.0, 15500.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-13", 13.0, 13.4, 12.8, 13.2, 1700.0, 17000.0, 0.072,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-14", 13.2, 13.6, 13.0, 13.4, 1650.0, 16500.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-15", 13.4, 13.8, 13.2, 13.6, 1800.0, 18000.0, 0.075,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-16", 13.6, 14.0, 13.4, 13.8, 1750.0, 17500.0, 0.073,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-17", 13.8, 14.2, 13.6, 14.0, 1900.0, 19000.0, 0.078,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-18", 14.0, 14.4, 13.8, 14.2, 1850.0, 18500.0, 0.076,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-19", 14.2, 14.6, 14.0, 14.4, 2000.0, 20000.0, 0.08,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-20", 14.4, 14.8, 14.2, 14.6, 1950.0, 19500.0, 0.078,
+    ),
+  ]
+
+  let cci_values = @indicator.cci(klines, 20)
+  let last_cci = cci_values[cci_values.length() - 1]
+
+  // CCI can range from -infinity to +infinity
+  // Check that we got a valid value (not NaN or infinite)
+  assert_true(last_cci > Float::from_double(-1000.0))
+  assert_true(last_cci < Float::from_double(1000.0))
+
+  @json.inspect(cci_values)
+}
+```
+
+#### KDJ 随机指标
+
+```mbt check-disabled
+///|
+test "kdj calculation" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 11.3, 11.8, 11.1, 11.6, 1300.0, 13000.0, 0.062,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 11.6, 12.0, 11.4, 11.9, 1400.0, 14000.0, 0.065,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 11.9, 12.3, 11.7, 12.1, 1350.0, 13500.0, 0.063,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 12.1, 12.5, 11.9, 12.4, 1500.0, 15000.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 12.4, 12.8, 12.2, 12.6, 1450.0, 14500.0, 0.066,
+    ),
+  ]
+
+  let (k_line, d_line, j_line) = @indicator.kdj(klines, 9, 3, 3)
+  let last_k = k_line[k_line.length() - 1]
+  let last_d = d_line[d_line.length() - 1]
+  let last_j = j_line[j_line.length() - 1]
+
+  // K, D should be between 0 and 100
+  assert_true(last_k >= Float::from_double(0.0))
+  assert_true(last_k <= Float::from_double(100.0))
+  assert_true(last_d >= Float::from_double(0.0))
+  assert_true(last_d <= Float::from_double(100.0))
+
+  // J can exceed 0-100 range (formula: J = 3*K - 2*D)
+  assert_true(
+    last_j ==
+    Float::from_double(3.0) * last_k - Float::from_double(2.0) * last_d,
+  )
+
+  @json.inspect({ "k": k_line, "d": d_line, "j": j_line })
+}
+```
+
+#### 威廉指标 (Williams %R)
+
+```mbt check-disabled
+///|
+test "williams %r calculation" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 11.3, 11.8, 11.1, 11.6, 1300.0, 13000.0, 0.062,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 11.6, 12.0, 11.4, 11.9, 1400.0, 14000.0, 0.065,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 11.9, 12.3, 11.7, 12.1, 1350.0, 13500.0, 0.063,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 12.1, 12.5, 11.9, 12.4, 1500.0, 15000.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 12.4, 12.8, 12.2, 12.6, 1450.0, 14500.0, 0.066,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-11", 12.6, 13.0, 12.4, 12.8, 1600.0, 16000.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-12", 12.8, 13.2, 12.6, 13.0, 1550.0, 15500.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-13", 13.0, 13.4, 12.8, 13.2, 1700.0, 17000.0, 0.072,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-14", 13.2, 13.6, 13.0, 13.4, 1650.0, 16500.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-15", 13.4, 13.8, 13.2, 13.6, 1800.0, 18000.0, 0.075,
+    ),
+  ]
+
+  let wr_values = @indicator.williams_r(klines, 14)
+  let last_wr = wr_values[wr_values.length() - 1]
+
+  // Williams %R should be between -100 and 0
+  assert_true(last_wr >= Float::from_double(-100.0))
+  assert_true(last_wr <= Float::from_double(0.0))
+
+  @json.inspect(wr_values)
+}
+```
+
+#### 能量潮指标 (OBV)
+
+```mbt check-disabled
+///|
+test "obv calculation" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+  ]
+
+  let obv_values = @indicator.obv(klines)
+
+  // OBV should be positive and increasing (since prices are rising)
+  assert_true(obv_values.length() == klines.length())
+  let mut i = 1
+  while i < obv_values.length() {
+    assert_true(obv_values[i] >= obv_values[i - 1])
+    i = i + 1
+  }
+
+  @json.inspect(obv_values)
+}
+```
+
+#### 布林带 (Bollinger Bands)
+
+```mbt check-disabled
+///|
+test "bollinger bands calculation" {
+  let prices : Array[Float] = [
+    Float::from_double(100.0),
+    Float::from_double(102.0),
+    Float::from_double(101.0),
+    Float::from_double(103.0),
+    Float::from_double(105.0),
+    Float::from_double(104.0),
+    Float::from_double(106.0),
+    Float::from_double(108.0),
+    Float::from_double(107.0),
+    Float::from_double(109.0),
+    Float::from_double(110.0),
+    Float::from_double(111.0),
+    Float::from_double(112.0),
+    Float::from_double(113.0),
+    Float::from_double(114.0),
+    Float::from_double(115.0),
+    Float::from_double(116.0),
+    Float::from_double(117.0),
+    Float::from_double(118.0),
+    Float::from_double(119.0),
+  ]
+
+  let (upper, middle, lower) = @indicator.bollinger_bands(
+    prices,
+    20,
+    Float::from_double(2.0),
+  )
+
+  // Upper band should be above middle band
+  // Middle band should be above lower band
+  let mut i = 0
+  while i < upper.length() {
+    assert_true(upper[i] >= middle[i])
+    assert_true(middle[i] >= lower[i])
+    i = i + 1
+  }
+
+  // Check %B helper function
+  let percent_b = @indicator.bollinger_percent_b(
+    Float::from_double(110.0),
+    upper[upper.length() - 1],
+    lower[lower.length() - 1],
+  )
+  assert_true(percent_b >= Float::from_double(0.0))
+  assert_true(percent_b <= Float::from_double(1.0))
+
+  @json.inspect({ "upper": upper, "middle": middle, "lower": lower })
+}
+```
+
 ## CLI 使用指南
 
 ### 命令列表

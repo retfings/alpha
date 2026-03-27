@@ -399,13 +399,19 @@ test "rsi gradual uptrend then decline" {
 test "rsi helper boundary conditions" {
   // Test is_overbought at boundary
   assert_true(
-    !@indicator.is_overbought(Float::from_double(70.0), Float::from_double(70.0)),
+    !@indicator.is_overbought(
+      Float::from_double(70.0),
+      Float::from_double(70.0),
+    ),
   )
   assert_true(
     @indicator.is_overbought(Float::from_double(70.1), Float::from_double(70.0)),
   )
   assert_true(
-    !@indicator.is_overbought(Float::from_double(69.9), Float::from_double(70.0)),
+    !@indicator.is_overbought(
+      Float::from_double(69.9),
+      Float::from_double(70.0),
+    ),
   )
 
   // Test is_oversold at boundary
