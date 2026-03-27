@@ -11,7 +11,11 @@
 | [用户指南](user-guide.md) | 完整使用教程 | 所有用户 |
 | [API 参考手册](MANUAL.md) | 完整 API 参考手册 | 开发者 |
 | [API 参考](api-reference.md) | 核心模块 API 文档 | 开发者 |
+| [HTTP API 端点](api-endpoints.md) | HTTP API 端点参考 | 开发者 |
 | [架构设计](architecture.md) | 系统架构说明 | 开发者/架构师 |
+| [股票策略架构](stock-strategy-architecture.md) | 股票策略系统架构 | 开发者/架构师 |
+| [开发者指南](developer-guide.md) | 开发环境和规范 | 开发者 |
+| [数据下载指南](data-download-guide.md) | Baostock 数据下载和管理 | 数据工程师 |
 
 ## 开发和设计文档
 
@@ -22,6 +26,15 @@
 | [架构优化提案](architecture-optimization-proposals.md) | 功能和架构建议 | 待审查 |
 | [代码优化建议](optimization-proposals.md) | 性能和质量优化详情 | 部分完成 |
 | [代码修复文档](code-fixes.md) | 修复记录汇总 | 持续更新 |
+
+## Baostock 数据集成文档
+
+| 文档 | 描述 | 状态 |
+|------|------|------|
+| [数据下载指南](data-download-guide.md) | 完整数据下载和管理指南 | 已完成 |
+| [Baostock API 参考](baostock-api.md) | Baostock API 使用说明 | 已完成 |
+| [数据格式说明](data-format.md) | CSV 数据和 KLine 结构 | 已完成 |
+| [Baostock 集成项目文档](baostock-integration-project.md) | 集成项目和团队说明 | 已完成 |
 
 ## 报告和状态
 
@@ -74,7 +87,14 @@ docs/
 ├── QUICKSTART.md                 # 快速入门指南
 ├── MANUAL.md                     # API 参考手册（完整版）
 ├── api-reference.md              # API 参考文档
+├── api-endpoints.md              # HTTP API 端点参考
 ├── architecture.md               # 架构设计
+├── stock-strategy-architecture.md # 股票策略架构
+├── developer-guide.md            # 开发者指南
+├── data-download-guide.md        # 数据下载指南（新增）
+├── baostock-api.md               # Baostock API 参考
+├── baostock-integration-project.md # Baostock 集成项目
+├── data-format.md                # 数据格式说明
 ├── architecture-improvements.md  # 架构改进建议
 ├── architecture-optimization-proposals.md  # 架构优化提案
 ├── code-fixes.md                 # 代码修复记录
@@ -94,7 +114,13 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
-| 2026-03-27 | INDEX.md | 初始版本，创建文档索引 | doc-eng |
+| 2026-03-27 | INDEX.md | 添加数据下载指南索引 | data-eng |
+| 2026-03-27 | data-download-guide.md | 新建完整数据下载指南 | data-eng |
+| 2026-03-27 | script/download_data.md | 更新增强下载器文档 | data-eng |
+| 2026-03-27 | script/enhanced_downloader.py | 添加财务数据和行业数据下载 | data-eng |
+| 2026-03-27 | INDEX.md | 添加新文档索引 | doc-eng |
+| 2026-03-27 | stock-strategy-architecture.md | 新建股票策略系统架构文档 | doc-eng |
+| 2026-03-27 | developer-guide.md | 新建开发者指南 | doc-eng |
 | 2026-03-27 | QUICKSTART.md | 创建快速入门指南 | doc-eng |
 | 2026-03-27 | api-reference.md | 更新为中文版 API 文档 | doc-eng |
 | 2026-03-27 | MANUAL.md | 创建完整 API 参考手册 | doc-eng |
@@ -102,4 +128,4 @@ docs/
 ---
 
 *最后更新：2026-03-27*
-*文档维护者：doc-eng*
+*文档维护者：doc-eng, data-eng*

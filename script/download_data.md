@@ -19,9 +19,10 @@ pip install baostock
 
 ```
 script/
-├── baostock_client.py    # Baostock API 封装模块（类型安全）
-├── download_data.py      # 主下载脚本（命令行入口）
-└── requirements.txt      # Python 依赖
+├── baostock_client.py       # Baostock API 封装模块（类型安全）
+├── download_data.py         # 主下载脚本（命令行入口）
+├── enhanced_downloader.py   # 增强下载器（支持增量更新、验证、财务数据等）
+└── requirements.txt         # Python 依赖
 ```
 
 ### `baostock_client.py` API
@@ -45,6 +46,37 @@ with BaostockClient() as client:
         client.save_to_csv(result, "./data/sh_600000.csv")
 ```
 
+### `enhanced_downloader.py` API
+
+提供增强的数据下载功能：
+
+```python
+from enhanced_downloader import EnhancedBaostockDownloader, DownloadConfig
+
+config = DownloadConfig(
+    output_dir="./data",
+    frequency="d",
+    adjustflag="3",
+    max_workers=4,
+)
+
+with EnhancedBaostockDownloader(config) as downloader:
+    # 批量下载
+    report = downloader.batch_download(["sh.600000", "sz.000001"])
+
+    # 增量更新
+    report = downloader.batch_download(["sh.600000"], incremental=True)
+
+    # 下载财务指标
+    report = downloader.download_all_financials(["sh.600000"])
+
+    # 下载行业分类
+    report = downloader.download_industry_classification()
+
+    # 数据验证
+    result = downloader.validate_stock("sh.600000")
+```
+
 ## 基本用法
 
 ### 默认执行（下载近 3 年日线数据，前复权）
@@ -52,6 +84,31 @@ with BaostockClient() as client:
 ```bash
 # 默认下载浦发银行 (sh.600000) 和平安银行 (sz.000001) 近 3 年的日线数据（前复权）
 python script/download_data.py
+```
+
+### 使用增强下载器
+
+```bash
+# 使用增强下载器下载全部 A 股
+python script/enhanced_downloader.py --all
+
+# 增量更新全部 A 股数据
+python script/enhanced_downloader.py --all --incremental
+
+# 下载全部 A 股的财务指标
+python script/enhanced_downloader.py --financials --all
+
+# 下载行业分类数据
+python script/enhanced_downloader.py --industries
+
+# 验证全部 A 股数据质量
+python script/enhanced_downloader.py --validate --all
+
+# 下载指定股票的财务指标
+python script/enhanced_downloader.py --financials -s sh.600000 sz.000001
+
+# 使用 5 分钟级别数据下载全部 A 股（静默模式）
+python script/enhanced_downloader.py --all -f 5 -q
 ```
 
 ### 下载全部 A 股
@@ -95,6 +152,8 @@ python script/download_data.py --stocks sh.600000 --frequency 5
 
 ## 命令行参数
 
+### `download_data.py` 参数
+
 | 参数 | 简写 | 说明 | 默认值 |
 |------|------|------|--------|
 | `--stocks` | `-s` | 股票代码列表 | `sh.600000 sz.000001` |
@@ -105,6 +164,24 @@ python script/download_data.py --stocks sh.600000 --frequency 5
 | `--frequency` | `-f` | 频率：d=日，w=周，m=月，5/15/30/60=分钟 | `d` |
 | `--adjustflag` | `-a` | 复权类型：1=后复权，2=无复权，3=前复权 | `3` |
 | `--quiet` | `-q` | 静默模式，不输出进度 | 不启用 |
+
+### `enhanced_downloader.py` 参数
+
+| 参数 | 简写 | 说明 | 默认值 |
+|------|------|------|--------|
+| `--stocks` | `-s` | 股票代码列表 | `sh.600000 sz.000001` |
+| `--all` | | 下载全部 A 股股票 | 不启用 |
+| `--incremental` | `-i` | 使用增量更新模式 | 不启用 |
+| `--validate` | `-v` | 验证现有数据质量 | 不启用 |
+| `--financials` | | 下载财务指标数据 | 不启用 |
+| `--industries` | | 下载行业分类数据 | 不启用 |
+| `--start` | | 开始日期 (YYYY-MM-DD) | 3 年前 |
+| `--end` | | 结束日期 (YYYY-MM-DD) | 今天 |
+| `--output` | `-o` | 输出目录 | `./data/` |
+| `--frequency` | `-f` | 频率：d=日，w=周，m=月，5/15/30/60=分钟 | `d` |
+| `--adjustflag` | `-a` | 复权类型：1=后复权，2=无复权，3=前复权 | `3` |
+| `--workers` | `-w` | 并行下载工作线程数 | `4` |
+| `--quiet` | `-q` | 静默模式 | 不启用 |
 
 ## 示例
 
@@ -199,6 +276,8 @@ python script/download_data.py --stocks sh.600000 --output ./my_data/
 
 ## 输出文件格式
 
+### K-line 数据文件格式
+
 脚本会在输出目录下生成 CSV 文件，文件名格式：
 ```
 {股票代码}_{开始日期}_{结束日期}[ _qfq{复权标识}].csv
@@ -218,6 +297,75 @@ CSV 包含以下字段：
 - `volume`: 成交量
 - `amount`: 成交额
 - `turn`: 换手率
+
+### 财务指标数据文件格式
+
+输出目录：`data/financials/`
+
+文件名格式：
+```
+{股票代码}_financials_{开始日期}_{结束日期}.csv
+```
+
+例如：
+- `sh_600000_financials_2020-01-01_2024-12-31.csv`
+
+CSV 包含以下字段（部分）：
+- `pubDate`: 发布日期
+- `statDate`: 统计日期
+- `roEAvg`: 平均 ROE
+- `roeWaa`: 加权 ROE
+- `roaAvg`: 平均 ROA
+- `netProfitOperatingIncomeRatio`: 净利率
+- `grossProfitRatio`: 毛利率
+- `totalAssetTurnoverRatio`: 总资产周转率
+- `debtToAssetRatio`: 资产负债率
+- `currentRatio`: 流动比率
+- `quickRatio`: 速动比率
+- `epsBasic`: 基本每股收益
+- `dps`: 每股股利
+- `totalOperatingIncome`: 营业总收入
+- `netProfit`: 净利润
+- `totalAsset`: 总资产
+- `totalLiability`: 总负债
+
+### 行业分类数据文件格式
+
+输出目录：`data/industries/`
+
+文件名格式：
+```
+industry_classification_{日期}.csv
+```
+
+例如：
+- `industry_classification_20240327.csv`
+
+CSV 包含以下字段：
+- `code`: 股票代码
+- `codeName`: 股票名称
+- `industryName`: 行业名称
+- `industryType`: 行业类型
+- `industryCode1/2/3`: 行业分类代码（一级/二级/三级）
+
+### 元数据文件格式
+
+增强下载器会在 `data/.metadata/` 目录下保存元数据文件：
+
+文件名格式：
+```
+{股票代码安全格式}.meta.json
+```
+
+例如：
+- `sh_600000.meta.json`
+
+元数据包含：
+- `code`: 股票代码
+- `last_update`: 最后更新时间（ISO 格式）
+- `last_date`: 数据中最后交易日
+- `record_count`: 记录数
+- `file_path`: 数据文件路径
 
 ## 注意事项
 
