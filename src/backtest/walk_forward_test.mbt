@@ -302,7 +302,11 @@ test "calculate_profit - empty returns" {
 ///|
 test "wf_result - struct creation" {
   let result = create_wf_result(
-    0, 0, 50, 50, 70,
+    0,
+    0,
+    50,
+    50,
+    70,
     Float::from_double(1000.0),
     Float::from_double(500.0),
     Float::from_double(1.5),
@@ -332,7 +336,11 @@ test "analyze_wf_results - empty results" {
 test "analyze_wf_results - single profitable window" {
   let results : Array[WfResult] = [
     create_wf_result(
-      0, 0, 50, 50, 70,
+      0,
+      0,
+      50,
+      50,
+      70,
       Float::from_double(1000.0),
       Float::from_double(500.0),
       Float::from_double(1.5),
@@ -354,7 +362,11 @@ test "analyze_wf_results - single profitable window" {
 test "analyze_wf_results - mixed results" {
   let results : Array[WfResult] = [
     create_wf_result(
-      0, 0, 50, 50, 70,
+      0,
+      0,
+      50,
+      50,
+      70,
       Float::from_double(1000.0),
       Float::from_double(500.0),
       Float::from_double(1.5),
@@ -365,7 +377,11 @@ test "analyze_wf_results - mixed results" {
       5,
     ),
     create_wf_result(
-      1, 10, 60, 60, 80,
+      1,
+      10,
+      60,
+      60,
+      80,
       Float::from_double(800.0),
       Float::from_double(-200.0),
       Float::from_double(1.2),
@@ -388,7 +404,11 @@ test "analyze_wf_results - mixed results" {
 test "analyze_wf_results - degradation ratio calculation" {
   let results : Array[WfResult] = [
     create_wf_result(
-      0, 0, 50, 50, 70,
+      0,
+      0,
+      50,
+      50,
+      70,
       Float::from_double(1000.0),
       Float::from_double(500.0),
       Float::from_double(2.0),
@@ -409,7 +429,8 @@ test "analyze_wf_results - degradation ratio calculation" {
 ///|
 test "passes_wf_validation - passing strategy" {
   let summary = create_wf_summary(
-    5, 3,
+    5,
+    3,
     Float::from_double(1000.0),
     Float::from_double(500.0),
     Float::from_double(1.5),
@@ -427,7 +448,8 @@ test "passes_wf_validation - passing strategy" {
 ///|
 test "passes_wf_validation - failing low success rate" {
   let summary = create_wf_summary(
-    5, 1,
+    5,
+    1,
     Float::from_double(1000.0),
     Float::from_double(500.0),
     Float::from_double(1.5),
@@ -446,7 +468,8 @@ test "passes_wf_validation - failing low success rate" {
 ///|
 test "passes_wf_validation - failing degradation" {
   let summary = create_wf_summary(
-    5, 3,
+    5,
+    3,
     Float::from_double(1000.0),
     Float::from_double(500.0),
     Float::from_double(2.0),
@@ -465,7 +488,8 @@ test "passes_wf_validation - failing degradation" {
 ///|
 test "passes_wf_validation - failing negative oos profit" {
   let summary = create_wf_summary(
-    5, 3,
+    5,
+    3,
     Float::from_double(1000.0),
     Float::from_double(-100.0),
     Float::from_double(1.5),
@@ -492,7 +516,11 @@ test "wf_mode_enum - equality" {
 test "robustness_score - calculation example" {
   let results : Array[WfResult] = [
     create_wf_result(
-      0, 0, 50, 50, 70,
+      0,
+      0,
+      50,
+      50,
+      70,
       Float::from_double(1000.0),
       Float::from_double(500.0),
       Float::from_double(1.5),
@@ -503,7 +531,11 @@ test "robustness_score - calculation example" {
       5,
     ),
     create_wf_result(
-      1, 10, 60, 60, 80,
+      1,
+      10,
+      60,
+      60,
+      80,
       Float::from_double(800.0),
       Float::from_double(400.0),
       Float::from_double(1.3),
@@ -527,11 +559,11 @@ test "walk_forward_realistic_scenario" {
   // 2 years of daily data (~504 bars)
   let total_bars = 504
   let config = create_walk_forward_config(
-    252,           // 1 year window
-    63,            // Roll quarterly
-    Float::from_double(0.3),  // 30% OOS
+    252, // 1 year window
+    63, // Roll quarterly
+    Float::from_double(0.3), // 30% OOS
     wf_mode_rolling(),
-    21,            // Min 1 month OOS
+    21, // Min 1 month OOS
   )
 
   let windows = generate_wf_windows(config, total_bars)
