@@ -16,6 +16,27 @@ pub enum AdjustType {
 } derive(Eq, Show)
 
 ///|
+/// Helper function to create AdjustType::None
+/// Useful for testing and configuration
+pub fn adjust_type_none() -> AdjustType {
+  AdjustType::None
+}
+
+///|
+/// Helper function to create AdjustType::Forward
+/// Useful for testing and configuration
+pub fn adjust_type_forward() -> AdjustType {
+  AdjustType::Forward
+}
+
+///|
+/// Helper function to create AdjustType::Backward
+/// Useful for testing and configuration
+pub fn adjust_type_backward() -> AdjustType {
+  AdjustType::Backward
+}
+
+///|
 /// Adjustment factor information
 pub struct AdjustFactor {
   /// Date when adjustment takes effect

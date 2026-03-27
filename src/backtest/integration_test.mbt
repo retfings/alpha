@@ -1802,7 +1802,7 @@ test "integration: ATR volatility-based position sizing with risk limits" {
   }
 
   // Step 4: Create portfolio and risk engine
-  let portfolio = @portfolio.create_portfolio(Float::from_double(100000.0))
+  let _portfolio = @portfolio.create_portfolio(Float::from_double(100000.0))
   let risk_engine = @risk.create_risk_engine()
   @risk.RiskEngine::add_rule(
     risk_engine,
@@ -2384,7 +2384,7 @@ test "integration: Bollinger Bands mean reversion with risk management" {
         let len = close_history.length()
         let current_price = kline.close
         let u = upper[len - 1]
-        let m = middle[len - 1]
+        let _m = middle[len - 1]
         let l = lower[len - 1]
 
         // Calculate %B (position within bands)

@@ -328,14 +328,13 @@ pub fn trailing_stop_distance(
 ///|
 /// Enum representing trailing stop status
 pub enum TrailingStopStatus {
-  /// Position active, stop not triggered
-  Active
   /// Stop price crossed, exit signal
   Triggered
   /// Position profitable and stop protecting gains
   Profitable
   /// Position at loss but stop not yet triggered
   AtLoss
+  // Active reserved for future implementation
 } derive(Eq, Show)
 
 ///|

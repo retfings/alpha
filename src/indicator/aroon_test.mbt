@@ -49,7 +49,7 @@ test "aroon - uptrend detection" {
       "test", "2024-01-05", 115.0, 125.0, 110.0, 120.0, 1000.0, 140000.0, 0.01,
     ),
   ]
-  let (up, down) = @indicator.aroon(klines, 3)
+  let (up, _down) = @indicator.aroon(klines, 3)
   // In strong uptrend, Aroon Up should be 100 (newest high is the highest)
   assert_true(up[4] == Float::from_double(100.0))
 }
@@ -74,7 +74,7 @@ test "aroon - downtrend detection" {
       "test", "2024-01-05", 105.0, 110.0, 100.0, 105.0, 1000.0, 140000.0, 0.01,
     ),
   ]
-  let (up, down) = @indicator.aroon(klines, 3)
+  let (_up, down) = @indicator.aroon(klines, 3)
   // In strong downtrend, Aroon Down should be 100 (newest low is the lowest)
   assert_true(down[4] == Float::from_double(100.0))
 }

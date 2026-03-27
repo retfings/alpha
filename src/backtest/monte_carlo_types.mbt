@@ -11,10 +11,7 @@ pub enum MonteCarloMode {
   TradeSkip
   /// Add random noise to trade prices
   SlippageNoise
-  /// Bootstrap resampling of equity curve
-  Bootstrap
-  /// Combined mode (all of the above)
-  Combined
+  // Bootstrap and Combined reserved for future implementation
 } derive(Show, Eq)
 
 ///|
@@ -85,6 +82,7 @@ pub fn slippage_noise_config(
 
 ///|
 /// Single Monte Carlo run result
+/// Reserved for future Monte Carlo simulation implementation
 pub struct MonteCarloRun {
   /// Run index
   run_id : Int
@@ -101,6 +99,29 @@ pub struct MonteCarloRun {
   /// Whether this run was profitable
   is_profitable : Bool
 } derive(Show)
+
+///|
+/// Helper function to create a MonteCarloRun instance
+/// Reserved for future Monte Carlo simulation implementation
+pub fn create_monte_carlo_run(
+  run_id : Int,
+  total_return : Float,
+  max_drawdown : Float,
+  sharpe_ratio : Float,
+  final_capital : Float,
+  num_trades : Int,
+  is_profitable : Bool,
+) -> MonteCarloRun {
+  MonteCarloRun::{
+    run_id,
+    total_return,
+    max_drawdown,
+    sharpe_ratio,
+    final_capital,
+    num_trades,
+    is_profitable,
+  }
+}
 
 ///|
 /// Monte Carlo simulation summary statistics
@@ -161,6 +182,7 @@ pub fn create_monte_carlo_summary(original_return : Float) -> MonteCarloSummary 
 
 ///|
 /// Monte Carlo simulation result
+/// Reserved for future Monte Carlo simulation implementation
 pub struct MonteCarloResult {
   /// Individual run results
   runs : Array[MonteCarloRun]
@@ -169,3 +191,14 @@ pub struct MonteCarloResult {
   /// Configuration used
   config : MonteCarloConfig
 } derive(Show)
+
+///|
+/// Helper function to create a MonteCarloResult instance
+/// Reserved for future Monte Carlo simulation implementation
+pub fn create_monte_carlo_result(
+  runs : Array[MonteCarloRun],
+  summary : MonteCarloSummary,
+  config : MonteCarloConfig,
+) -> MonteCarloResult {
+  MonteCarloResult::{ runs, summary, config }
+}

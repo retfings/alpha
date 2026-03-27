@@ -5,11 +5,11 @@ import {
   "retfings/alpha/src/risk" @risk,
   "retfings/alpha/src/drawdown" @drawdown,
   "retfings/alpha/src/ffi" @ffi,
-  "retfings/alpha/server" @server,
   "moonbitlang/core/json",
   "moonbitlang/core/math",
 }
 
 import {
   "retfings/alpha/src/indicator" @indicator,
+  "retfings/alpha/server" @server,
 } for "test"

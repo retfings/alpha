@@ -21,6 +21,10 @@ pub fn calculate_sharpe(Array[Float], Float) -> Float
 
 pub fn create_backtest_engine(@strategy.BacktestConfig) -> BacktestEngine
 
+pub fn create_monte_carlo_result(Array[MonteCarloRun], MonteCarloSummary, MonteCarloConfig) -> MonteCarloResult
+
+pub fn create_monte_carlo_run(Int, Float, Float, Float, Float, Int, Bool) -> MonteCarloRun
+
 pub fn create_monte_carlo_summary(Float) -> MonteCarloSummary
 
 pub fn create_trade_log() -> TradeLog
@@ -133,8 +137,6 @@ pub enum MonteCarloMode {
   TradeShuffle
   TradeSkip
   SlippageNoise
-  Bootstrap
-  Combined
 }
 pub impl Eq for MonteCarloMode
 pub impl Show for MonteCarloMode

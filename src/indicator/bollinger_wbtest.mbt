@@ -10,7 +10,7 @@ test "bollinger_bands - internal SMA calculation verified" {
     Float::from_double(40.0),
     Float::from_double(50.0),
   ]
-  let (upper, middle, lower) = bollinger_bands(
+  let (_upper, middle, _lower) = bollinger_bands(
     prices,
     3,
     Float::from_double(2.0),
@@ -40,7 +40,7 @@ test "bollinger_bands - internal std dev calculation" {
     Float::from_double(20.0),
     Float::from_double(30.0),
   ]
-  let (upper, middle, lower) = bollinger_bands(
+  let (upper, _middle, lower) = bollinger_bands(
     prices,
     3,
     Float::from_double(1.0),
@@ -445,7 +445,7 @@ test "bollinger_bands - monotonic price sequence" {
     Float::from_double(4.0),
     Float::from_double(5.0),
   ]
-  let (upper, middle, lower) = bollinger_bands(
+  let (_upper, middle, _lower) = bollinger_bands(
     prices,
     3,
     Float::from_double(2.0),

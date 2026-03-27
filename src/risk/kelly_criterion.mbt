@@ -110,7 +110,7 @@ pub fn kelly_mode_quarter() -> KellyMode {
 }
 
 ///|
-pub fn kelly_mode_custom(fraction : Float) -> KellyMode {
+pub fn kelly_mode_custom(_fraction : Float) -> KellyMode {
   KellyMode::Custom
 }
 

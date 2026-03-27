@@ -8,7 +8,7 @@ pub type StockCode = String
 ///|
 /// Trading frequency enumeration
 /// Used to specify the time interval of market data
-pub enum Frequency {
+pub(all) enum Frequency {
   /// Daily bars (one bar per trading day)
   Daily
   /// Weekly bars (one bar per trading week)

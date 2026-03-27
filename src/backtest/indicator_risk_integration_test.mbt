@@ -154,8 +154,8 @@ test "integration: MACD crossover with position limit check" {
 
   // Check for bullish crossover (histogram > 0)
   let len = histogram.length()
-  let current_histogram = histogram[len - 1]
-  let prev_histogram = histogram[len - 2]
+  let _current_histogram = histogram[len - 1]
+  let _prev_histogram = histogram[len - 2]
 
   // Verify MACD calculation completed
   assert_true(macd_line.length() == prices.length())
@@ -760,10 +760,10 @@ test "integration: KDJ golden cross with multiple risk rules" {
   let len = k_line.length()
 
   // Golden cross: K crosses above D
-  let k_current = k_line[len - 1]
-  let d_current = d_line[len - 1]
-  let k_prev = k_line[len - 2]
-  let d_prev = d_line[len - 2]
+  let _k_current = k_line[len - 1]
+  let _d_current = d_line[len - 1]
+  let _k_prev = k_line[len - 2]
+  let _d_prev = d_line[len - 2]
 
   // Verify KDJ calculation
   assert_true(k_line.length() == klines.length())

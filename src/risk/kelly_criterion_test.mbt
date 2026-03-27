@@ -338,7 +338,7 @@ test "realistic_strategy_simulation" {
   let win_loss_ratio = Float::from_double(2.5)
   let capital = Float::from_double(500000.0)
 
-  let full_kelly = @risk.kelly_fraction(win_rate, win_loss_ratio)
+  let _full_kelly = @risk.kelly_fraction(win_rate, win_loss_ratio)
   // Kelly = 0.45 - (0.55 / 2.5) = 0.45 - 0.22 = 0.23
 
   let half_kelly_size = @risk.kelly_position_size(

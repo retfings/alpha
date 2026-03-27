@@ -4,6 +4,12 @@ package "retfings/alpha/src/data"
 // Values
 pub fn adjust_klines(Array[KLine], AdjustType, Float) -> Array[KLine]
 
+pub fn adjust_type_backward() -> AdjustType
+
+pub fn adjust_type_forward() -> AdjustType
+
+pub fn adjust_type_none() -> AdjustType
+
 pub fn annualize_volatility(Float, Int) -> Float
 
 pub fn apply_backward_adjustment(Array[KLine], Float) -> Array[KLine]
@@ -62,7 +68,7 @@ pub enum AdjustType {
 pub impl Eq for AdjustType
 pub impl Show for AdjustType
 
-pub enum Frequency {
+pub(all) enum Frequency {
   Daily
   Weekly
   Monthly

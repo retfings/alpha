@@ -97,8 +97,8 @@ test "generate_anchored_windows - growing window" {
   let windows = generate_anchored_windows(100, 30, 10, Float::from_double(0.2))
 
   if windows.length() >= 2 {
-    let (_, is_end_0, oos_start_0, oos_end_0) = windows[0]
-    let (_, is_end_1, oos_start_1, oos_end_1) = windows[1]
+    let (_, is_end_0, _oos_start_0, oos_end_0) = windows[0]
+    let (_, is_end_1, _oos_start_1, oos_end_1) = windows[1]
 
     // In anchored mode, window size grows
     assert_true(oos_end_1 > oos_end_0)
