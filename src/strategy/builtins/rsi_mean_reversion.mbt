@@ -1,6 +1,6 @@
 /// RSI Mean Reversion Strategy
 ///
-/// A contrarian strategy that buys when RSI is oversold and sells when RSI is overbought,
+/// A contrarian strategy that buys when RSI is oversold && sells when RSI is overbought,
 /// betting on mean reversion.
 
 ///|
@@ -87,15 +87,10 @@ pub fn RsiMeanReversionStrategy::on_bar(
     0.0
   }
 
-  // Determine action based on RSI levels and crossovers
-  let action = if prev_rsi >= self.oversold_threshold and current_rsi < self.oversold_threshold
-  {
-    // RSI crossed below oversold - potential buy signal
+  // Determine action based on RSI levels && crossovers
+  let action = if prev_rsi >= self.oversold_threshold && current_rsi < self.oversold_threshold {
     @strategy.Action::Buy
-  } else if prev_rsi <= self.overbought_threshold
-    and current_rsi > self.overbought_threshold
-  {
-    // RSI crossed above overbought - potential sell signal
+  } else if prev_rsi <= self.overbought_threshold && current_rsi > self.overbought_threshold {
     @strategy.Action::Sell
   } else {
     @strategy.Action::Hold

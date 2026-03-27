@@ -319,25 +319,30 @@ test "trailing stop - large percent" {
 
 ///|
 test "get_trailing_stop_status - all enum variants" {
-  // Test that all status enum variants can be matched
-  // We can't create enum values directly, but we can test the function returns them
-  
-  // Active - initial position
   let ts = @risk.create_trailing_stop(Float::from_double(100.0), Float::from_double(0.10), true)
   let s1 = @risk.get_trailing_stop_status(ts, Float::from_double(100.0), Float::from_double(100.0), true)
-  assert_true(match s1 { @risk.TrailingStopStatus::Active => true _ => false })
-  
-  // Profitable - price moved in favor
+  assert_true(match s1 {
+    @risk.TrailingStopStatus::Active => true
+    _ => false
+  })
+
   let ts1 = @risk.trailing_stop_long_update(ts, Float::from_double(150.0))
   let s2 = @risk.get_trailing_stop_status(ts1, Float::from_double(100.0), Float::from_double(150.0), true)
-  assert_true(match s2 { @risk.TrailingStopStatus::Profitable => true _ => false })
-  
-  // Triggered - stop hit
+  assert_true(match s2 {
+    @risk.TrailingStopStatus::Profitable => true
+    _ => false
+  })
+
   let s3 = @risk.get_trailing_stop_status(ts1, Float::from_double(100.0), Float::from_double(130.0), true)
-  assert_true(match s3 { @risk.TrailingStopStatus::Triggered => true _ => false })
-  
-  // AtLoss - short at loss
+  assert_true(match s3 {
+    @risk.TrailingStopStatus::Triggered => true
+    _ => false
+  })
+
   let ts_short = @risk.create_trailing_stop(Float::from_double(100.0), Float::from_double(0.10), false)
   let s4 = @risk.get_trailing_stop_status(ts_short, Float::from_double(100.0), Float::from_double(105.0), false)
-  assert_true(match s4 { @risk.TrailingStopStatus::AtLoss => true _ => false })
+  assert_true(match s4 {
+    @risk.TrailingStopStatus::AtLoss => true
+    _ => false
+  })
 }
