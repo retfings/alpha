@@ -122,7 +122,7 @@ pub struct WfResult {
   oos_max_dd : Float
   is_trades : Int
   oos_trades : Int
-} derive(Show)
+}
 
 ///|
 /// Create WfResult instance
@@ -183,7 +183,7 @@ pub struct WfSummary {
   degradation_ratio : Float
   /// Overall robustness score (0-100)
   robustness_score : Float
-} derive(Show)
+}
 
 ///|
 /// Create WfSummary instance
