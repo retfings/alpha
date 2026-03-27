@@ -208,36 +208,41 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
   let market = stock_parts_arr[0]
   let code = stock_parts_arr[1]
 
-  // Try to find the data file by checking common patterns
-  // We try to read files that match the pattern
+  // Try to find the data file by constructing path from stock code
+  // File pattern: data/{market}_{code}_*.csv (e.g., data/sh_600000_*.csv)
   let mut found_file : String? = None
 
-  // Hardcoded list of known data files (since we can't use opendir in MoonBit FFI easily)
-  // This is a workaround - in production, you'd use a proper FFI for list_files
-  let known_files = [
-    "sh_600000_2026-01-01_2026-03-26.csv",
-    "sh_600001_2026-01-01_2026-03-26.csv",
-    "sh_600002_2026-01-01_2026-03-26.csv",
-    "sh_600003_2026-01-01_2026-03-26.csv",
-    "sh_600004_2026-01-01_2026-03-26.csv",
-    "sh_600005_2026-01-01_2026-03-26.csv",
-    "sh_600006_2026-01-01_2026-03-26.csv",
-    "sh_600007_2026-01-01_2026-03-26.csv",
-    "sh_600008_2026-01-01_2026-03-26.csv",
-    "sh_600009_2026-01-01_2026-03-26.csv",
-    "sh_600010_2026-01-01_2026-03-26.csv",
-    "sh_600011_2026-01-01_2026-03-26.csv",
-    "sh_600012_2026-01-01_2026-03-26.csv",
-    "sh_600015_2026-01-01_2026-03-26.csv",
-    "sh_600016_2026-01-01_2026-03-26.csv",
-    "sh_600017_2026-01-01_2026-03-26.csv",
-    "sh_600018_2026-01-01_2026-03-26.csv",
-  ]
-
-  for file in known_files {
-    if file.has_prefix(market + "_" + code + "_") {
-      found_file = Some("data/" + file)
-      break
+  // Try to read available files from DATA_FILES environment variable
+  // Format: comma-separated file names (e.g., "sh_600000_*.csv,sh_600001_*.csv")
+  // If not set, construct path directly and check if file exists
+  match @ffi.getenv("DATA_FILES") {
+    Some(files_str) => {
+      // Parse comma-separated file list
+      let files = files_str.split(",").map(fn(s) { s.trim().to_string() }).to_array()
+      for file in files {
+        if file != "" && file.has_prefix(market + "_" + code) {
+          found_file = Some("data/" + file)
+          break
+        }
+      }
+    }
+    None => {
+      // Fallback: construct path pattern and try common date ranges
+      // This avoids hardcoding - just check if a matching file exists
+      let base_pattern = market + "_" + code + "_"
+      let date_ranges = [
+        "2026-01-01_2026-03-26",
+        "2025-01-01_2025-12-31",
+        "2024-01-01_2024-12-31",
+        "2023-01-01_2023-12-31",
+      ]
+      for date_range in date_ranges {
+        let candidate = (base_pattern + date_range + ".csv").to_string()
+        if @ffi.file_exists("data/" + candidate) {
+          found_file = Some("data/" + candidate)
+          break
+        }
+      }
     }
   }
 
@@ -356,12 +361,9 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
       println("Error: No data file found for stock '\{stock}'")
       println("Expected file pattern: data/\{market}_\{code}_*.csv")
       println("")
-      println("Available files in data/:")
-      for file in known_files {
-        if file.has_suffix(".csv") {
-          println("  - \{file}")
-        }
-      }
+      println("Hint: Set DATA_FILES environment variable with comma-separated")
+      println("      file names available in the data/ directory.")
+      println("      Example: DATA_FILES=\"sh_600000_*.csv,sh_600001_*.csv\"")
     }
   }
 }
