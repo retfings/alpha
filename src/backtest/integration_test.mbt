@@ -1974,7 +1974,7 @@ test "integration: Multi-indicator confluence strategy with full backtest" {
     "2024-01-19", "2024-01-20", "2024-01-21", "2024-01-22", "2024-01-23", "2024-01-24",
     "2024-01-25", "2024-01-26", "2024-01-27", "2024-01-28", "2024-01-29", "2024-01-30",
   ]
-  let klines = prices.mapi(fn(p, i) {
+  let klines = prices.mapi(fn(i, p) {
     @data.KLine::daily(
       "sh.600000",
       dates[i],
