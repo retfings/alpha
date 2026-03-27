@@ -344,6 +344,128 @@ test "rule combinators" {
 }
 ```
 
+#### 追踪止损 (Trailing Stop)
+
+追踪止损是一种动态止损策略，随着持仓向有利方向移动而调整止损价格。与静态止损不同，追踪止损只向盈利方向移动。
+
+**参数说明：**
+- `entry_price`: 建仓价格
+- `trail_pct`: 追踪百分比（例如 0.05 表示 5%）
+- `is_long`: true 表示多头持仓，false 表示空头持仓
+
+**类型：**
+- `TrailingStop`: 追踪止损状态结构体
+  - `stop_price`: 当前止损价格
+  - `trail_pct`: 追踪百分比
+  - `highest_price`: 自建仓以来最高价（多头）
+  - `lowest_price`: 自建仓以来最低价（空头）
+
+**解读：**
+- 多头：止损价格 = 最高价 × (1 - 追踪百分比)，只上不下
+- 空头：止损价格 = 最低价 × (1 + 追踪百分比），只下不上
+- 当价格穿越止损价格时触发离场
+
+```mbt check-disabled
+///|
+test "trailing stop basic usage" {
+  let entry_price = Float::from_double(100.0)
+  let trail_pct = Float::from_double(0.05) // 5% 追踪
+
+  // 创建多头追踪止损
+  let ts_long = @risk.create_trailing_stop(entry_price, trail_pct, true)
+  assert_true(ts_long.stop_price == Float::from_double(95.0)) // 100 * 0.95
+
+  // 价格上涨，更新止损
+  let ts_updated = @risk.trailing_stop_long_update(
+    ts_long,
+    Float::from_double(110.0),
+  )
+  // 新止损 = 110 * 0.95 = 104.5
+  assert_true(ts_updated.stop_price == Float::from_double(104.5))
+  assert_true(ts_updated.highest_price == Float::from_double(110.0))
+
+  // 价格回调但未触发止损
+  let current_price = Float::from_double(107.0)
+  assert_true(!@risk.is_stopped_out(ts_updated, current_price, true))
+
+  // 价格继续下跌触发止损
+  let stopped_price = Float::from_double(103.0)
+  assert_true(@risk.is_stopped_out(ts_updated, stopped_price, true))
+
+  // 获取止损价格
+  let stop_price = @risk.get_stop_price(ts_updated)
+  assert_true(stop_price == Float::from_double(104.5))
+
+  // 止损状态
+  let status = @risk.get_trailing_stop_status(
+    ts_updated,
+    entry_price,
+    current_price,
+    true,
+  )
+  // status : TrailingStopStatus (Active | Triggered | Profitable | AtLoss)
+
+  json_inspect({
+    "initial_stop": ts_long.stop_price,
+    "updated_stop": ts_updated.stop_price,
+    "stop_price": stop_price,
+    "status": status,
+  })
+}
+```
+
+**ATR 追踪止损:**
+
+```mbt check-disabled
+///|
+test "atr trailing stop" {
+  let entry_price = Float::from_double(100.0)
+  let atr = Float::from_double(2.5)
+  let multiplier = Float::from_double(2.0) // 2x ATR
+
+  // 创建 ATR 追踪止损（多头）
+  let atr_ts = @risk.create_atr_trailing_stop(
+    entry_price,
+    atr,
+    multiplier,
+    true,
+  )
+  // 初始止损 = 100 - (2.0 * 2.5) = 95.0
+  assert_true(atr_ts.stop_price == Float::from_double(95.0))
+
+  // 更新 ATR 追踪止损
+  let current_high = Float::from_double(105.0)
+  let current_low = Float::from_double(103.0)
+  let new_atr = Float::from_double(2.6)
+
+  let updated_ts = @risk.atr_trailing_stop_long_update(
+    atr_ts,
+    current_high,
+    current_low,
+    new_atr,
+    multiplier,
+  )
+  // 新止损 = 105 - (2.0 * 2.6) = 99.8
+  assert_true(updated_ts.stop_price == Float::from_double(99.8))
+
+  // 空头 ATR 追踪止损
+  let atr_ts_short = @risk.create_atr_trailing_stop(
+    entry_price,
+    atr,
+    multiplier,
+    false,
+  )
+  // 初始止损 = 100 + (2.0 * 2.5) = 105.0
+  assert_true(atr_ts_short.stop_price == Float::from_double(105.0))
+
+  json_inspect({
+    "long_stop": atr_ts.stop_price,
+    "updated_long_stop": updated_ts.stop_price,
+    "short_stop": atr_ts_short.stop_price,
+  })
+}
+```
+
 ### 技术指标
 
 #### 简单移动平均 (SMA)
@@ -960,7 +1082,11 @@ test "vwap with reset and bands" {
   assert_true(vwap_reset.length() == klines.length())
 
   // VWAP 带宽指标（类似布林带）
-  let (upper, vwap, lower) = @indicator.vwap_bands(klines, 10, Float::from_double(2.0))
+  let (upper, vwap, lower) = @indicator.vwap_bands(
+    klines,
+    10,
+    Float::from_double(2.0),
+  )
 
   // 验证：上轨 >= VWAP >= 下轨
   let mut i = 0

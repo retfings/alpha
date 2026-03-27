@@ -27,7 +27,10 @@
 /// ```mbt check-disabled
 /// let (up, down) = aroon(klines, 25)
 /// ```
-pub fn aroon(klines : Array[@data.KLine], period : Int) -> (Array[Float], Array[Float]) {
+pub fn aroon(
+  klines : Array[@data.KLine],
+  period : Int,
+) -> (Array[Float], Array[Float]) {
   let zero = Float::from_double(0.0)
   let hundred = Float::from_double(100.0)
   let period_f = Float::from_int(period)
@@ -68,8 +71,12 @@ pub fn aroon(klines : Array[@data.KLine], period : Int) -> (Array[Float], Array[
         j = j + 1
       }
 
-      let up_val = (period_f - Float::from_int(days_since_high)) / period_f * hundred
-      let down_val = (period_f - Float::from_int(days_since_low)) / period_f * hundred
+      let up_val = (period_f - Float::from_int(days_since_high)) /
+        period_f *
+        hundred
+      let down_val = (period_f - Float::from_int(days_since_low)) /
+        period_f *
+        hundred
 
       up.push(up_val)
       down.push(down_val)
@@ -96,7 +103,10 @@ pub fn aroon(klines : Array[@data.KLine], period : Int) -> (Array[Float], Array[
 ///
 /// Returns:
 /// - Array of oscillator values
-pub fn aroon_oscillator(klines : Array[@data.KLine], period : Int) -> Array[Float] {
+pub fn aroon_oscillator(
+  klines : Array[@data.KLine],
+  period : Int,
+) -> Array[Float] {
   let (up, down) = aroon(klines, period)
   let len = up.length()
   let result : Array[Float] = []
@@ -151,7 +161,7 @@ pub fn is_aroon_strong_trend(up : Float, down : Float) -> Bool {
   let threshold_high = Float::from_double(70.0)
   let threshold_low = Float::from_double(30.0)
   (up > threshold_high && down < threshold_low) ||
-    (down > threshold_high && up < threshold_low)
+  (down > threshold_high && up < threshold_low)
 }
 
 ///|
@@ -173,12 +183,18 @@ pub fn is_aroon_consolidation(up : Float, down : Float) -> Bool {
 ///|
 /// Enum representing Aroon trend state
 pub enum AroonTrend {
-  StrongUptrend   /// Aroon Up > 70, Aroon Down < 30
-  Uptrend         /// Aroon Up > Aroon Down
-  Neutral         /// Both lines near middle or crossing
-  Downtrend       /// Aroon Down > Aroon Up
-  StrongDowntrend /// Aroon Down > 70, Aroon Up < 30
-  Consolidation   /// Both lines < 50
+  /// Aroon Up > 70, Aroon Down < 30
+  /// Aroon Up > Aroon Down
+  /// Both lines near middle or crossing
+  /// Aroon Down > Aroon Up
+  /// Aroon Down > 70, Aroon Up < 30
+  /// Both lines < 50
+  StrongUptrend
+  Uptrend
+  Neutral
+  Downtrend
+  StrongDowntrend
+  Consolidation
 } derive(Eq, Show)
 
 ///|

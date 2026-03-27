@@ -116,6 +116,7 @@ alpha/
 │   │   ├── ma.mbt             # 移动平均 (MA/SMA/EMA) 和 MACD
 │   │   ├── atr.mbt            # ATR (Average True Range)
 │   │   ├── adx.mbt            # ADX (Average Directional Index)
+│   │   ├── aroon.mbt          # Aroon (阿隆指标)
 │   │   ├── cci.mbt            # CCI (Commodity Channel Index)
 │   │   ├── kdj.mbt            # KDJ (Stochastic Oscillator)
 │   │   ├── obv.mbt            # OBV (On-Balance Volume)
