@@ -11,5 +11,5 @@ import {
 
 import {
   "retfings/alpha/src/indicator" @indicator,
-  "retfings/alpha/server/routes" @routes,
+  "retfings/alpha/src/server/routes" @routes,
 } for "test"

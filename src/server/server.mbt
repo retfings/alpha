@@ -29,7 +29,11 @@ extern "c" fn http_server_accept(server_fd : Int) -> Bytes = "moonbit_http_serve
 ///|
 /// Send HTTP response with status code
 #borrow(server_fd, status_code, body)
-extern "c" fn http_server_respond(server_fd : Int, status_code : Int, body : Bytes) -> Int = "moonbit_http_server_respond"
+extern "c" fn http_server_respond(
+  server_fd : Int,
+  status_code : Int,
+  body : Bytes,
+) -> Int = "moonbit_http_server_respond"
 
 ///|
 /// Close server socket

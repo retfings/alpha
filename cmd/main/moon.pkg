@@ -1,8 +1,0 @@
-import {
-  "retfings/alpha/cmd/main/handlers" @cmd/main/handlers,
-  "retfings/alpha/cmd/main/parsers" @cmd/main/parsers,
-}
-
-options(
-  "is-main": true,
-)

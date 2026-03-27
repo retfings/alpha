@@ -1,5 +1,5 @@
 import {
-  "retfings/alpha/server/routes",
+  "retfings/alpha/src/server/routes",
   "moonbitlang/core/json",
   "moonbitlang/core/encoding/utf8",
 }

@@ -13,7 +13,7 @@ pub fn _run_monitor(stock : String) -> Unit {
   println("")
 
   // Get data directory from config
-  let data_dir = @cmd/main/config.get_data_dir()
+  let data_dir = @alpha/config.get_data_dir()
 
   // Build data file path from stock code
   let stock_parts = stock.split(".")

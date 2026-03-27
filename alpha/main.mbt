@@ -1,6 +1,6 @@
 ///|
 /// Main entry point for the quantitative drawdown CLI
-using @cmd/main/handlers {
+using @alpha/handlers {
   _run_analyze,
   _run_backtest,
   _run_monitor,
@@ -11,7 +11,7 @@ using @cmd/main/handlers {
 }
 
 ///|
-using @cmd/main/parsers {type Command, _get_env_command}
+using @alpha/parsers {type Command, _get_env_command}
 
 ///|
 /// Execute command

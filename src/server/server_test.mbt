@@ -190,7 +190,7 @@ test "route_request list stocks response body" {
   inspect(
     response.body,
     content=(
-      #|{"stocks":[{"code":"sh.600000","name":"Ping An Bank"}],"total":1}
+      #|{"stocks":[{"code":"sh.600000","name":"Stock 600000","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600001","name":"Stock 600001","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600002","name":"Stock 600002","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600003","name":"Stock 600003","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600004","name":"Stock 600004","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600005","name":"Stock 600005","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600006","name":"Stock 600006","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600007","name":"Stock 600007","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600008","name":"Stock 600008","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600009","name":"Stock 600009","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600010","name":"Stock 600010","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600011","name":"Stock 600011","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600012","name":"Stock 600012","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600015","name":"Stock 600015","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600016","name":"Stock 600016","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600017","name":"Stock 600017","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600018","name":"Stock 600018","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600019","name":"Stock 600019","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"},{"code":"sh.600020","name":"Stock 600020","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"}],"total":19}
     ),
   )
 }
@@ -202,7 +202,7 @@ test "route_request get stock info response body" {
   inspect(
     response.body,
     content=(
-      #|{"stock":{"code":"sh.600000","name":"Sample Stock"}}
+      #|{"code":"sh.600000","name":"Stock 600000","industry":"Banking","market":"SH","list_date":"1990-01-01","status":"active"}
     ),
   )
 }
@@ -214,7 +214,7 @@ test "route_request get klines response body" {
   inspect(
     response.body,
     content=(
-      #|{"stock":"sh.600000","klines":[{"date":"2024-01-02","close":10.8}],"count":1}
+      #|{"stock":"sh.600000","klines":[{"date":"2026-03-27","open":10.5,"high":11.0,"low":10.3,"close":10.8,"volume":1000000.0,"amount":10800000.0,"turn":0.05}],"count":1}
     ),
   )
 }
@@ -238,7 +238,7 @@ test "route_request backtest result response body" {
   inspect(
     response.body,
     content=(
-      #|{"backtest_id":"bt_123","status":"completed","result":{"total_return":0.1245,"max_drawdown":-0.0832}}
+      #|{"backtest_id":"bt_123","status":"completed","result":{"initial_capital":100000.0,"final_capital":112450.0,"total_return":0.1245,"max_drawdown":-0.0832,"sharpe_ratio":1.25,"total_trades":24,"win_rate":0.625}}
     ),
   )
 }

@@ -21,7 +21,7 @@ pub fn _run_analyze(stock : String, metric : String) -> Unit {
   }
 
   // Get data directory from config
-  let data_dir = @cmd/main/config.get_data_dir()
+  let data_dir = @alpha/config.get_data_dir()
 
   // Build file path from stock code (e.g., sh.600000 -> {data_dir}/sh_600000_*.csv)
   let stock_parts = stock.split(".")

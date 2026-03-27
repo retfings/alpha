@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "retfings/alpha/cmd/main/parsers"
+package "retfings/alpha/alpha/parsers"
 
 // Values
 pub fn _get_env_command() -> Command

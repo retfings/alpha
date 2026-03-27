@@ -23,7 +23,7 @@ pub fn _run_report(format : String) -> Unit {
   println("")
 
   // Get data directory from config
-  let data_dir = @cmd/main/config.get_data_dir()
+  let data_dir = @alpha/config.get_data_dir()
 
   // Build data file path - try to find any available data file
   let mut found_file : String? = None

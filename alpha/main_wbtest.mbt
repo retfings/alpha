@@ -1,7 +1,7 @@
 ///|
 /// CLI main module whitebox tests
 /// Tests for serve command parsing and execution
-using @cmd/main/parsers {_parse_serve_args, _parse_args}
+using @alpha/parsers {_parse_serve_args, _parse_args}
 
 ///|
 test "Command::Serve with default port" {
