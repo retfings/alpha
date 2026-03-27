@@ -1,13 +1,6 @@
 import {
-  "retfings/alpha/src/ffi" @ffi,
-  "retfings/alpha/server" @server,
-  "retfings/alpha/src/data" @data,
-  "retfings/alpha/src/drawdown" @drawdown,
-  "retfings/alpha/src/strategy" @strategy,
-  "retfings/alpha/src/strategy/builtins" @builtins,
-  "retfings/alpha/src/backtest" @backtest,
-  "moonbitlang/core/strconv",
-  "moonbitlang/core/math",
+  "retfings/alpha/cmd/main/handlers" @cmd/main/handlers,
+  "retfings/alpha/cmd/main/parsers" @cmd/main/parsers,
 }
 
 options(

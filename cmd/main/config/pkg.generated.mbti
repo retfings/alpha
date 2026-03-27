@@ -1,7 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "retfings/alpha/cmd/main"
+package "retfings/alpha/cmd/main/config"
 
 // Values
+pub fn get_data_dir() -> String
 
 // Errors
 

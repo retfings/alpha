@@ -1,9 +1,13 @@
+///|
 /// CLI main module whitebox tests
 /// Tests for serve command parsing and execution
+using @cmd/main/parsers {_parse_serve_args, _parse_args}
 
 ///|
 test "Command::Serve with default port" {
-  let cmd = Command::Serve(8080)
+  // Test that serve command is recognized (construction happens via parser)
+  let args = ["serve"]
+  let cmd = _parse_args(args)
   match cmd {
     Command::Serve(port) => assert_true(port == 8080)
     _ => fail("Expected Command::Serve")
@@ -12,7 +16,8 @@ test "Command::Serve with default port" {
 
 ///|
 test "Command::Serve with custom port 3000" {
-  let cmd = Command::Serve(3000)
+  let args = ["serve", "--port", "3000"]
+  let cmd = _parse_args(args)
   match cmd {
     Command::Serve(port) => assert_true(port == 3000)
     _ => fail("Expected Command::Serve")
@@ -100,23 +105,45 @@ test "_parse_args serve without port uses default" {
 }
 
 ///|
-test "test all command variants exist" {
-  let help_cmd = Command::Help
-  let analyze_cmd = Command::Analyze("sh.600000", "max_drawdown")
-  let backtest_cmd = Command::Backtest(
-    "ma_cross", "sh.600000", "2023-01-01", "2023-12-31",
-  )
-  let monitor_cmd = Command::Monitor("sh.600000")
-  let report_cmd = Command::Report("html")
-  let list_cmd = Command::ListStrategies
-  let serve_cmd = Command::Serve(8080)
+test "test all command variants via parsers" {
+  // Test all commands via parser functions instead of direct construction
+  let help_cmd = _parse_args(["help"])
+  let analyze_cmd = _parse_args(["analyze", "--stock", "sh.600000"])
+  let backtest_cmd = _parse_args([
+    "backtest", "--strategy", "ma_cross", "--stock", "sh.600000",
+  ])
+  let monitor_cmd = _parse_args(["monitor", "--stock", "sh.600000"])
+  let report_cmd = _parse_args(["report", "--format", "html"])
+  let list_cmd = _parse_args(["list-strategies"])
+  let serve_cmd = _parse_args(["serve", "--port", "8080"])
 
-  ignore(help_cmd)
-  ignore(analyze_cmd)
-  ignore(backtest_cmd)
-  ignore(monitor_cmd)
-  ignore(report_cmd)
-  ignore(list_cmd)
-  ignore(serve_cmd)
-  assert_true(true)
+  // Verify commands parsed correctly via pattern matching
+  match help_cmd {
+    Command::Help => assert_true(true)
+    _ => fail("Expected Command::Help")
+  }
+  match analyze_cmd {
+    Command::Analyze(_, _) => assert_true(true)
+    _ => fail("Expected Command::Analyze")
+  }
+  match backtest_cmd {
+    Command::Backtest(_, _, _, _) => assert_true(true)
+    _ => fail("Expected Command::Backtest")
+  }
+  match monitor_cmd {
+    Command::Monitor(_) => assert_true(true)
+    _ => fail("Expected Command::Monitor")
+  }
+  match report_cmd {
+    Command::Report(_) => assert_true(true)
+    _ => fail("Expected Command::Report")
+  }
+  match list_cmd {
+    Command::ListStrategies => assert_true(true)
+    _ => fail("Expected Command::ListStrategies")
+  }
+  match serve_cmd {
+    Command::Serve(_) => assert_true(true)
+    _ => fail("Expected Command::Serve")
+  }
 }
