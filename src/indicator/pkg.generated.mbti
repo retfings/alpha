@@ -6,19 +6,67 @@ import {
 }
 
 // Values
+pub fn adx(Array[@data.KLine], Int) -> Array[Float]
+
+pub fn aroon(Array[@data.KLine], Int) -> (Array[Float], Array[Float])
+
+pub fn aroon_oscillator(Array[@data.KLine], Int) -> Array[Float]
+
 pub fn atr(Array[@data.KLine], Int) -> Array[Float]
 
+pub fn bandwidth(Array[Float], Array[Float], Array[Float]) -> Array[Float]
+
+pub fn bollinger_band_width(Float, Float, Float) -> Float
+
 pub fn bollinger_bands(Array[Float], Int, Float) -> (Array[Float], Array[Float], Array[Float])
+
+pub fn bollinger_bands_default(Array[Float]) -> (Array[Float], Array[Float], Array[Float])
+
+pub fn bollinger_percent_b(Float, Float, Float) -> Float
+
+pub fn bollinger_position(Float, Float, Float, Float) -> BollingerPosition
 
 pub fn cci(Array[@data.KLine], Int) -> Array[Float]
 
 pub fn ema(Array[Float], Int) -> Array[Float]
 
+pub fn get_aroon_trend(Float, Float) -> AroonTrend
+
+pub fn is_above_upper_band(Float, Float) -> Bool
+
+pub fn is_above_vwap(@data.KLine, Float) -> Bool
+
+pub fn is_aroon_consolidation(Float, Float) -> Bool
+
+pub fn is_aroon_downtrend(Float, Float) -> Bool
+
+pub fn is_aroon_strong_trend(Float, Float) -> Bool
+
+pub fn is_aroon_uptrend(Float, Float) -> Bool
+
+pub fn is_below_lower_band(Float, Float) -> Bool
+
+pub fn is_below_vwap(@data.KLine, Float) -> Bool
+
+pub fn is_bollinger_squeeze(Float, Float, Float, Float) -> Bool
+
+pub fn is_overbought(Float, Float) -> Bool
+
+pub fn is_oversold(Float, Float) -> Bool
+
+pub fn is_strong_trend(Float, Float) -> Bool
+
 pub fn kdj(Array[@data.KLine], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
 
 pub fn macd(Array[Float], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
 
+pub fn minus_di(Array[@data.KLine], Int) -> Array[Float]
+
 pub fn obv(Array[@data.KLine]) -> Array[Float]
+
+pub fn percent_b(Array[Float], Array[Float], Array[Float]) -> Array[Float]
+
+pub fn plus_di(Array[@data.KLine], Int) -> Array[Float]
 
 pub fn rsi(Array[Float], Int) -> Array[Float]
 
@@ -26,11 +74,50 @@ pub fn sma(Array[Float], Int) -> Array[Float]
 
 pub fn true_range(Array[@data.KLine]) -> Array[Float]
 
+pub fn typical_price(@data.KLine) -> Float
+
+pub fn vwap(Array[@data.KLine]) -> Array[Float]
+
+pub fn vwap_bands(Array[@data.KLine], Int, Float) -> (Array[Float], Array[Float], Array[Float])
+
+pub fn vwap_deviation(@data.KLine, Float) -> Float
+
+pub fn vwap_position(@data.KLine, Float) -> VwapPosition
+
+pub fn vwap_with_reset(Array[@data.KLine], Int) -> Array[Float]
+
 pub fn williams_r(Array[@data.KLine], Int) -> Array[Float]
 
 // Errors
 
 // Types and methods
+pub enum AroonTrend {
+  StrongUptrend
+  Uptrend
+  Neutral
+  Downtrend
+  StrongDowntrend
+  Consolidation
+}
+pub impl Eq for AroonTrend
+pub impl Show for AroonTrend
+
+pub enum BollingerPosition {
+  AboveUpper
+  AboveMiddle
+  BelowMiddle
+  BelowLower
+}
+pub impl Eq for BollingerPosition
+pub impl Show for BollingerPosition
+
+pub enum VwapPosition {
+  Above
+  Below
+  Equal
+}
+pub impl Eq for VwapPosition
+pub impl Show for VwapPosition
 
 // Type aliases
 

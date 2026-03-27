@@ -11,6 +11,14 @@ pub fn create_ma_cross_strategy(Int, Int) -> MaCrossStrategy
 
 pub fn create_momentum_strategy(Int, Float, Float) -> MomentumStrategy
 
+pub fn create_rsi_mean_reversion_aggressive() -> RsiMeanReversionStrategy
+
+pub fn create_rsi_mean_reversion_conservative() -> RsiMeanReversionStrategy
+
+pub fn create_rsi_mean_reversion_standard() -> RsiMeanReversionStrategy
+
+pub fn create_rsi_mean_reversion_strategy(Int, Float, Float) -> RsiMeanReversionStrategy
+
 // Errors
 
 // Types and methods
@@ -35,6 +43,16 @@ pub fn MomentumStrategy::is_oversold(Self, Array[Float]) -> Bool
 pub fn MomentumStrategy::name(Self) -> String
 pub fn MomentumStrategy::on_bar(Self, @data.KLine, @strategy.StrategyContext, Array[Float]) -> @strategy.Signal
 pub fn MomentumStrategy::on_init(Self, @strategy.StrategyContext) -> Unit
+
+pub struct RsiMeanReversionStrategy {
+  rsi_period : Int
+  oversold_threshold : Float
+  overbought_threshold : Float
+  name : String
+}
+pub fn RsiMeanReversionStrategy::name(Self) -> String
+pub fn RsiMeanReversionStrategy::on_bar(Self, @data.KLine, @strategy.StrategyContext, Array[Float]) -> @strategy.Signal
+pub fn RsiMeanReversionStrategy::on_init(Self, @strategy.StrategyContext) -> Unit
 
 // Type aliases
 

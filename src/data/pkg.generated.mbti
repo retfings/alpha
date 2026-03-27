@@ -2,6 +2,8 @@
 package "username/alpha/src/data"
 
 // Values
+pub fn adjust_klines(Array[KLine], AdjustType, Float) -> Array[KLine]
+
 pub fn annualize_volatility(Float, Int) -> Float
 
 pub fn apply_backward_adjustment(Array[KLine], Float) -> Array[KLine]
@@ -60,18 +62,6 @@ pub enum AdjustType {
 pub impl Eq for AdjustType
 pub impl Show for AdjustType
 
-pub struct AdjustedKLine {
-  code : String
-  date : String
-  open : Float
-  high : Float
-  low : Float
-  close : Float
-  volume : Float
-  amount : Float
-  adjust_factor : Float
-}
-
 pub enum Frequency {
   Daily
   Weekly
@@ -81,6 +71,8 @@ pub enum Frequency {
   Minute30
   Minute60
 }
+pub impl Eq for Frequency
+pub impl Show for Frequency
 
 pub struct KLine {
   code : String
@@ -99,14 +91,6 @@ pub fn KLine::daily(String, String, Float, Float, Float, Float, Float, Float, Fl
 pub impl Eq for KLine
 pub impl Show for KLine
 pub impl ToJson for KLine
-
-pub struct OHLCV {
-  open : Float
-  high : Float
-  low : Float
-  close : Float
-  volume : Float
-}
 
 // Type aliases
 pub type StockCode = String

@@ -11,19 +11,47 @@ import {
 // Values
 pub fn action_to_string(@strategy.Action) -> String
 
+pub fn analyze_wf_results(Array[WfResult]) -> WfSummary
+
+pub fn calculate_max_dd(Array[Float]) -> Float
+
+pub fn calculate_profit(Array[Float]) -> Float
+
+pub fn calculate_sharpe(Array[Float], Float) -> Float
+
 pub fn create_backtest_engine(@strategy.BacktestConfig) -> BacktestEngine
 
 pub fn create_trade_log() -> TradeLog
 
+pub fn create_walk_forward_config(Int, Int, Float, WfMode, Int) -> WalkForwardConfig
+
+pub fn create_wf_result(Int, Int, Int, Int, Int, Float, Float, Float, Float, Float, Float, Int, Int) -> WfResult
+
+pub fn create_wf_summary(Int, Int, Float, Float, Float, Float, Float, Float, Float, Float, Float) -> WfSummary
+
 pub fn default_report_config() -> ReportConfig
 
+pub fn generate_anchored_windows(Int, Int, Int, Float) -> Array[(Int, Int, Int, Int)]
+
 pub fn generate_report(BacktestResult, ReportConfig) -> String
+
+pub fn generate_walk_forward_windows(Int, Int, Int, Float) -> Array[(Int, Int, Int, Int)]
+
+pub fn generate_wf_windows(WalkForwardConfig, Int) -> Array[(Int, Int, Int, Int)]
+
+pub fn passes_wf_validation(WfSummary) -> Bool
 
 pub fn print_report(BacktestResult, _format? : ReportFormat) -> Unit
 
 pub fn run_backtest(BacktestEngine, Array[@data.KLine], @strategy.Strategy) -> BacktestResult
 
 pub fn save_report_to_file(BacktestResult, String, _format? : ReportFormat) -> Result[Unit, String]
+
+pub fn walk_forward_config_default() -> WalkForwardConfig
+
+pub fn wf_mode_anchored() -> WfMode
+
+pub fn wf_mode_rolling() -> WfMode
 
 // Errors
 
@@ -122,6 +150,52 @@ pub(all) struct TradeLogEntry {
   quantity : Float
   pnl : Float?
   commentary : String
+}
+
+pub struct WalkForwardConfig {
+  window_size : Int
+  step_size : Int
+  oos_ratio : Float
+  mode : WfMode
+  min_oos_bars : Int
+}
+pub impl Show for WalkForwardConfig
+
+pub enum WfMode {
+  Rolling
+  Anchored
+}
+pub impl Eq for WfMode
+pub impl Show for WfMode
+
+pub struct WfResult {
+  window_index : Int
+  in_sample_start : Int
+  in_sample_end : Int
+  oos_start : Int
+  oos_end : Int
+  is_profit : Float
+  oos_profit : Float
+  is_sharpe : Float
+  oos_sharpe : Float
+  is_max_dd : Float
+  oos_max_dd : Float
+  is_trades : Int
+  oos_trades : Int
+}
+
+pub struct WfSummary {
+  total_windows : Int
+  successful_windows : Int
+  avg_is_profit : Float
+  avg_oos_profit : Float
+  avg_is_sharpe : Float
+  avg_oos_sharpe : Float
+  avg_is_max_dd : Float
+  avg_oos_max_dd : Float
+  oos_success_rate : Float
+  degradation_ratio : Float
+  robustness_score : Float
 }
 
 // Type aliases

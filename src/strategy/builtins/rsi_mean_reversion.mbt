@@ -90,9 +90,11 @@ pub fn RsiMeanReversionStrategy::on_bar(
   }
 
   // Determine action based on RSI levels and crossovers
-  let action = if prev_rsi >= self.oversold_threshold && current_rsi < self.oversold_threshold {
+  let action = if prev_rsi >= self.oversold_threshold &&
+    current_rsi < self.oversold_threshold {
     @strategy.Action::Buy
-  } else if prev_rsi <= self.overbought_threshold && current_rsi > self.overbought_threshold {
+  } else if prev_rsi <= self.overbought_threshold &&
+    current_rsi > self.overbought_threshold {
     @strategy.Action::Sell
   } else {
     @strategy.Action::Hold

@@ -10,17 +10,59 @@ pub fn and_rules(RiskRule, RiskRule, String) -> RiskRule
 
 pub fn at_least_rules(Array[RiskRule], Int, String) -> RiskRule
 
+pub fn atr_trailing_stop(Float, Float, Float, Float, Bool) -> Float
+
+pub fn atr_trailing_stop_long_update(TrailingStop, Float, Float, Float, Float) -> TrailingStop
+
+pub fn atr_trailing_stop_short_update(TrailingStop, Float, Float, Float, Float) -> TrailingStop
+
+pub fn calculate_win_loss_ratio(Float, Float, Int, Int) -> Float
+
+pub fn calculate_win_rate(Int, Int) -> Float
+
 pub fn check_portfolio_stop_loss(@portfolio.Portfolio, Float) -> (String, RiskResult)?
 
 pub fn check_position_stop_loss(String, Float, Float) -> RiskResult
 
 pub fn check_single_stock_exposure(@portfolio.Portfolio, Float) -> (String, RiskResult)?
 
+pub fn create_atr_trailing_stop(Float, Float, Float, Bool) -> TrailingStop
+
 pub fn create_risk_engine() -> RiskEngine
+
+pub fn create_trailing_stop(Float, Float, Bool) -> TrailingStop
 
 pub fn daily_loss_limit_rule(Float) -> RiskRule
 
 pub fn default_rules() -> Array[RiskRule]
+
+pub fn expected_growth_rate(Float, Float, Float) -> Float
+
+pub fn get_stop_price(TrailingStop) -> Float
+
+pub fn get_trailing_stop_status(TrailingStop, Float, Float, Bool) -> TrailingStopStatus
+
+pub fn half_kelly(Float, Float) -> Float
+
+pub fn is_stopped_out(TrailingStop, Float, Bool) -> Bool
+
+pub fn is_strategy_suitable_for_kelly(Float, Float) -> Bool
+
+pub fn kelly_fraction(Float, Float) -> Float
+
+pub fn kelly_from_trades(Float, Float, Int, Int) -> Float
+
+pub fn kelly_mode_custom(Float) -> KellyMode
+
+pub fn kelly_mode_full() -> KellyMode
+
+pub fn kelly_mode_half() -> KellyMode
+
+pub fn kelly_mode_quarter() -> KellyMode
+
+pub fn kelly_position_size(Float, Float, Float, KellyMode, Float) -> Float
+
+pub fn kelly_with_cap(Float, Float) -> Float
 
 pub fn max_drawdown_rule(Float) -> RiskRule
 
@@ -29,6 +71,8 @@ pub fn not_rule(RiskRule, String) -> RiskRule
 pub fn or_rules(RiskRule, RiskRule, String) -> RiskRule
 
 pub fn position_limit_rule(Float) -> RiskRule
+
+pub fn quarter_kelly(Float, Float) -> Float
 
 pub fn risk_action_allow() -> RiskAction
 
@@ -53,9 +97,24 @@ pub fn take_profit_rule(Float) -> RiskRule
 
 pub fn total_exposure_limit_rule(Float) -> RiskRule
 
+pub fn trailing_stop_distance(TrailingStop, Float) -> Float
+
+pub fn trailing_stop_long_update(TrailingStop, Float) -> TrailingStop
+
+pub fn trailing_stop_short_update(TrailingStop, Float) -> TrailingStop
+
 // Errors
 
 // Types and methods
+pub enum KellyMode {
+  Full
+  Half
+  Quarter
+  Custom
+}
+pub impl Eq for KellyMode
+pub impl Show for KellyMode
+
 pub enum RiskAction {
   Allow
   Reject
@@ -85,6 +144,22 @@ pub struct RiskRule {
   check_fn : (Float, Float, Float) -> RiskResult
 }
 pub impl Show for RiskRule
+
+pub struct TrailingStop {
+  stop_price : Float
+  trail_pct : Float
+  highest_price : Float
+  lowest_price : Float
+}
+
+pub enum TrailingStopStatus {
+  Active
+  Triggered
+  Profitable
+  AtLoss
+}
+pub impl Eq for TrailingStopStatus
+pub impl Show for TrailingStopStatus
 
 // Type aliases
 
