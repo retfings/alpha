@@ -46,7 +46,9 @@ pub fn handle_list_strategies() -> HttpResponse {
 
   let all_strategies = builtin_json
   let total = Int::to_string(all_strategies.length())
-  let response = "{\"strategies\":[" + builtin_json.join(",") + "],\"total\":\{total}}"
+  let response = "{\"strategies\":[" +
+    builtin_json.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -67,17 +69,26 @@ pub fn handle_get_strategy(id : String) -> HttpResponse {
 ///|
 /// Handler: Create new strategy (placeholder)
 pub fn handle_create_strategy(body : String) -> HttpResponse {
-  make_response(201, "{\"message\":\"Strategy creation not yet implemented\",\"body\":\"\{body}\"}")
+  make_response(
+    201,
+    "{\"message\":\"Strategy creation not yet implemented\",\"body\":\"\{body}\"}",
+  )
 }
 
 ///|
 /// Handler: Update strategy (placeholder)
 pub fn handle_update_strategy(id : String, body : String) -> HttpResponse {
-  make_response(200, "{\"message\":\"Strategy update not yet implemented\",\"id\":\"\{id}\"}")
+  make_response(
+    200,
+    "{\"message\":\"Strategy update not yet implemented\",\"id\":\"\{id}\"}",
+  )
 }
 
 ///|
 /// Handler: Delete strategy (placeholder)
 pub fn handle_delete_strategy(id : String) -> HttpResponse {
-  make_response(200, "{\"message\":\"Strategy deletion not yet implemented\",\"id\":\"\{id}\"}")
+  make_response(
+    200,
+    "{\"message\":\"Strategy deletion not yet implemented\",\"id\":\"\{id}\"}",
+  )
 }

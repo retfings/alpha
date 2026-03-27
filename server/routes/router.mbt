@@ -77,7 +77,8 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
     return handle_list_industries()
   }
 
-  if clean_path.has_prefix("/api/industries/") && clean_path.has_suffix("/stocks") {
+  if clean_path.has_prefix("/api/industries/") &&
+    clean_path.has_suffix("/stocks") {
     let industry = clean_path[16:].to_string()
     let industry_clean = industry.replace(old="/stocks", new="")
     return handle_get_industry_stocks(industry_clean)

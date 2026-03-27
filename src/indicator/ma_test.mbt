@@ -103,21 +103,21 @@ test "macd - basic calculation" {
   let prices : Array[Float] = [
     10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
   ]
-  let (macd_line, signal_line, histogram) = macd(prices, 3, 5, 2)
-  assert_true(macd_line.length() == 9)
-  assert_true(signal_line.length() == 9)
-  assert_true(histogram.length() == 9)
+  let result = macd(prices, 3, 5, 2)
+  assert_true(result.macd_line.length() == 9)
+  assert_true(result.signal_line.length() == 9)
+  assert_true(result.histogram.length() == 9)
   // MACD line should be positive in uptrend
-  assert_true(macd_line[8] > 0.0)
+  assert_true(result.macd_line[8] > 0.0)
 }
 
 ///|
 test "macd - insufficient data" {
   let prices : Array[Float] = [10.0, 11.0, 12.0]
-  let (macd_line, signal_line, histogram) = macd(prices, 5, 7, 3)
-  assert_true(macd_line.length() == 3)
-  assert_true(signal_line.length() == 3)
-  assert_true(histogram.length() == 3)
+  let result = macd(prices, 5, 7, 3)
+  assert_true(result.macd_line.length() == 3)
+  assert_true(result.signal_line.length() == 3)
+  assert_true(result.histogram.length() == 3)
 }
 
 ///|
@@ -242,11 +242,11 @@ test "macd - snapshot test" {
   let prices : Array[Float] = [
     100.0, 102.0, 101.0, 103.0, 105.0, 104.0, 106.0, 108.0, 107.0, 110.0,
   ]
-  let (macd_line, signal_line, histogram) = macd(prices, 3, 5, 2)
+  let result = macd(prices, 3, 5, 2)
   // Just verify lengths and that we get some values
-  assert_true(macd_line.length() == 10)
-  assert_true(signal_line.length() == 10)
-  assert_true(histogram.length() == 10)
+  assert_true(result.macd_line.length() == 10)
+  assert_true(result.signal_line.length() == 10)
+  assert_true(result.histogram.length() == 10)
 }
 
 ///|
@@ -466,10 +466,10 @@ test "rsi - empty array" {
 ///|
 test "macd - empty array" {
   let prices : Array[Float] = []
-  let (macd_line, signal_line, histogram) = macd(prices, 12, 26, 9)
-  assert_true(macd_line.length() == 0)
-  assert_true(signal_line.length() == 0)
-  assert_true(histogram.length() == 0)
+  let result = macd(prices, 12, 26, 9)
+  assert_true(result.macd_line.length() == 0)
+  assert_true(result.signal_line.length() == 0)
+  assert_true(result.histogram.length() == 0)
 }
 
 ///|
@@ -720,12 +720,12 @@ test "macd - histogram sign indicates momentum" {
   let prices : Array[Float] = [
     10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0,
   ]
-  let (macd_line, signal_line, histogram) = macd(prices, 3, 6, 3)
-  assert_true(macd_line.length() == 11)
-  assert_true(signal_line.length() == 11)
-  assert_true(histogram.length() == 11)
+  let result = macd(prices, 3, 6, 3)
+  assert_true(result.macd_line.length() == 11)
+  assert_true(result.signal_line.length() == 11)
+  assert_true(result.histogram.length() == 11)
   // In uptrend, MACD should be positive and histogram should show momentum
-  assert_true(macd_line[10] > 0.0)
+  assert_true(result.macd_line[10] > 0.0)
 }
 
 ///|

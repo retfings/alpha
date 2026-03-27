@@ -721,22 +721,39 @@ du -sh data/.metadata/
 
 ```bash
 # 安装依赖
-pip install pyarrow
+pip install pandas pyarrow
 
-# Python 转换脚本
-python << 'EOF'
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+# 转换全部 CSV 文件
+python script/convert_to_parquet.py --all
 
-# 读取 CSV
-df = pd.read_csv('data/sh_600000_2024-01-01_2024-12-31_qfq3.csv')
+# 转换指定股票
+python script/convert_to_parquet.py --stocks sh.600000 sz.000001
 
-# 保存为 Parquet
-df.to_parquet('data/sh_600000_2024.parquet', compression='snappy')
-print(f"Converted to Parquet: {len(df)} records")
-EOF
+# 使用 gzip 压缩
+python script/convert_to_parquet.py --all --compression gzip
+
+# 保存到子目录
+python script/convert_to_parquet.py --all --output parquet/
+
+# 转换后删除原 CSV 文件
+python script/convert_to_parquet.py --all --remove-csv
 ```
+
+**Parquet 格式优势**：
+- 更高的压缩率（通常比 CSV 小 50-80%）
+- 更快的读取速度
+- 保留数据类型信息
+- 支持列式存储（适合分析）
+
+**Parquet 转换脚本选项**：
+
+| 选项 | 说明 | 默认值 |
+|------|------|--------|
+| `--all` | 转换全部 CSV | false |
+| `--stocks` | 转换指定股票 | - |
+| `--compression` | 压缩方式 (snappy/gzip/zstd) | snappy |
+| `--output` | 输出目录 | 同 CSV 目录 |
+| `--remove-csv` | 删除原 CSV | false |
 
 ---
 

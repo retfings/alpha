@@ -27,10 +27,10 @@ pub fn scan_stock_files() -> Array[String] {
   // Known stock codes from data files
   // Note: In production, this would use directory listing to scan for CSV files
   [
-    "sh.600000", "sh.600001", "sh.600002", "sh.600003", "sh.600004",
-    "sh.600005", "sh.600006", "sh.600007", "sh.600008", "sh.600009",
-    "sh.600010", "sh.600011", "sh.600012", "sh.600015", "sh.600016",
-    "sh.600017", "sh.600018", "sh.600019", "sh.600020",
+    "sh.600000", "sh.600001", "sh.600002", "sh.600003", "sh.600004", "sh.600005",
+    "sh.600006", "sh.600007", "sh.600008", "sh.600009", "sh.600010", "sh.600011",
+    "sh.600012", "sh.600015", "sh.600016", "sh.600017", "sh.600018", "sh.600019",
+    "sh.600020",
   ]
 }
 
@@ -42,9 +42,9 @@ fn get_stock_info(code : String) -> StockInfo {
   let name = get_name_for_code(code)
 
   StockInfo::{
-    code: code,
-    name: name,
-    industry: industry,
+    code,
+    name,
+    industry,
     market: "SH",
     list_date: "1990-01-01",
     status: "active",
@@ -181,7 +181,9 @@ pub fn handle_list_stocks() -> HttpResponse {
   })
 
   let total = Int::to_string(stocks.length())
-  let response = "{\"stocks\":[" + stocks_json.join(",") + "],\"total\":\{total}}"
+  let response = "{\"stocks\":[" +
+    stocks_json.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -198,7 +200,9 @@ pub fn handle_filter_stocks(query : String?) -> HttpResponse {
 
   let total = Int::to_string(stocks.length())
   let query_str = if query != None { query.unwrap() } else { "" }
-  let response = "{\"stocks\":[" + stocks_json.join(",") + "],\"total\":\{total},\"query\":\"\{query_str}\"}"
+  let response = "{\"stocks\":[" +
+    stocks_json.join(",") +
+    "],\"total\":\{total},\"query\":\"\{query_str}\"}"
 
   make_response(200, response)
 }
@@ -233,7 +237,9 @@ pub fn handle_get_klines(code : String) -> HttpResponse {
   })
 
   let count = Int::to_string(klines.length())
-  let response = "{\"stock\":\"\{code}\",\"klines\":[" + klines_json.join(",") + "],\"count\":\{count}}"
+  let response = "{\"stock\":\"\{code}\",\"klines\":[" +
+    klines_json.join(",") +
+    "],\"count\":\{count}}"
 
   make_response(200, response)
 }
@@ -249,7 +255,9 @@ pub fn handle_list_industries() -> HttpResponse {
   })
 
   let total = Int::to_string(industries.length())
-  let response = "{\"industries\":[" + industry_data.join(",") + "],\"total\":\{total}}"
+  let response = "{\"industries\":[" +
+    industry_data.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -263,7 +271,9 @@ pub fn handle_get_industry_stocks(industry : String) -> HttpResponse {
   })
 
   let total = Int::to_string(stocks.length())
-  let response = "{\"industry\":\"\{industry}\",\"stocks\":[" + stocks_json.join(",") + "],\"total\":\{total}}"
+  let response = "{\"industry\":\"\{industry}\",\"stocks\":[" +
+    stocks_json.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }

@@ -1,10 +1,15 @@
+///|
 /// HTTP API Server for MoonBit Drawdown Framework
 
 // Re-export from routes package
 pub type HttpResponse = @routes.HttpResponse
+
+///|
 pub fn make_response(status_code : Int, body : String) -> HttpResponse {
   @routes.make_response(status_code, body)
 }
+
+///|
 pub fn handle_request(request : String) -> HttpResponse {
   @routes.handle_request(request)
 }

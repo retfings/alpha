@@ -2279,11 +2279,11 @@ test "integration: Server endpoint with backtest execution flow" {
   // Step 1: Simulate API request parsing
   let backtest_request = "POST /api/backtest HTTP/1.1\nContent-Type: application/json\nContent-Length: 100\n\n"
 
-  let request_path = @server.parse_request_path(backtest_request)
+  let request_path = @routes.parse_request_path(backtest_request)
   assert_true(request_path == "/api/backtest")
 
   // Step 2: Verify routing to backtest endpoint
-  let route_response = @server.route_request("/api/backtest", "POST")
+  let route_response = @routes.route_request("/api/backtest", "POST")
   assert_true(route_response.status_code == 200)
   assert_true(route_response.body.contains("started"))
 
