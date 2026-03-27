@@ -1,4 +1,5 @@
 import {
+  "retfings/alpha/server/routes" @routes,
   "moonbitlang/core/json",
 }
 

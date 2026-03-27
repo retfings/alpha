@@ -510,28 +510,130 @@ EXAMPLES:
 
 ### Web 界面设计 (`www/`)
 
-- **Dashboard**: 组合概览、实时回撤监控
-- **Backtest**: 策略配置和回测结果可视化
-- **Analysis**: 个股/组合回撤分析图表
-- **Settings**: 风控参数配置
+**已完成页面**:
 
-前端技术栈：
+- **index.html** - 主页 Dashboard
+  - 组合概览卡片（总市值、最大回撤、当前回撤、夏普比率）
+  - 最近回测结果列表
+  - 收益曲线图表（Chart.js）
+  - 回撤曲线图表
+
+- **stock_strategy.html** - 股票策略配置页面
+  - 步骤导航（择股设置、交易模型、大盘择时、股指对冲）
+  - 股票池配置（我的股票池、系统股票池）
+  - 基础筛选条件（指数成份、上市板块、行业分类等）
+  - 选股指标配置（行情、技术指标、财务指标等 7 大类）
+  - 回测参数配置（时间范围、收益基准、交易成本）
+
+**前端架构**:
+
+```
+www/
+├── index.html              # 主页 Dashboard
+├── stock_strategy.html     # 股票策略配置页面
+├── app.js                  # 主页应用逻辑
+├── stock_strategy.js       # 策略页面逻辑
+├── api.js                  # API 客户端封装
+├── styles.css              # 主页样式
+├── stock_strategy.css      # 策略页面样式
+└── stock_strategy.js       # 策略页面交互逻辑
+```
+
+**前端技术栈**:
 - 纯静态 HTML/CSS/JS（轻量级）
-- Chart.js / D3.js 用于图表
+- Chart.js 用于图表可视化
+- 原生 Fetch API 进行 HTTP 通信
 - 通过 HTTP API 与后端交互
 
-### HTTP API 设计 (`server/`)
+**核心模块**:
 
-使用 MoonBit 实现简单 HTTP 服务器，提供以下 API：
+| 模块 | 文件 | 功能 |
+|------|------|------|
+| API 客户端 | `api.js` | 封装所有后端 API 调用 |
+| 主页应用 | `app.js` | Dashboard 逻辑和图表渲染 |
+| 策略页面 | `stock_strategy.js` | 策略配置和回测流程 |
+| 样式 | `*.css` | 页面样式和响应式布局 |
+
+### HTTP API 服务器 (`server/`)
+
+**已实现端点**:
+
+| 端点 | 方法 | 描述 | 状态 |
+|------|------|------|------|
+| `/api/health` | GET | 健康检查 | ✅ |
+| `/api/stocks` | GET | 获取股票列表 | ✅ |
+| `/api/stocks/:code` | GET | 获取股票信息 | ✅ |
+| `/api/stocks/:code/klines` | GET | 获取 K 线数据 | ✅ |
+| `/api/backtest` | POST | 运行回测 | ✅ |
+| `/api/backtest/:id/result` | GET | 获取回测结果 | ✅ |
+| `/api/drawdown/:code` | GET | 计算个股回撤 | ✅ |
+| `/api/portfolio/drawdown` | GET | 组合回撤分析 | ✅ |
+
+**服务器架构**:
 
 ```
-GET  /api/stocks                 # 获取股票列表
-GET  /api/stocks/:code/klines    # 获取 K 线数据
-POST /api/backtest               # 运行回测
-GET  /api/backtest/:id/result    # 获取回测结果
-GET  /api/drawdown/:code         # 计算个股回撤
-GET  /api/portfolio/drawdown     # 计算组合回撤
+server/
+├── server.mbt              # HTTP 服务器主模块
+│   ├── HttpResponse 类型定义
+│   ├── make_response()     # 创建响应
+│   ├── handle_request()    # 请求处理入口
+│   └── start_server()      # 启动服务器
+│
+├── routes.mbt              # 请求路由和处理
+│   ├── parse_request_path()    # 解析路径
+│   ├── extract_stock_code()    # 提取股票代码
+│   ├── extract_backtest_id()   # 提取回测 ID
+│   ├── route_request()         # 路由分发
+│   └── Handler 函数们           # 各端点处理函数
+│
+├── http_server.c           # C FFI HTTP 服务器实现
+│   ├── moonbit_http_server_create()
+│   ├── moonbit_http_server_accept()
+│   ├── moonbit_http_server_respond()
+│   └── moonbit_http_server_close()
+│
+└── routes/                 # 路由模块（待扩展）
+    ├── backtest.mbt        # 回测路由
+    ├── stocks.mbt          # 股票数据路由
+    └── drawdown.mbt        # 回撤分析路由
 ```
+
+**请求处理流程**:
+
+```
+HTTP 请求
+   ↓
+parse_request_path() - 解析请求路径
+   ↓
+extract_stock_code() / extract_backtest_id() - 提取参数
+   ↓
+route_request() - 路由到对应 Handler
+   ↓
+Handler 函数 - 业务逻辑处理
+   ↓
+make_response() - 创建 HTTP 响应
+   ↓
+HTTP 响应返回客户端
+```
+
+**响应格式**:
+
+```json
+{
+  "status": "success|error",
+  "data": { ... }  // 成功时
+  "error": {       // 失败时
+    "code": "ERROR_CODE",
+    "message": "错误描述"
+  }
+}
+```
+
+**技术实现**:
+- MoonBit 实现核心路由和业务逻辑
+- C FFI 实现底层 HTTP 服务器（socket 通信）
+- JSON 格式数据交换
+- RESTful API 设计风格
 
 ## 技术决策（已确认）
 

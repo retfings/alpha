@@ -2,6 +2,71 @@
 
 Automated log of file changes from git commits.
 
+## [2026-03-27] Enhanced Baostock Data Tools
+
+**Author:** Data Engineer
+
+**Description:**
+Enhanced Baostock data integration with new tools for incremental updates, data validation, and comprehensive documentation.
+
+**New files:**
+- `script/enhanced_downloader.py` (新增) - Enhanced downloader with incremental updates
+- `script/validate_data.py` (新增) - Data quality validation tool
+- `docs/baostock-data-guide.md` (新增) - Comprehensive data download guide
+
+**Features added:**
+
+### script/enhanced_downloader.py
+- Incremental update support (download only new data since last update)
+- Parallel download with configurable workers (default: 4)
+- Automatic retry on failure (3 attempts with exponential backoff)
+- Progress tracking and detailed reporting
+- Metadata tracking in `.metadata/` directory
+- Batch download support for all A-share stocks
+- Multiple data frequencies (daily, weekly, monthly, minute-level)
+- Forward/backward/no adjustment support
+
+### script/validate_data.py
+- Price range validation (negative values, extreme values)
+- Date sequence validation (missing dates, large gaps)
+- Price continuity validation (extreme jumps)
+- Volume validation
+- Statistics computation
+- Detailed validation reports
+- Batch validation support
+
+### docs/baostock-data-guide.md
+- Quick start guide
+- Installation instructions
+- Download scripts comparison
+- Initial download workflows
+- Incremental update procedures
+- Data validation guide
+- Troubleshooting section
+- Best practices for data management
+- Command reference
+
+**Usage examples:**
+
+```bash
+# Initial download of all A-shares
+python script/enhanced_downloader.py --all
+
+# Incremental update (download only new data)
+python script/enhanced_downloader.py --incremental --all
+
+# Validate all downloaded data
+python script/validate_data.py --all --report
+
+# Download specific stocks
+python script/enhanced_downloader.py --stocks sh.600000 sz.000001
+
+# Download 5-minute data
+python script/enhanced_downloader.py --stocks sh.600000 --frequency 5
+```
+
+---
+
 ## [2026-03-27] 文档开发完成
 
 **Author:** Doc Engineer

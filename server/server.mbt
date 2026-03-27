@@ -1,16 +1,13 @@
 /// HTTP API Server for MoonBit Drawdown Framework
 
-///|
-/// HTTP Response structure
-pub struct HttpResponse {
-  status_code : Int
-  body : String
-} derive(Show, ToJson)
+import {
+  "retfings/alpha/server/routes" @routes,
+}
 
-///|
-/// Create HTTP response
+/// Re-export HttpResponse from routes package
+pub type HttpResponse = @routes.HttpResponse
 pub fn make_response(status_code : Int, body : String) -> HttpResponse {
-  HttpResponse::{ status_code, body }
+  @routes.make_response(status_code, body)
 }
 
 ///|
@@ -68,10 +65,16 @@ pub fn start_server(port : Int) -> Unit {
   println("Server listening on port \{port}")
   println("Endpoints:")
   println("  GET  /api/health              - Health check")
+  println("  GET  /api/strategies          - List strategies")
+  println("  GET  /api/strategies/:id      - Get strategy")
   println("  GET  /api/stocks              - List stocks")
+  println("  GET  /api/stocks/filter       - Filter stocks")
   println("  GET  /api/stocks/:code        - Get stock info")
   println("  GET  /api/stocks/:code/klines - Get klines")
-  println("  POST /api/backtest            - Start backtest")
+  println("  GET  /api/industries          - List industries")
+  println("  GET  /api/industries/:name/stocks - Get industry stocks")
+  println("  POST /api/backtest/run        - Run backtest")
+  println("  GET  /api/backtest            - List backtests")
   println("  GET  /api/backtest/:id/result - Get result")
   println("  GET  /api/drawdown/:code      - Get drawdown")
   println("  GET  /api/portfolio/drawdown  - Portfolio drawdown")
