@@ -88,7 +88,7 @@ char* moonbit_http_server_accept(int server_fd) {
     return (char*)result;
 }
 
-int moonbit_http_server_respond(int server_fd, int status_code, const unsigned char* body) {
+int moonbit_http_server_respond(int server_fd, int status_code, const unsigned char* body, const char* content_type) {
     if (g_client_fd < 0) {
         perror("no client connection");
         return -1;
@@ -105,10 +105,10 @@ int moonbit_http_server_respond(int server_fd, int status_code, const unsigned c
     char http_response[BUFFER_SIZE];
     int header_len = snprintf(http_response, sizeof(http_response),
         "HTTP/1.1 %d OK\r\n"
-        "Content-Type: application/json\r\n"
+        "Content-Type: %s\r\n"
         "Content-Length: %d\r\n"
         "Connection: close\r\n"
-        "\r\n", status_code, body_len);
+        "\r\n", status_code, content_type ? content_type : "application/json", body_len);
 
     if (send(g_client_fd, http_response, header_len, 0) < 0) {
         perror("send headers failed");

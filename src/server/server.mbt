@@ -27,12 +27,13 @@ extern "c" fn http_server_create(port : Int) -> Int = "moonbit_http_server_creat
 extern "c" fn http_server_accept(server_fd : Int) -> Bytes = "moonbit_http_server_accept"
 
 ///|
-/// Send HTTP response with status code
-#borrow(server_fd, status_code, body)
+/// Send HTTP response with status code and content type
+#borrow(server_fd, status_code, body, content_type)
 extern "c" fn http_server_respond(
   server_fd : Int,
   status_code : Int,
   body : Bytes,
+  content_type : Bytes,
 ) -> Int = "moonbit_http_server_respond"
 
 ///|
@@ -81,7 +82,8 @@ pub fn start_server(port : Int) -> Unit {
     let response_obj = handle_request(request)
     // Convert body String to Bytes for C FFI
     let body_bytes = @utf8.encode(response_obj.body)
-    let _ = http_server_respond(server_fd, response_obj.status_code, body_bytes)
+    let content_type_bytes = @utf8.encode(response_obj.content_type)
+    let _ = http_server_respond(server_fd, response_obj.status_code, body_bytes, content_type_bytes)
     println("Request \{request_count}: \{response_obj.status_code}")
   }
 

@@ -20,6 +20,39 @@ fn handle_portfolio_drawdown() -> HttpResponse {
 }
 
 ///|
+/// Handler: Get content type based on file extension
+fn get_content_type(file_path : String) -> String {
+  if file_path.has_suffix(".html") {
+    "text/html; charset=utf-8"
+  } else if file_path.has_suffix(".css") {
+    "text/css"
+  } else if file_path.has_suffix(".js") {
+    "application/javascript"
+  } else if file_path.has_suffix(".json") {
+    "application/json"
+  } else if file_path.has_suffix(".png") {
+    "image/png"
+  } else if file_path.has_suffix(".jpg") || file_path.has_suffix(".jpeg") {
+    "image/jpeg"
+  } else if file_path.has_suffix(".svg") {
+    "image/svg+xml"
+  } else {
+    "text/plain"
+  }
+}
+
+///|
+/// Handler: Serve static file from www directory
+fn handle_static_file(file_path : String) -> HttpResponse {
+  let full_path = "www/" + file_path
+  let content_type = get_content_type(file_path)
+  match @ffi.read_file(full_path) {
+    Some(content) => make_response_with_type(200, content, content_type)
+    None => make_response_with_type(404, "{\"error\":\"File not found\"}", "application/json")
+  }
+}
+
+///|
 /// Route request to appropriate handler
 pub fn route_request(path : String, http_method : String) -> HttpResponse {
   let clean_path = get_path_without_query(path)
@@ -30,6 +63,35 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
     return make_response(
       200, "{\"status\":\"ok\",\"service\":\"moonbit-drawdown\"}",
     )
+  }
+
+  // ===== Static Files / Frontend =====
+  if clean_path == "/" || clean_path == "/index.html" {
+    return handle_static_file("index.html")
+  }
+
+  // Serve CSS files
+  if clean_path.has_prefix("/") && clean_path.has_suffix(".css") {
+    let file = clean_path[1:].to_string()
+    return handle_static_file(file)
+  }
+
+  // Serve JS files
+  if clean_path.has_prefix("/") && clean_path.has_suffix(".js") {
+    let file = clean_path[1:].to_string()
+    return handle_static_file(file)
+  }
+
+  // Serve HTML files
+  if clean_path.has_prefix("/") && clean_path.has_suffix(".html") {
+    let file = clean_path[1:].to_string()
+    return handle_static_file(file)
+  }
+
+  // Serve other static files (images, etc.)
+  if clean_path.has_prefix("/") && (clean_path.has_suffix(".png") || clean_path.has_suffix(".jpg") || clean_path.has_suffix(".jpeg") || clean_path.has_suffix(".svg") || clean_path.has_suffix(".ico")) {
+    let file = clean_path[1:].to_string()
+    return handle_static_file(file)
   }
 
   // ===== Strategy Endpoints =====
