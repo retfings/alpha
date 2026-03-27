@@ -52,7 +52,7 @@ MINUTE_FIELDS = "date,time,open,high,low,close,volume,amount,turn"
 # Financial indicator fields
 FINANCIAL_FIELDS = "pubDate,statDate,roEAvg,roeWaa,roaAvg,netProfitOperatingIncomeRatio,grossProfitRatio,totalAssetTurnoverRatio,accountsReceivableTurnoverRatio,inventoryTurnoverRatio,operatingIncomeGrowthRate,netProfitGrowthRate,totalAssetGrowthRate,netAssetGrowthRate,debtToAssetRatio,currentRatio,quickRatio,cashFlowToOperatingIncomeRatio,netCashFlowFromOperatingActivitiesPerShare,dividendYield,payoutRatio,effectiveTaxRate,totalOperatingIncome,totalProfit,netProfitAttributableToParent,networkingCapital,netCashFromOperatingActivities,capex,epsBasic,dps,totalAsset,totalLiability,totalEquityAttributableToParent,retainedEarnings,cashAndEquivalents,accountsReceivable,inventory,nonCurrentAssetsDeferredTax,fixedAssets,constructionInProgress,intangibleAssets,goodwill,shortTermLoans,accountsPayable,employeePayable,longTermLoans,longTermPayables,capitalReserve,surplusReserve,undistributedProfit,operatingCost,sellingExpense,administrativeExpense,financialExpense,researchAndDevelopmentExpense,assetImpairmentLoss,creditImpairmentLoss,investmentIncome,netExposureChange,netFeeCommissionIncome,netTradingIncome,netExchangeGain,otherBusinessIncome,assetDisposalIncome,assetImpairmentLoss,creditImpairmentLoss,otherBusinessCost,interestExpense,interestIncome,minorityInterestIncome,minorityInterestDividend,withheldTax,otherComprehensiveIncome,comprehensiveIncomeTotal,ebit,ebitda,adjustedNetProfitAverage,equityMultiplier,roeDiluted,roaDiluted,incTax,surtax"
 
-# Industry classification fields
+# Industry classification fields (query_stock_industry returns: code, codeName, industryName, industryType, industryCode1, industryCode2, industryCode3)
 INDUSTRY_FIELDS = "code,codeName,industryName,industryType,industryCode1,industryCode2,industryCode3"
 
 
@@ -713,30 +713,27 @@ class EnhancedBaostockDownloader:
         if end_date is None:
             end_date = datetime.now().strftime("%Y-%m-%d")
 
-        logger.info(f"Downloading financial indicators for {stock_code}: {start_date} to {end_date}")
+        # Parse years from dates
+        start_year = int(start_date.split("-")[0])
+        end_year = int(end_date.split("-")[0])
+
+        logger.info(f"Downloading financial indicators for {stock_code}: {start_year} to {end_year}")
 
         try:
-            rs = bs.query_profit_data(
-                code=stock_code,
-                start_year=start_date.replace("-", ""),
-                end_year=end_date.replace("-", ""),
-            )
+            all_data: list[dict] = []
 
-            if rs.error_code != "0":
-                return DownloadResult(
-                    stock_code=stock_code,
-                    success=False,
-                    error=f"Query failed: {rs.error_msg}",
-                )
+            # Query year by year (baostock query_profit_data takes year parameter)
+            for year in range(start_year, end_year + 1):
+                rs = bs.query_profit_data(code=stock_code, year=year)
 
-            data: list[dict] = []
-            while rs.next():
-                row_data = rs.get_row_data()
-                if rs.fields and row_data:
-                    row_dict = dict(zip(rs.fields, row_data))
-                    data.append(row_dict)
+                if rs.error_code == "0":
+                    while rs.next():
+                        row_data = rs.get_row_data()
+                        if rs.fields and row_data:
+                            row_dict = dict(zip(rs.fields, row_data))
+                            all_data.append(row_dict)
 
-            if not data:
+            if not all_data:
                 return DownloadResult(
                     stock_code=stock_code,
                     success=True,
@@ -748,12 +745,12 @@ class EnhancedBaostockDownloader:
             filename = f"{stock_suffix}_financials_{start_date}_{end_date}.csv"
             file_path = os.path.join(self.config.output_dir, "financials", filename)
 
-            if self._save_to_csv(data, file_path):
+            if self._save_to_csv(all_data, file_path):
                 return DownloadResult(
                     stock_code=stock_code,
                     success=True,
-                    records_downloaded=len(data),
-                    message=f"Downloaded {len(data)} financial records",
+                    records_downloaded=len(all_data),
+                    message=f"Downloaded {len(all_data)} financial records",
                     duration=time.time() - start_time,
                 )
             else:
@@ -798,7 +795,7 @@ class EnhancedBaostockDownloader:
 
         try:
             # Query industry classification
-            rs = bs.query_industry_data()
+            rs = bs.query_stock_industry()
 
             if rs.error_code != "0":
                 report.errors.append({"error": f"Industry query failed: {rs.error_msg}"})
