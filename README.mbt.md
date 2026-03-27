@@ -398,10 +398,7 @@ test "trailing stop basic usage" {
 
   // 止损状态
   let status = @risk.get_trailing_stop_status(
-    ts_updated,
-    entry_price,
-    current_price,
-    true,
+    ts_updated, entry_price, current_price, true,
   )
   // status : TrailingStopStatus (Active | Triggered | Profitable | AtLoss)
 
@@ -425,10 +422,7 @@ test "atr trailing stop" {
 
   // 创建 ATR 追踪止损（多头）
   let atr_ts = @risk.create_atr_trailing_stop(
-    entry_price,
-    atr,
-    multiplier,
-    true,
+    entry_price, atr, multiplier, true,
   )
   // 初始止损 = 100 - (2.0 * 2.5) = 95.0
   assert_true(atr_ts.stop_price == Float::from_double(95.0))
@@ -439,21 +433,14 @@ test "atr trailing stop" {
   let new_atr = Float::from_double(2.6)
 
   let updated_ts = @risk.atr_trailing_stop_long_update(
-    atr_ts,
-    current_high,
-    current_low,
-    new_atr,
-    multiplier,
+    atr_ts, current_high, current_low, new_atr, multiplier,
   )
   // 新止损 = 105 - (2.0 * 2.6) = 99.8
   assert_true(updated_ts.stop_price == Float::from_double(99.8))
 
   // 空头 ATR 追踪止损
   let atr_ts_short = @risk.create_atr_trailing_stop(
-    entry_price,
-    atr,
-    multiplier,
-    false,
+    entry_price, atr, multiplier, false,
   )
   // 初始止损 = 100 + (2.0 * 2.5) = 105.0
   assert_true(atr_ts_short.stop_price == Float::from_double(105.0))

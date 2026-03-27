@@ -72,11 +72,16 @@ test "on_bar - oversold crossover triggers Buy" {
     last_signal: None,
   }
   // Downtrend that should push RSI below 30
-  let history : Array[Float] = [15.0, 14.0, 13.0, 12.0, 11.0, 10.0, 9.0, 8.0, 7.0, 6.0]
+  let history : Array[Float] = [
+    15.0, 14.0, 13.0, 12.0, 11.0, 10.0, 9.0, 8.0, 7.0, 6.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // RSI should be low, potentially triggering buy
-  assert_true(signal.action == @strategy.Action::Buy || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Buy ||
+    signal.action == @strategy.Action::Hold,
+  )
 }
 
 ///|
@@ -92,11 +97,16 @@ test "on_bar - overbought crossover triggers Sell" {
     last_signal: None,
   }
   // Uptrend that should push RSI above 70
-  let history : Array[Float] = [6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0]
+  let history : Array[Float] = [
+    6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // RSI should be high, potentially triggering sell
-  assert_true(signal.action == @strategy.Action::Sell || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Sell ||
+    signal.action == @strategy.Action::Hold,
+  )
 }
 
 ///|
@@ -136,7 +146,9 @@ test "on_bar - signal strength calculation" {
     last_signal: None,
   }
   // Strong downtrend for oversold signal
-  let history : Array[Float] = [20.0, 18.0, 16.0, 14.0, 12.0, 10.0, 8.0, 6.0, 4.0, 2.0]
+  let history : Array[Float] = [
+    20.0, 18.0, 16.0, 14.0, 12.0, 10.0, 8.0, 6.0, 4.0, 2.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // Signal strength should be between 0 and 1
@@ -157,18 +169,24 @@ test "on_bar - extreme downtrend produces strong buy signal" {
     last_signal: None,
   }
   // Very strong downtrend
-  let history : Array[Float] = [100.0, 90.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 20.0, 10.0]
+  let history : Array[Float] = [
+    100.0, 90.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 20.0, 10.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // Should generate buy signal with good strength
-  assert_true(signal.action == @strategy.Action::Buy || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Buy ||
+    signal.action == @strategy.Action::Hold,
+  )
 }
 
 ///|
 test "on_bar - extreme uptrend produces strong sell signal" {
   let strategy = create_rsi_mean_reversion_strategy(3, 30.0, 70.0)
   let kline = @data.KLine::daily(
-    "sh.600000", "2023-01-10", 100.0, 105.0, 98.0, 102.0, 1000000.0, 102000000.0, 0.05,
+    "sh.600000", "2023-01-10", 100.0, 105.0, 98.0, 102.0, 1000000.0, 102000000.0,
+    0.05,
   )
   let ctx = @strategy.StrategyContext::{
     capital: 100000.0,
@@ -177,11 +195,16 @@ test "on_bar - extreme uptrend produces strong sell signal" {
     last_signal: None,
   }
   // Very strong uptrend
-  let history : Array[Float] = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]
+  let history : Array[Float] = [
+    10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0,
+  ]
 
   let signal = strategy.on_bar(kline, ctx, history)
   // Should generate sell signal with good strength
-  assert_true(signal.action == @strategy.Action::Sell || signal.action == @strategy.Action::Hold)
+  assert_true(
+    signal.action == @strategy.Action::Sell ||
+    signal.action == @strategy.Action::Hold,
+  )
 }
 
 ///|
@@ -192,9 +215,13 @@ test "strategy variants comparison" {
 
   // Aggressive should have tighter thresholds
   assert_true(aggressive.oversold_threshold < conservative.oversold_threshold)
-  assert_true(aggressive.overbought_threshold > conservative.overbought_threshold)
+  assert_true(
+    aggressive.overbought_threshold > conservative.overbought_threshold,
+  )
 
   // Standard should be between them
   assert_true(standard.oversold_threshold >= conservative.oversold_threshold)
-  assert_true(standard.overbought_threshold <= conservative.overbought_threshold)
+  assert_true(
+    standard.overbought_threshold <= conservative.overbought_threshold,
+  )
 }
