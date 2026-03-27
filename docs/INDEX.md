@@ -8,13 +8,15 @@
 |------|------|----------|
 | [README](../README.md) | 项目概述和快速开始 | 新用户 |
 | [快速入门](QUICKSTART.md) | 5 分钟快速开始指南 | 新用户 |
+| [股票策略快速入门](stock-strategy-quickstart.md) | 股票策略系统 5 分钟上手 | 新用户 |
 | [用户指南](user-guide.md) | 完整使用教程 | 所有用户 |
 | [API 参考手册](MANUAL.md) | 完整 API 参考手册 | 开发者 |
 | [API 参考](api-reference.md) | 核心模块 API 文档 | 开发者 |
-| [HTTP API 端点](api-endpoints.md) | HTTP API 端点参考 | 开发者 |
+| [HTTP API 端点](api-endpoints.md) | HTTP API 端点参考（含策略 API） | 开发者 |
 | [架构设计](architecture.md) | 系统架构说明 | 开发者/架构师 |
 | [股票策略架构](stock-strategy-architecture.md) | 股票策略系统架构 | 开发者/架构师 |
 | [开发者指南](developer-guide.md) | 开发环境和规范 | 开发者 |
+| [测试计划](test-plan.md) | 测试流程和示例 | 开发者/QA |
 | [数据下载指南](data-download-guide.md) | Baostock 数据下载和管理 | 数据工程师 |
 
 ## 开发和设计文档
@@ -85,13 +87,15 @@
 docs/
 ├── INDEX.md                      # 文档索引（本文件）
 ├── QUICKSTART.md                 # 快速入门指南
+├── stock-strategy-quickstart.md  # 股票策略快速入门（新增）
 ├── MANUAL.md                     # API 参考手册（完整版）
 ├── api-reference.md              # API 参考文档
 ├── api-endpoints.md              # HTTP API 端点参考
 ├── architecture.md               # 架构设计
 ├── stock-strategy-architecture.md # 股票策略架构
 ├── developer-guide.md            # 开发者指南
-├── data-download-guide.md        # 数据下载指南（新增）
+├── test-plan.md                  # 测试计划（新增）
+├── data-download-guide.md        # 数据下载指南
 ├── baostock-api.md               # Baostock API 参考
 ├── baostock-integration-project.md # Baostock 集成项目
 ├── data-format.md                # 数据格式说明
@@ -114,6 +118,10 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
+| 2026-03-27 | api-endpoints.md | 添加股票策略 API（筛选/行业/策略 CRUD） | doc-eng |
+| 2026-03-27 | stock-strategy-quickstart.md | 新建股票策略快速入门指南 | doc-eng |
+| 2026-03-27 | test-plan.md | 新建测试计划文档 | doc-eng |
+| 2026-03-27 | INDEX.md | 添加快速入门和测试计划索引 | doc-eng |
 | 2026-03-27 | INDEX.md | 添加数据下载指南索引 | data-eng |
 | 2026-03-27 | data-download-guide.md | 新建完整数据下载指南 | data-eng |
 | 2026-03-27 | script/download_data.md | 更新增强下载器文档 | data-eng |

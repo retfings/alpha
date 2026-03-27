@@ -603,6 +603,376 @@ ws.onmessage = (event) => {
 
 ---
 
+## 股票策略 API
+
+### 获取股票列表（增强版）
+
+#### `GET /api/stocks/filter`
+
+获取筛选后的股票列表。
+
+**查询参数**:
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `industry` | string | - | 行业筛选 |
+| `exchange` | string | - | 交易所筛选（sh/sz） |
+| `min_market_cap` | float | - | 最小市值 |
+| `max_market_cap` | float | - | 最大市值 |
+| `min_pe_ratio` | float | - | 最小市盈率 |
+| `max_pe_ratio` | float | - | 最大市盈率 |
+| `limit` | int | `100` | 返回数量限制 |
+
+**请求**:
+```http
+GET /api/stocks/filter?industry=银行&exchange=sh HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "stocks": [
+    {
+      "code": "sh.600000",
+      "name": "浦发银行",
+      "exchange": "SH",
+      "industry": "银行",
+      "market_cap": 285000000000,
+      "pe_ratio": 5.23
+    },
+    {
+      "code": "sh.600001",
+      "name": "邯郸钢铁",
+      "exchange": "SH",
+      "industry": "钢铁",
+      "market_cap": 45000000000,
+      "pe_ratio": 8.12
+    }
+  ],
+  "total": 2,
+  "filters": {
+    "industry": "银行",
+    "exchange": "sh"
+  }
+}
+```
+
+**cURL 示例**:
+```bash
+# 按行业筛选
+curl "http://localhost:8080/api/stocks/filter?industry=银行"
+
+# 按交易所和市值筛选
+curl "http://localhost:8080/api/stocks/filter?exchange=sh&min_market_cap=100000000000"
+```
+
+---
+
+### 获取行业列表
+
+#### `GET /api/industries`
+
+获取所有行业分类列表。
+
+**请求**:
+```http
+GET /api/industries HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "industries": [
+    {
+      "code": "J66",
+      "name": "货币金融服务",
+      "count": 45
+    },
+    {
+      "code": "C26",
+      "name": "化学原料和化学制品制造业",
+      "count": 128
+    }
+  ],
+  "total": 97
+}
+```
+
+**cURL 示例**:
+```bash
+curl http://localhost:8080/api/industries
+```
+
+---
+
+### 获取行业成分股
+
+#### `GET /api/industries/:industry/stocks`
+
+获取某个行业的所有成分股。
+
+**路径参数**:
+- `industry`: 行业代码或名称
+
+**查询参数**:
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `limit` | int | `100` | 返回数量限制 |
+| `offset` | int | `0` | 偏移量 |
+
+**请求**:
+```http
+GET /api/industries/货币金融服务业/stocks HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "industry": "货币金融服务业",
+  "stocks": [
+    {
+      "code": "sh.600000",
+      "name": "浦发银行",
+      "weight": 0.085
+    },
+    {
+      "code": "sh.600001",
+      "name": "工商银行",
+      "weight": 0.125
+    }
+  ],
+  "total": 45
+}
+```
+
+**cURL 示例**:
+```bash
+# 获取银行业成分股
+curl "http://localhost:8080/api/industries/银行/stocks"
+
+# 获取保险业成分股
+curl "http://localhost:8080/api/industries/保险业/stocks"
+```
+
+---
+
+### 策略列表
+
+#### `GET /api/strategies`
+
+获取所有可用策略列表。
+
+**请求**:
+```http
+GET /api/strategies HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "strategies": [
+    {
+      "name": "ma_cross",
+      "description": "均线交叉策略 - 当快均线上穿慢均线时买入，下穿时卖出",
+      "default_parameters": {
+        "fast_period": 10,
+        "slow_period": 30
+      },
+      "category": "trend_following"
+    },
+    {
+      "name": "momentum",
+      "description": "动量策略 - 买入近期表现强劲的股票",
+      "default_parameters": {
+        "lookback_period": 20,
+        "threshold": 0.05
+      },
+      "category": "momentum"
+    },
+    {
+      "name": "rsi_mean_reversion",
+      "description": "RSI 均值回归策略 - 超卖时买入，超买时卖出",
+      "default_parameters": {
+        "rsi_period": 14,
+        "oversold": 30,
+        "overbought": 70
+      },
+      "category": "mean_reversion"
+    }
+  ],
+  "total": 3
+}
+```
+
+**cURL 示例**:
+```bash
+curl http://localhost:8080/api/strategies
+```
+
+---
+
+### 获取策略详情
+
+#### `GET /api/strategies/:id`
+
+获取单个策略的详细信息。
+
+**路径参数**:
+- `id`: 策略名称
+
+**请求**:
+```http
+GET /api/strategies/ma_cross HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "id": "ma_cross",
+  "name": "均线交叉策略",
+  "description": "均线交叉策略 - 当快均线上穿慢均线时买入，下穿时卖出",
+  "parameters": {
+    "fast_period": 10,
+    "slow_period": 30
+  },
+  "category": "trend_following",
+  "is_builtin": true
+}
+```
+
+**cURL 示例**:
+```bash
+# 获取均线交叉策略详情
+curl http://localhost:8080/api/strategies/ma_cross
+
+# 获取动量策略详情
+curl http://localhost:8080/api/strategies/momentum
+```
+
+---
+
+### 创建自定义策略
+
+#### `POST /api/strategies`
+
+创建用户自定义策略。
+
+**请求体**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | string | 是 | 策略名称 |
+| `description` | string | 否 | 策略描述 |
+| `strategy_type` | string | 是 | 策略类型 |
+| `parameters` | object | 是 | 策略参数配置 |
+
+**请求**:
+```http
+POST /api/strategies HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "name": "my_ma_strategy",
+  "description": "自定义均线策略",
+  "strategy_type": "ma_cross",
+  "parameters": {
+    "fast_period": 5,
+    "slow_period": 20
+  }
+}
+```
+
+**响应**:
+```json
+{
+  "status": "created",
+  "strategy_id": "usr_ma_001",
+  "name": "my_ma_strategy"
+}
+```
+
+**cURL 示例**:
+```bash
+curl -X POST http://localhost:8080/api/strategies \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my_strategy",
+    "strategy_type": "ma_cross",
+    "parameters": {"fast_period": 5, "slow_period": 20}
+  }'
+```
+
+---
+
+### 更新策略
+
+#### `PUT /api/strategies/:id`
+
+更新现有策略配置。
+
+**路径参数**:
+- `id`: 策略 ID
+
+**请求体**:
+
+```json
+{
+  "name": "updated_strategy_name",
+  "parameters": {
+    "fast_period": 8,
+    "slow_period": 25
+  }
+}
+```
+
+**响应**:
+```json
+{
+  "status": "updated",
+  "strategy_id": "usr_ma_001"
+}
+```
+
+**cURL 示例**:
+```bash
+curl -X PUT http://localhost:8080/api/strategies/usr_ma_001 \
+  -H "Content-Type: application/json" \
+  -d '{"parameters": {"fast_period": 8}}'
+```
+
+---
+
+### 删除策略
+
+#### `DELETE /api/strategies/:id`
+
+删除自定义策略。
+
+**路径参数**:
+- `id`: 策略 ID
+
+**响应**:
+```json
+{
+  "status": "deleted",
+  "strategy_id": "usr_ma_001"
+}
+```
+
+**cURL 示例**:
+```bash
+curl -X DELETE http://localhost:8080/api/strategies/usr_ma_001
+```
+
+---
+
 ## 批量操作 (待实现)
 
 ### 批量回测
