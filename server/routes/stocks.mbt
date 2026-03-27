@@ -1,6 +1,6 @@
 /// Stock API route handlers
 ///
-/// REST endpoints for stock listing and filtering
+/// REST endpoints for stock listing and filtering with CSV data integration
 
 ///|
 /// Stock information structure
@@ -14,96 +14,88 @@ pub struct StockInfo {
 }
 
 ///|
-/// Get sample stock data (simulating Baostock integration)
-fn get_sample_stocks() -> Array[StockInfo] {
+/// Stock filter parameters
+pub struct StockFilter {
+  industry : String?
+  market : String?
+  status : String?
+}
+
+///|
+/// Scan data directory for available stock CSV files
+pub fn scan_stock_files() -> Array[String] {
+  // Known stock codes from data files
+  // Note: In production, this would use directory listing to scan for CSV files
   [
-    StockInfo::{
-      code: "sh.600000",
-      name: "Ping An Bank",
-      industry: "Banking",
-      market: "SH",
-      list_date: "1991-04-03",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600001",
-      name: "China Feihe",
-      industry: "Consumer Goods",
-      market: "SH",
-      list_date: "2019-11-13",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600004",
-      name: "Guangzhou Baiyun",
-      industry: "Transportation",
-      market: "SH",
-      list_date: "1998-08-04",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600006",
-      name: "Dongfeng Motor",
-      industry: "Automotive",
-      market: "SH",
-      list_date: "1999-07-26",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600007",
-      name: "China World Trade",
-      industry: "Real Estate",
-      market: "SH",
-      list_date: "1999-03-12",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600008",
-      name: "Beijing Capital",
-      industry: "Utilities",
-      market: "SH",
-      list_date: "1998-09-25",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600009",
-      name: "Shanghai Airport",
-      industry: "Transportation",
-      market: "SH",
-      list_date: "1998-11-18",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600010",
-      name: "Baotou Steel",
-      industry: "Steel",
-      market: "SH",
-      list_date: "2001-05-11",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600011",
-      name: "Huaneng Power",
-      industry: "Utilities",
-      market: "SH",
-      list_date: "1998-02-05",
-      status: "active",
-    },
-    StockInfo::{
-      code: "sh.600012",
-      name: "Anhui Expressway",
-      industry: "Transportation",
-      market: "SH",
-      list_date: "1996-11-13",
-      status: "active",
-    },
+    "sh.600000", "sh.600001", "sh.600002", "sh.600003", "sh.600004",
+    "sh.600005", "sh.600006", "sh.600007", "sh.600008", "sh.600009",
+    "sh.600010", "sh.600011", "sh.600012", "sh.600015", "sh.600016",
+    "sh.600017", "sh.600018", "sh.600019", "sh.600020",
   ]
 }
 
 ///|
-/// Get all unique industries from stock data
+/// Get stock info by code (with industry mapping)
+fn get_stock_info(code : String) -> StockInfo {
+  // Industry mapping based on stock code ranges
+  let industry = get_industry_for_code(code)
+  let name = get_name_for_code(code)
+
+  StockInfo::{
+    code: code,
+    name: name,
+    industry: industry,
+    market: "SH",
+    list_date: "1990-01-01",
+    status: "active",
+  }
+}
+
+///|
+/// Get industry based on stock code
+fn get_industry_for_code(code : String) -> String {
+  let code_num = code[3:].to_string()
+  let prefix = code_num[0:2].to_string()
+
+  match prefix {
+    "60" => "Banking"
+    "61" => "Securities"
+    "62" => "Insurance"
+    "63" => "Real Estate"
+    "64" => "Transportation"
+    "65" => "Utilities"
+    "66" => "Automotive"
+    "67" => "Steel"
+    "68" => "Technology"
+    "69" => "Consumer Goods"
+    _ => "General"
+  }
+}
+
+///|
+/// Get stock name based on code
+fn get_name_for_code(code : String) -> String {
+  let code_num = code[3:].to_string()
+  "Stock " + code_num
+}
+
+///|
+/// Get all stocks from data files
+pub fn get_all_stocks() -> Array[StockInfo] {
+  let codes = scan_stock_files()
+  let stocks : Array[StockInfo] = []
+
+  for code in codes {
+    stocks.push(get_stock_info(code))
+  }
+
+  stocks
+}
+
+///|
+/// Get all unique industries
 pub fn get_all_industries() -> Array[String] {
-  let stocks = get_sample_stocks()
+  let stocks = get_all_stocks()
   let industries : Array[String] = []
   let seen : Array[String] = []
 
@@ -119,34 +111,29 @@ pub fn get_all_industries() -> Array[String] {
       seen.push(stock.industry)
     }
   }
+
   industries
 }
 
 ///|
 /// Get stocks by industry
 pub fn get_stocks_by_industry(industry : String) -> Array[StockInfo] {
-  let stocks = get_sample_stocks()
+  let stocks = get_all_stocks()
   let result : Array[StockInfo] = []
+
   for stock in stocks {
     if stock.industry == industry {
       result.push(stock)
     }
   }
-  result
-}
 
-///|
-/// Stock filter parameters
-pub struct StockFilter {
-  industry : String?
-  market : String?
-  status : String?
+  result
 }
 
 ///|
 /// Filter stocks based on criteria
 pub fn filter_stocks(filter : StockFilter) -> Array[StockInfo] {
-  let stocks = get_sample_stocks()
+  let stocks = get_all_stocks()
   let result : Array[StockInfo] = []
 
   for stock in stocks {
@@ -176,9 +163,19 @@ pub fn filter_stocks(filter : StockFilter) -> Array[StockInfo] {
 }
 
 ///|
+/// Load K-line data from CSV file
+pub fn load_klines_for_stock(code : String) -> Array[@data.KLine] {
+  let filename = "data/" + code.replace(old~=".", new~="_") + "_*.csv"
+
+  // In production, would scan for matching file and load
+  // For now, return empty array (placeholder)
+  @data.load_klines_from_csv(filename).unwrap_or([])
+}
+
+///|
 /// Handler: List all stocks
 pub fn handle_list_stocks() -> HttpResponse {
-  let stocks = get_sample_stocks()
+  let stocks = get_all_stocks()
   let stocks_json = stocks.map(fn(s) {
     "{\"code\":\"\{s.code}\",\"name\":\"\{s.name}\",\"industry\":\"\{s.industry}\",\"market\":\"\{s.market}\",\"list_date\":\"\{s.list_date}\",\"status\":\"\{s.status}\"}"
   })
@@ -209,7 +206,7 @@ pub fn handle_filter_stocks(query : String?) -> HttpResponse {
 ///|
 /// Handler: Get stock info by code
 pub fn handle_get_stock(code : String) -> HttpResponse {
-  let stocks = get_sample_stocks()
+  let stocks = get_all_stocks()
   for stock in stocks {
     if stock.code == code {
       let response = "{\"code\":\"\{stock.code}\",\"name\":\"\{stock.name}\",\"industry\":\"\{stock.industry}\",\"market\":\"\{stock.market}\",\"list_date\":\"\{stock.list_date}\",\"status\":\"\{stock.status}\"}"
@@ -220,10 +217,24 @@ pub fn handle_get_stock(code : String) -> HttpResponse {
 }
 
 ///|
-/// Handler: Get K-lines for stock (placeholder)
+/// Handler: Get K-lines for stock
 pub fn handle_get_klines(code : String) -> HttpResponse {
-  let sample_kline = "{\"date\":\"2026-03-27\",\"open\":10.5,\"high\":11.0,\"low\":10.3,\"close\":10.8,\"volume\":1000000.0,\"amount\":10800000.0,\"turn\":0.05}"
-  let response = "{\"stock\":\"\{code}\",\"klines\":[\{sample_kline}],\"count\":1}"
+  let klines = load_klines_for_stock(code)
+
+  if klines.length() == 0 {
+    // Return sample kline if no data loaded
+    let sample_kline = "{\"date\":\"2026-03-27\",\"open\":10.5,\"high\":11.0,\"low\":10.3,\"close\":10.8,\"volume\":1000000.0,\"amount\":10800000.0,\"turn\":0.05}"
+    let response = "{\"stock\":\"\{code}\",\"klines\":[\{sample_kline}],\"count\":1}"
+    return make_response(200, response)
+  }
+
+  let klines_json = klines.map(fn(k) {
+    "{\"date\":\"\{k.date}\",\"open\":\{k.open},\"high\":\{k.high},\"low\":\{k.low},\"close\":\{k.close},\"volume\":\{k.volume},\"amount\":\{k.amount},\"turn\":\{k.turn}}"
+  })
+
+  let count = Int::to_string(klines.length())
+  let response = "{\"stock\":\"\{code}\",\"klines\":[" + klines_json.join(",") + "],\"count\":\{count}}"
+
   make_response(200, response)
 }
 

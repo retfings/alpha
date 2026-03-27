@@ -1,32 +1,12 @@
 /// HTTP API Server for MoonBit Drawdown Framework
 
-import {
-  "retfings/alpha/server/routes" @routes,
-}
-
-/// Re-export HttpResponse from routes package
+// Re-export from routes package
 pub type HttpResponse = @routes.HttpResponse
 pub fn make_response(status_code : Int, body : String) -> HttpResponse {
   @routes.make_response(status_code, body)
 }
-
-///|
-/// Handle incoming HTTP request
 pub fn handle_request(request : String) -> HttpResponse {
-  let path = parse_request_path(request)
-  let lines = request.split("\n").to_array()
-  let http_method = if lines.length() > 0 {
-    let parts = lines[0].split(" ").to_array()
-    if parts.length() > 0 {
-      string_view_to_string(parts[0])
-    } else {
-      "GET"
-    }
-  } else {
-    "GET"
-  }
-
-  route_request(path, http_method)
+  @routes.handle_request(request)
 }
 
 // FFI Functions

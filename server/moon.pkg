@@ -1,9 +1,0 @@
-import {
-  "retfings/alpha/server/routes" @routes,
-  "moonbitlang/core/json",
-}
-
-options(
-  "native-stub": [ "http_server.c" ],
-  targets: { "server.mbt": [ "native" ] },
-)
