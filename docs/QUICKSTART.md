@@ -47,8 +47,23 @@ moon test     # 运行所有测试
 
 ### 使用 CLI 运行回测
 
+**重要**: 由于 MoonBit C 后端的参数传递机制，需要使用环境变量方式传递参数：
+
 ```bash
-moon run cmd/main backtest --strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31
+# 基本格式
+MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run cmd/main
+
+# 分析回撤
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
+
+# 运行回测
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
+
+# 列出策略
+MOONBIT_CMD=list-strategies moon run cmd/main
+
+# 启动服务器
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
 ```
 
 ### 输出示例
@@ -74,9 +89,9 @@ Win Rate:         62.50%
 在 `src/strategy/builtins/` 目录下创建 `my_strategy.mbt`：
 
 ```moonbit
-import username/alpha/src/data.{KLine}
-import username/alpha/src/strategy.{Strategy, StrategyContext, Signal, Action}
-import username/alpha/src/indicator.{sma}
+import retfings/alpha/src/data.{KLine}
+import retfings/alpha/src/strategy.{Strategy, StrategyContext, Signal, Action}
+import retfings/alpha/src/indicator.{sma}
 
 /// 我的第一个策略：双均线交叉
 pub fn my_ma_strategy() -> Strategy {
@@ -148,13 +163,16 @@ let ma20 = indicator::sma(closes, 20)
 2. 使用 `src/indicator/` 中的技术指标
 3. 运行 `moon test` 确保策略正确
 4. 使用 `moon run cmd/main backtest` 回测策略
+   ```bash
+   MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy --stock sh.600000" moon run cmd/main
+   ```
 
 ## 7. 获取帮助
 
 ### 查看帮助
 
 ```bash
-moon run cmd/main help
+MOONBIT_CMD=help moon run cmd/main
 ```
 
 ### 查阅文档
