@@ -4,105 +4,23 @@ Download stock data using baostock API.
 Saves data to CSV files in the data/ directory.
 """
 
-import csv
+from __future__ import annotations
+
+import argparse
+import logging
 import os
 import sys
 from datetime import datetime, timedelta
 
-import baostock as bs
+from baostock_client import (
+    BaostockClient,
+    Frequency,
+    AdjustFlag,
+    get_default_date_range,
+    setup_logging,
+)
 
-
-def get_all_stock_codes() -> list[str]:
-    """
-    Get all A-share stock codes using official BaoStock API.
-
-    Returns:
-        List of stock codes in format 'sh.xxx' or 'sz.xxx'
-    """
-    # Login first
-    lg = bs.login()
-    if lg.error_code != "0":
-        print(f"Login failed: {lg.error_msg}")
-        return []
-
-    print("Querying all A-share stocks from BaoStock...")
-
-    # Use query_stock_basic() without code parameter to get all stocks
-    # This is more reliable than query_all_stock() which often returns empty data
-    rs = bs.query_stock_basic()
-
-    all_codes = []
-    if rs.error_code == "0":
-        while rs.next():
-            row = rs.get_row_data()
-            if row and row[0]:
-                code = row[0]  # code field
-                stock_type = row[4] if len(row) > 4 else ""  # type field: 1=stock, 2=index
-                
-                # Filter for A-share stocks (sh. or sz. prefix, type=1)
-                if (code.startswith("sh.") or code.startswith("sz.")) and stock_type == "1":
-                    all_codes.append(code)
-
-    bs.logout()
-    print(f"Found {len(all_codes)} A-share stocks.")
-    return all_codes
-
-
-def download_stock_data(
-    stock_code: str,
-    start_date: str,
-    end_date: str,
-    output_dir: str,
-    frequency: str = "d",
-    fields: str = "date,time,open,high,low,close,volume,amount,turn",
-) -> None:
-    """
-    Download stock data and save to CSV.
-
-    Args:
-        stock_code: Stock code in format 'sh.xxx' or 'sz.xxx'
-        start_date: Start date in 'YYYY-MM-DD' format
-        end_date: End date in 'YYYY-MM-DD' format
-        output_dir: Directory to save the CSV file
-        frequency: 'd' (daily), 'w' (weekly), 'm' (monthly), default 'd'
-        fields: Fields to download, default includes OHLCV and turnover
-    """
-    # Login to baostock
-    lg = bs.login()
-    if lg.error_code != "0":
-        print(f"Login failed: {lg.error_msg}")
-        sys.exit(1)
-
-    print(f"Logged in successfully. Downloading data for {stock_code}...")
-
-    # Query historical data
-    rs = bs.query_history_k_data_plus(
-        code=stock_code,
-        fields=fields,
-        start_date=start_date,
-        end_date=end_date,
-        frequency=frequency,
-        adjustflag="2",  # No adjustment
-    )
-
-    if rs.error_code != "0":
-        print(f"Query failed: {rs.error_msg}")
-        bs.logout()
-        sys.exit(1)
-
-    # Export to CSV
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, f"{stock_code.replace('.', '_')}_{start_date}_{end_date}.csv")
-
-    with open(output_file, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(rs.fields)
-        while rs.next():
-            writer.writerow(rs.get_row_data())
-    print(f"Data saved to: {output_file}")
-
-    # Logout
-    bs.logout()
+logger = logging.getLogger(__name__)
 
 
 def download_stocks_from_list(
@@ -110,10 +28,10 @@ def download_stocks_from_list(
     start_date: str,
     end_date: str,
     output_dir: str,
-    frequency: str = "d",
-    adjustflag: str = "2",
+    frequency: Frequency = "d",
+    adjustflag: AdjustFlag = "2",
     show_progress: bool = True,
-) -> None:
+) -> tuple[int, int]:
     """
     Download data for multiple stocks.
 
@@ -125,13 +43,18 @@ def download_stocks_from_list(
         frequency: Data frequency
         adjustflag: Adjustment type: 1=后复权，2=无复权，3=前复权
         show_progress: Whether to show progress messages
-    """
-    lg = bs.login()
-    if lg.error_code != "0":
-        print(f"Login failed: {lg.error_msg}")
-        sys.exit(1)
 
-    print(f"Logged in successfully. Downloading data for {len(stock_list)} stocks...")
+    Returns:
+        Tuple of (success_count, fail_count)
+    """
+    client = BaostockClient()
+
+    if not client.login():
+        logger.error("Failed to login to Baostock")
+        return 0, len(stock_list)
+
+    if show_progress:
+        print(f"Logged in successfully. Downloading data for {len(stock_list)} stocks...")
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -139,47 +62,35 @@ def download_stocks_from_list(
     fail_count = 0
 
     for i, stock_code in enumerate(stock_list, 1):
-        # 5 分钟级别需要额外字段
-        if frequency == "5":
-            fields = "date,time,open,high,low,close,volume,amount,turn"
-        else:
-            fields = "date,open,high,low,close,volume,amount,turn"
-
-        rs = bs.query_history_k_data_plus(
-            code=stock_code,
-            fields=fields,
+        success, message = client.download_and_save(
+            stock_code=stock_code,
             start_date=start_date,
             end_date=end_date,
+            output_dir=output_dir,
             frequency=frequency,
-            adjustflag=adjustflag,
+            adjust_flag=adjustflag,
         )
 
-        if rs.error_code != "0":
+        if success:
+            success_count += 1
+            if show_progress:
+                print(f"[{i}/{len(stock_list)}] Downloaded: {stock_code} -> {message}")
+        else:
             fail_count += 1
             if show_progress:
-                print(f"[{i}/{len(stock_list)}] Failed: {stock_code}: {rs.error_msg}")
-            continue
+                print(f"[{i}/{len(stock_list)}] Failed: {stock_code}: {message}")
 
-        # 文件名包含复权信息
-        adjust_suffix = "" if adjustflag == "2" else f"_qfq{adjustflag}"
-        output_file = os.path.join(output_dir, f"{stock_code.replace('.', '_')}_{start_date}_{end_date}{adjust_suffix}.csv")
-        with open(output_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(rs.fields)
-            while rs.next():
-                writer.writerow(rs.get_row_data())
-        success_count += 1
+    client.logout()
 
-        if show_progress:
-            print(f"[{i}/{len(stock_list)}] Downloaded: {stock_code} -> {output_file}")
+    if show_progress:
+        print(f"Download completed. Success: {success_count}, Failed: {fail_count}")
 
-    bs.logout()
-    print(f"Download completed. Success: {success_count}, Failed: {fail_count}")
+    return success_count, fail_count
 
 
 def main() -> None:
     """Main entry point."""
-    import argparse
+    setup_logging()
 
     parser = argparse.ArgumentParser(description="Download stock data using baostock")
     parser.add_argument(
@@ -197,13 +108,13 @@ def main() -> None:
     parser.add_argument(
         "--start",
         type=str,
-        default=(datetime.now() - timedelta(days=365*3)).strftime("%Y-%m-%d"),
+        default=None,
         help="Start date (YYYY-MM-DD), default: 3 years ago",
     )
     parser.add_argument(
         "--end",
         type=str,
-        default=datetime.now().strftime("%Y-%m-%d"),
+        default=None,
         help="End date (YYYY-MM-DD), default: today",
     )
     parser.add_argument(
@@ -238,11 +149,23 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # Set default date range if not specified
+    start_date = args.start or get_default_date_range(3)[0]
+    end_date = args.end or get_default_date_range(3)[1]
+
     # Determine stock list
+    stock_list: list[str] = []
+
     if args.all:
         print("Fetching all A-share stock codes...")
-        stock_list = get_all_stock_codes()
-        print(f"Found {len(stock_list)} stocks.")
+        client = BaostockClient()
+        if client.login():
+            stock_list = client.get_all_stock_codes()
+            client.logout()
+            print(f"Found {len(stock_list)} stocks.")
+        else:
+            print("Failed to fetch stock list.")
+            sys.exit(1)
     elif args.stocks:
         stock_list = args.stocks
     else:
@@ -253,14 +176,10 @@ def main() -> None:
         print("No stocks to download.")
         sys.exit(1)
 
-    # 5 分钟级别数据需要单独登录下载
-    if args.frequency == "5":
-        print(f"Downloading 5-minute level data with 前复权...")
-
     download_stocks_from_list(
         stock_list=stock_list,
-        start_date=args.start,
-        end_date=args.end,
+        start_date=start_date,
+        end_date=end_date,
         output_dir=args.output,
         frequency=args.frequency,
         adjustflag=args.adjustflag,

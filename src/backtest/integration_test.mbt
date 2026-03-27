@@ -328,7 +328,10 @@ test "integration: MACD crossover signal generation" {
   ]
 
   // Step 2: Calculate MACD
-  let (macd_line, signal_line, histogram) = @indicator.macd(prices, 12, 26, 9)
+  let result = @indicator.macd(prices, 12, 26, 9)
+  let macd_line = result.macd_line
+  let signal_line = result.signal_line
+  let histogram = result.histogram
   assert_true(macd_line.length() == 20)
   assert_true(signal_line.length() == 20)
   assert_true(histogram.length() == 20)
@@ -755,7 +758,8 @@ test "integration: Multi-indicator confluence strategy" {
   // Step 2: Calculate multiple indicators
   let ma5 = @indicator.sma(prices, 5)
   let rsi_values = @indicator.rsi(prices, 7)
-  let (macd_line, _signal_line, _) = @indicator.macd(prices, 12, 26, 9)
+  let macd_result = @indicator.macd(prices, 12, 26, 9)
+  let macd_line = macd_result.macd_line
 
   // Verify all indicators produce valid results
   ignore(ma5)
@@ -1873,7 +1877,9 @@ test "integration: Multi-indicator confluence strategy with full backtest" {
   let sma_10 = @indicator.sma(prices, 10)
   let sma_20 = @indicator.sma(prices, 20)
   let rsi_values = @indicator.rsi(prices, 14)
-  let (macd_line, signal_line, _) = @indicator.macd(prices, 12, 26, 9)
+  let macd_result = @indicator.macd(prices, 12, 26, 9)
+  let macd_line = macd_result.macd_line
+  let signal_line = macd_result.signal_line
 
   // Verify all indicators produce expected length
   assert_true(sma_10.length() == 30)
@@ -1902,7 +1908,9 @@ test "integration: Multi-indicator confluence strategy with full backtest" {
         let fast_ma = @indicator.sma(close_history, 10)
         let slow_ma = @indicator.sma(close_history, 20)
         let rsi = @indicator.rsi(close_history, 14)
-        let (macd, signal, _) = @indicator.macd(close_history, 12, 26, 9)
+        let macd_result = @indicator.macd(close_history, 12, 26, 9)
+        let macd = macd_result.macd_line
+        let signal = macd_result.signal_line
 
         let curr_fast = fast_ma[len - 1]
         let curr_slow = slow_ma[len - 1]

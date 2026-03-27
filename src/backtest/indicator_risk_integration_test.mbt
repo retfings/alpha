@@ -150,7 +150,10 @@ test "integration: MACD crossover with position limit check" {
   ]
 
   // Calculate MACD
-  let (macd_line, signal_line, histogram) = @indicator.macd(prices, 12, 26, 9)
+  let result = @indicator.macd(prices, 12, 26, 9)
+  let macd_line = result.macd_line
+  let signal_line = result.signal_line
+  let histogram = result.histogram
 
   // Check for bullish crossover (histogram > 0)
   let len = histogram.length()
@@ -211,7 +214,8 @@ test "integration: Position limit exceeded blocks MACD signal" {
     Float::from_double(125.0),
   ]
 
-  let (_, _, histogram) = @indicator.macd(prices, 12, 26, 9)
+  let result = @indicator.macd(prices, 12, 26, 9)
+  let histogram = result.histogram
   let len = histogram.length()
   assert_true(histogram[len - 1] > Float::from_double(0.0))
 
@@ -273,7 +277,8 @@ test "integration: Multi-indicator confluence with risk management" {
 
   // Calculate multiple indicators
   let rsi_values = @indicator.rsi(prices, 14)
-  let (_, _, histogram) = @indicator.macd(prices, 12, 26, 9)
+  let macd_result = @indicator.macd(prices, 12, 26, 9)
+  let histogram = macd_result.histogram
   let (_, _, bb_lower) = @indicator.bollinger_bands(prices, 20, 2.0)
 
   let len = prices.length()

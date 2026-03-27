@@ -5,7 +5,44 @@
 ## 安装依赖
 
 ```bash
+# 安装 Python 依赖
+pip install -r script/requirements.txt
+```
+
+或者单独安装：
+
+```bash
 pip install baostock
+```
+
+## 模块结构
+
+```
+script/
+├── baostock_client.py    # Baostock API 封装模块（类型安全）
+├── download_data.py      # 主下载脚本（命令行入口）
+└── requirements.txt      # Python 依赖
+```
+
+### `baostock_client.py` API
+
+提供类型安全的 Baostock API 封装：
+
+```python
+from baostock_client import BaostockClient, get_default_date_range
+
+# 使用上下文管理器（自动登录/登出）
+with BaostockClient() as client:
+    result = client.query_history_k_data(
+        stock_code="sh.600000",
+        start_date="2024-01-01",
+        end_date="2024-12-31",
+        frequency="d",
+        adjust_flag="3"  # 前复权
+    )
+
+    if result.success:
+        client.save_to_csv(result, "./data/sh_600000.csv")
 ```
 
 ## 基本用法
