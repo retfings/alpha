@@ -820,7 +820,7 @@ fn _run_report(format : String) -> Unit {
           let report_format = if format == "html" {
             @backtest.ReportFormat::Html
           } else if format == "json" {
-            @backtest.ReportFormat::Html // JSON not yet supported, fallback to HTML
+            @backtest.ReportFormat::Json
           } else {
             @backtest.ReportFormat::Text
           }

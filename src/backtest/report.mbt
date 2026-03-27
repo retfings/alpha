@@ -5,6 +5,7 @@
 pub(all) enum ReportFormat {
   Html
   Text
+  Json
 } derive(Show)
 
 ///|
@@ -42,6 +43,7 @@ pub fn generate_report(
   match config.format {
     ReportFormat::Html => generate_html_report(result, config)
     ReportFormat::Text => generate_text_report(result, config)
+    ReportFormat::Json => generate_json_report(result)
   }
 }
 
@@ -231,6 +233,12 @@ pub fn action_to_string(action : @strategy.Action) -> String {
     @strategy.Action::Sell => "SELL"
     @strategy.Action::Hold => "HOLD"
   }
+}
+
+///|
+/// Generate JSON report
+fn generate_json_report(result : BacktestResult) -> String {
+  result.to_json().stringify()
 }
 
 ///|
