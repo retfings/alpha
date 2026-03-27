@@ -810,6 +810,319 @@ test "bollinger bands calculation" {
 }
 ```
 
+#### 成交量加权平均价 (VWAP)
+
+VWAP（Volume-Weighted Average Price）是成交量加权平均价，给出证券全天交易的平均价格（基于成交量和价格）。
+
+**参数说明：**
+- `klines`: K 线数据数组（需要包含成交量信息）
+
+**公式：**
+- 典型价格 (Typical Price) = (最高价 + 最低价 + 收盘价) / 3
+- VWAP = Σ(典型价格 × 成交量) / Σ(成交量)
+
+**解读：**
+- 价格高于 VWAP：看涨（交易溢价）
+- 价格低于 VWAP：看跌（交易折价）
+- VWAP 可作为动态支撑/阻力位
+
+```mbt check-disabled
+///|
+test "vwap calculation" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+  ]
+
+  // 计算 VWAP
+  let vwap_values = @indicator.vwap(klines)
+
+  // VWAP 值应该为正
+  let mut i = 0
+  while i < vwap_values.length() {
+    assert_true(vwap_values[i] > Float::from_double(0.0))
+    i = i + 1
+  }
+
+  // 检查价格与 VWAP 的关系
+  let last_kline = klines[klines.length() - 1]
+  let last_vwap = vwap_values[vwap_values.length() - 1]
+
+  // 典型价格辅助函数
+  let tp = @indicator.typical_price(last_kline)
+  assert_true(tp > Float::from_double(0.0))
+
+  // 检查价格位置
+  assert_true(@indicator.is_above_vwap(last_kline, last_vwap) == false)
+  assert_true(@indicator.is_below_vwap(last_kline, last_vwap) == false)
+
+  // VWAP 偏离百分比
+  let deviation = @indicator.vwap_deviation(last_kline, last_vwap)
+  assert_true(deviation > Float::from_double(-100.0))
+  assert_true(deviation < Float::from_double(100.0))
+
+  // 获取价格相对位置枚举
+  let position = @indicator.vwap_position(last_kline, last_vwap)
+  // position : VwapPosition (Above | Below | Equal)
+
+  json_inspect({
+    "vwap": vwap_values,
+    "typical_price": tp,
+    "deviation": deviation,
+    "position": position,
+  })
+}
+```
+
+**辅助函数：**
+
+```mbt check-disabled
+///|
+test "vwap with reset and bands" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 11.3, 11.8, 11.1, 11.6, 1300.0, 13000.0, 0.062,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 11.6, 12.0, 11.4, 11.9, 1400.0, 14000.0, 0.065,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 11.9, 12.3, 11.7, 12.1, 1350.0, 13500.0, 0.063,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 12.1, 12.5, 11.9, 12.4, 1500.0, 15000.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 12.4, 12.8, 12.2, 12.6, 1450.0, 14500.0, 0.066,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-11", 12.6, 13.0, 12.4, 12.8, 1600.0, 16000.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-12", 12.8, 13.2, 12.6, 13.0, 1550.0, 15500.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-13", 13.0, 13.4, 12.8, 13.2, 1700.0, 17000.0, 0.072,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-14", 13.2, 13.6, 13.0, 13.4, 1650.0, 16500.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-15", 13.4, 13.8, 13.2, 13.6, 1800.0, 18000.0, 0.075,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-16", 13.6, 14.0, 13.4, 13.8, 1750.0, 17500.0, 0.073,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-17", 13.8, 14.2, 13.6, 14.0, 1900.0, 19000.0, 0.078,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-18", 14.0, 14.4, 13.8, 14.2, 1850.0, 18500.0, 0.076,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-19", 14.2, 14.6, 14.0, 14.4, 2000.0, 20000.0, 0.08,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-20", 14.4, 14.8, 14.2, 14.6, 1950.0, 19500.0, 0.078,
+    ),
+  ]
+
+  // 带周期重置的 VWAP（每 20 期重置）
+  let vwap_reset = @indicator.vwap_with_reset(klines, 20)
+  assert_true(vwap_reset.length() == klines.length())
+
+  // VWAP 带宽指标（类似布林带）
+  let (upper, vwap, lower) = @indicator.vwap_bands(klines, 10, Float::from_double(2.0))
+
+  // 验证：上轨 >= VWAP >= 下轨
+  let mut i = 0
+  while i < vwap.length() {
+    assert_true(upper[i] >= vwap[i])
+    assert_true(vwap[i] >= lower[i])
+    i = i + 1
+  }
+
+  json_inspect({
+    "vwap_reset": vwap_reset,
+    "upper_band": upper,
+    "vwap": vwap,
+    "lower_band": lower,
+  })
+}
+```
+
+#### 阿隆指标 (Aroon)
+
+阿隆指标是一个趋势跟踪指标，通过测量新高和新低之间的时间来识别趋势方向。它由两条线组成：Aroon Up 和 Aroon Down。
+
+**参数说明：**
+- `klines`: K 线数据数组
+- `period`: 回溯周期（通常 25 或 14）
+
+**公式：**
+- Aroon Up = ((周期 - 距离最高价天数) / 周期) × 100
+- Aroon Down = ((周期 - 距离最低价天数) / 周期) × 100
+- Aroon Oscillator = Aroon Up - Aroon Down
+
+**解读：**
+- Aroon Up > Aroon Down：上升趋势
+- Aroon Down > Aroon Up：下降趋势
+- 两者都低（< 50）：盘整/震荡市场
+- 两者都高（> 70）：强劲趋势
+
+```mbt check-disabled
+///|
+test "aroon calculation" {
+  let klines : Array[@data.KLine] = [
+    @data.KLine::daily(
+      "sh.600000", "2023-01-01", 10.0, 10.5, 9.5, 10.2, 1000.0, 10000.0, 0.05,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-02", 10.2, 10.8, 10.0, 10.6, 1100.0, 11000.0, 0.055,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-03", 10.6, 11.0, 10.4, 10.8, 1050.0, 10500.0, 0.052,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-04", 10.8, 11.2, 10.6, 11.0, 1200.0, 12000.0, 0.058,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-05", 11.0, 11.5, 10.8, 11.3, 1150.0, 11500.0, 0.06,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-06", 11.3, 11.8, 11.1, 11.6, 1300.0, 13000.0, 0.062,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-07", 11.6, 12.0, 11.4, 11.9, 1400.0, 14000.0, 0.065,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-08", 11.9, 12.3, 11.7, 12.1, 1350.0, 13500.0, 0.063,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-09", 12.1, 12.5, 11.9, 12.4, 1500.0, 15000.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-10", 12.4, 12.8, 12.2, 12.6, 1450.0, 14500.0, 0.066,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-11", 12.6, 13.0, 12.4, 12.8, 1600.0, 16000.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-12", 12.8, 13.2, 12.6, 13.0, 1550.0, 15500.0, 0.068,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-13", 13.0, 13.4, 12.8, 13.2, 1700.0, 17000.0, 0.072,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-14", 13.2, 13.6, 13.0, 13.4, 1650.0, 16500.0, 0.07,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-15", 13.4, 13.8, 13.2, 13.6, 1800.0, 18000.0, 0.075,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-16", 13.6, 14.0, 13.4, 13.8, 1750.0, 17500.0, 0.073,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-17", 13.8, 14.2, 13.6, 14.0, 1900.0, 19000.0, 0.078,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-18", 14.0, 14.4, 13.8, 14.2, 1850.0, 18500.0, 0.076,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-19", 14.2, 14.6, 14.0, 14.4, 2000.0, 20000.0, 0.08,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-20", 14.4, 14.8, 14.2, 14.6, 1950.0, 19500.0, 0.078,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-21", 14.6, 15.0, 14.4, 14.8, 2100.0, 21000.0, 0.082,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-22", 14.8, 15.2, 14.6, 15.0, 2050.0, 20500.0, 0.08,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-23", 15.0, 15.4, 14.8, 15.2, 2200.0, 22000.0, 0.085,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-24", 15.2, 15.6, 15.0, 15.4, 2150.0, 21500.0, 0.083,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-25", 15.4, 15.8, 15.2, 15.6, 2300.0, 23000.0, 0.088,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-26", 15.6, 16.0, 15.4, 15.8, 2250.0, 22500.0, 0.086,
+    ),
+    @data.KLine::daily(
+      "sh.600000", "2023-01-27", 15.8, 16.2, 15.6, 16.0, 2400.0, 24000.0, 0.09,
+    ),
+  ]
+
+  // 计算 Aroon（周期 25）
+  let (aroon_up, aroon_down) = @indicator.aroon(klines, 25)
+
+  // Aroon 值范围 0-100
+  let mut i = 0
+  while i < aroon_up.length() {
+    assert_true(aroon_up[i] >= Float::from_double(0.0))
+    assert_true(aroon_up[i] <= Float::from_double(100.0))
+    assert_true(aroon_down[i] >= Float::from_double(0.0))
+    assert_true(aroon_down[i] <= Float::from_double(100.0))
+    i = i + 1
+  }
+
+  // Aroon Oscillator
+  let oscillator = @indicator.aroon_oscillator(klines, 25)
+  assert_true(oscillator[oscillator.length() - 1] >= Float::from_double(-100.0))
+  assert_true(oscillator[oscillator.length() - 1] <= Float::from_double(100.0))
+
+  // 趋势判断辅助函数
+  let last_up = aroon_up[aroon_up.length() - 1]
+  let last_down = aroon_down[aroon_down.length() - 1]
+
+  assert_true(@indicator.is_aroon_uptrend(last_up, last_down) == true)
+  assert_true(@indicator.is_aroon_downtrend(last_up, last_down) == false)
+
+  // 获取趋势状态枚举
+  let trend = @indicator.get_aroon_trend(last_up, last_down)
+  // trend : AroonTrend (StrongUptrend | Uptrend | Neutral | Downtrend | StrongDowntrend | Consolidation)
+
+  json_inspect({
+    "aroon_up": aroon_up,
+    "aroon_down": aroon_down,
+    "oscillator": oscillator,
+    "trend": trend,
+  })
+}
+```
+
 ## CLI 使用指南
 
 ### 命令列表

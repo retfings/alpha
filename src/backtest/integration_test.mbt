@@ -2044,63 +2044,63 @@ test "integration: Drawdown monitoring with portfolio rebalancing triggers" {
   // Total invested: 40000 + 45000 + 50000 + 32000 = 167000
   // Cash remaining: 33000
 
-  // Step 2: Create drawdown monitor configuration
-  let drawdown_config = @drawdown.DrawdownAlertConfig::{
-    caution_threshold: Float::from_double(-0.05),
-    warning_threshold: Float::from_double(-0.10),
-    critical_threshold: Float::from_double(-0.20),
-  }
+  // Step 2: Use default drawdown alert configuration
+  let drawdown_config = @drawdown.default_alert_config()
 
-  // Step 3: Simulate gradual portfolio decline
-  let decline_prices = [
-    fn(code) -> Float {
+  // Step 3: Simulate gradual portfolio decline with helper function
+  fn get_price_for_stage(code : String, stage : Int) -> Float {
+    if stage == 0 {
+      // -5% stage
       if code == "sh.600000" {
-        Float::from_double(19.0) // -5%
+        Float::from_double(19.0)
       } else if code == "sz.000001" {
-        Float::from_double(28.5) // -5%
+        Float::from_double(28.5)
       } else if code == "sh.600036" {
-        Float::from_double(47.5) // -5%
+        Float::from_double(47.5)
       } else if code == "sz.000063" {
-        Float::from_double(38.0) // -5%
+        Float::from_double(38.0)
       } else {
         Float::from_double(0.0)
       }
-    },
-    fn(code) -> Float {
+    } else if stage == 1 {
+      // -10% stage
       if code == "sh.600000" {
-        Float::from_double(18.0) // -10%
+        Float::from_double(18.0)
       } else if code == "sz.000001" {
-        Float::from_double(27.0) // -10%
+        Float::from_double(27.0)
       } else if code == "sh.600036" {
-        Float::from_double(45.0) // -10%
+        Float::from_double(45.0)
       } else if code == "sz.000063" {
-        Float::from_double(36.0) // -10%
+        Float::from_double(36.0)
       } else {
         Float::from_double(0.0)
       }
-    },
-    fn(code) -> Float {
+    } else if stage == 2 {
+      // -20% stage
       if code == "sh.600000" {
-        Float::from_double(16.0) // -20%
+        Float::from_double(16.0)
       } else if code == "sz.000001" {
-        Float::from_double(24.0) // -20%
+        Float::from_double(24.0)
       } else if code == "sh.600036" {
-        Float::from_double(40.0) // -20%
+        Float::from_double(40.0)
       } else if code == "sz.000063" {
-        Float::from_double(32.0) // -20%
+        Float::from_double(32.0)
       } else {
         Float::from_double(0.0)
       }
-    },
-  ]
+    } else {
+      Float::from_double(0.0)
+    }
+  }
 
   // Step 4: Build equity curve and monitor drawdown at each stage
   let initial_value = portfolio.total_value()
   let equity_curve : Array[Float] = [initial_value]
 
   let mut stage = 0
-  while stage < decline_prices.length() {
-    portfolio.update_prices(decline_prices[stage])
+  while stage < 3 {
+    let price_fn = fn(code : String) { get_price_for_stage(code, stage) }
+    portfolio.update_prices(price_fn)
     let current_value = portfolio.total_value()
     equity_curve.push(current_value)
     stage = stage + 1
@@ -2429,15 +2429,14 @@ test "integration: Bollinger Bands mean reversion with risk management" {
     "2024-01-19", "2024-01-20", "2024-01-21", "2024-01-22", "2024-01-23", "2024-01-24",
     "2024-01-25", "2024-01-26", "2024-01-27", "2024-01-28", "2024-01-29", "2024-01-30",
   ]
-  let klines = prices.mapi(fn(p, i) {
-    let price = Float::from_double(p)
+  let klines = prices.mapi(fn(i : Int, p : Float) {
     @data.KLine::daily(
       "sh.600000",
       dates[i],
-      price,
-      price * Float::from_double(1.03),
-      price * Float::from_double(0.97),
-      price,
+      p,
+      p * Float::from_double(1.03),
+      p * Float::from_double(0.97),
+      p,
       Float::from_double(1000000.0),
       Float::from_double(10000000.0),
       Float::from_double(0.03),

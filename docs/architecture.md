@@ -121,7 +121,8 @@ alpha/
 │   │   ├── obv.mbt            # OBV (On-Balance Volume)
 │   │   ├── rsi.mbt            # RSI (Relative Strength Index)
 │   │   ├── williams_r.mbt     # Williams %R
-│   │   └── bollinger.mbt      # 布林带 (Bollinger Bands)
+│   │   ├── bollinger.mbt      # 布林带 (Bollinger Bands)
+│   │   └── vwap.mbt           # VWAP (成交量加权平均价)
 │   │
 │   └── backtest/              # 回测引擎
 │       ├── moon.pkg
