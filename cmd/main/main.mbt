@@ -139,6 +139,7 @@ fn print_help() -> Unit {
   println("")
   println("USAGE:")
   println("    moon run cmd/main [COMMAND] [OPTIONS]")
+  println("    MOONBIT_CMD=<command> MOONBIT_ARGS=\"<args>\" moon run cmd/main")
   println("")
   println("COMMANDS:")
   println("    analyze           Analyze stock/portfolio drawdown")
@@ -169,6 +170,14 @@ fn print_help() -> Unit {
   println("    moon run cmd/main report --format html")
   println("    moon run cmd/main list-strategies")
   println("    moon run cmd/main serve --port 8080")
+  println("")
+  println("ENVIRONMENT VARIABLES:")
+  println(
+    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000 --metric max_drawdown\" moon run cmd/main",
+  )
+  println(
+    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000\" moon run cmd/main",
+  )
 }
 
 ///|
@@ -816,11 +825,16 @@ fn _run_report(format : String) -> Unit {
             @backtest.ReportFormat::Text
           }
 
-          let report_config = @backtest.default_report_config()
-          report_config.format = report_format
-          report_config.title = "Backtest Report - " + filepath
-          report_config.include_trades = true
-          report_config.include_stats = true
+          let default_config = @backtest.default_report_config()
+          let report_config = @backtest.ReportConfig::{
+            author: default_config.author,
+            date: default_config.date,
+            title: "Backtest Report - " + filepath,
+            format: report_format,
+            include_equity_curve: default_config.include_equity_curve,
+            include_trades: true,
+            include_stats: true,
+          }
 
           let report = @backtest.generate_report(result, report_config)
           println(report)
