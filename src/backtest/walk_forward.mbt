@@ -125,6 +125,40 @@ pub struct WfResult {
 } derive(Show)
 
 ///|
+/// Create WfResult instance
+pub fn create_wf_result(
+  window_index : Int,
+  in_sample_start : Int,
+  in_sample_end : Int,
+  oos_start : Int,
+  oos_end : Int,
+  is_profit : Float,
+  oos_profit : Float,
+  is_sharpe : Float,
+  oos_sharpe : Float,
+  is_max_dd : Float,
+  oos_max_dd : Float,
+  is_trades : Int,
+  oos_trades : Int,
+) -> WfResult {
+  WfResult::{
+    window_index,
+    in_sample_start,
+    in_sample_end,
+    oos_start,
+    oos_end,
+    is_profit,
+    oos_profit,
+    is_sharpe,
+    oos_sharpe,
+    is_max_dd,
+    oos_max_dd,
+    is_trades,
+    oos_trades,
+  }
+}
+
+///|
 ///\n/// Walk-Forward analysis summary
 pub struct WfSummary {
   /// Total windows
@@ -150,6 +184,36 @@ pub struct WfSummary {
   /// Overall robustness score (0-100)
   robustness_score : Float
 } derive(Show)
+
+///|
+/// Create WfSummary instance
+pub fn create_wf_summary(
+  total_windows : Int,
+  successful_windows : Int,
+  avg_is_profit : Float,
+  avg_oos_profit : Float,
+  avg_is_sharpe : Float,
+  avg_oos_sharpe : Float,
+  avg_is_max_dd : Float,
+  avg_oos_max_dd : Float,
+  oos_success_rate : Float,
+  degradation_ratio : Float,
+  robustness_score : Float,
+) -> WfSummary {
+  WfSummary::{
+    total_windows,
+    successful_windows,
+    avg_is_profit,
+    avg_oos_profit,
+    avg_is_sharpe,
+    avg_oos_sharpe,
+    avg_is_max_dd,
+    avg_oos_max_dd,
+    oos_success_rate,
+    degradation_ratio,
+    robustness_score,
+  }
+}
 
 ///|
 ///\n/// Calculate Walk-Forward windows for anchored mode
@@ -295,19 +359,19 @@ pub fn calculate_profit(returns : Array[Float]) -> Float {
 pub fn analyze_wf_results(results : Array[WfResult]) -> WfSummary {
   let total = results.length()
   if total == 0 {
-    WfSummary::{
-      total_windows: 0,
-      successful_windows: 0,
-      avg_is_profit: Float::from_double(0.0),
-      avg_oos_profit: Float::from_double(0.0),
-      avg_is_sharpe: Float::from_double(0.0),
-      avg_oos_sharpe: Float::from_double(0.0),
-      avg_is_max_dd: Float::from_double(0.0),
-      avg_oos_max_dd: Float::from_double(0.0),
-      oos_success_rate: Float::from_double(0.0),
-      degradation_ratio: Float::from_double(0.0),
-      robustness_score: Float::from_double(0.0),
-    }
+    create_wf_summary(
+      0,
+      0,
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+      Float::from_double(0.0),
+    )
   } else {
     let mut successful = 0
     let mut sum_is_profit = Float::from_double(0.0)
@@ -357,19 +421,10 @@ pub fn analyze_wf_results(results : Array[WfResult]) -> WfSummary {
         Float::from_double(0.0)
       })
 
-    WfSummary::{
-      total_windows: total,
-      successful_windows: successful,
-      avg_is_profit,
-      avg_oos_profit,
-      avg_is_sharpe,
-      avg_oos_sharpe,
-      avg_is_max_dd: avg_is_dd,
-      avg_oos_max_dd: avg_oos_dd,
-      oos_success_rate,
-      degradation_ratio,
-      robustness_score,
-    }
+    create_wf_summary(
+      total, successful, avg_is_profit, avg_oos_profit, avg_is_sharpe, avg_oos_sharpe,
+      avg_is_dd, avg_oos_dd, oos_success_rate, degradation_ratio, robustness_score,
+    )
   }
 }
 

@@ -127,14 +127,23 @@ test "walk_forward_config_default - standard values" {
 ///|
 test "create_walk_forward_config - custom values" {
   let config = create_walk_forward_config(
-    100, 25, Float::from_double(0.25), WfMode::Rolling, 10,
+    100,
+    25,
+    Float::from_double(0.25),
+    wf_mode_rolling(),
+    10,
   )
 
   assert_eq(config.window_size, 100)
   assert_eq(config.step_size, 25)
   assert_true(config.oos_ratio > Float::from_double(0.24))
   assert_true(config.oos_ratio < Float::from_double(0.26))
-  assert_true(match config.mode { WfMode::Rolling => true _ => false })
+  assert_true(
+    match config.mode {
+      WfMode::Rolling => true
+      _ => false
+    },
+  )
   assert_eq(config.min_oos_bars, 10)
 }
 
@@ -144,7 +153,7 @@ test "generate_wf_windows - rolling mode" {
     50,
     10,
     Float::from_double(0.2),
-    WfMode::Rolling,
+    wf_mode_rolling(),
     5,
   )
   let windows = generate_wf_windows(config, 100)
@@ -159,7 +168,7 @@ test "generate_wf_windows - anchored mode" {
     50,
     10,
     Float::from_double(0.2),
-    WfMode::Anchored,
+    wf_mode_anchored(),
     5,
   )
   let windows = generate_wf_windows(config, 100)
@@ -292,7 +301,7 @@ test "calculate_profit - empty returns" {
 
 ///|
 test "wf_result - struct creation" {
-  let result = WfResult {
+  let result = WfResult::{
     window_index: 0,
     in_sample_start: 0,
     in_sample_end: 50,
@@ -326,7 +335,7 @@ test "analyze_wf_results - empty results" {
 ///|
 test "analyze_wf_results - single profitable window" {
   let results : Array[WfResult] = [
-    WfResult {
+    WfResult::{
       window_index: 0,
       in_sample_start: 0,
       in_sample_end: 50,
@@ -340,7 +349,7 @@ test "analyze_wf_results - single profitable window" {
       oos_max_dd: Float::from_double(0.15),
       is_trades: 10,
       oos_trades: 5,
-    }
+    },
   ]
   let summary = analyze_wf_results(results)
 
@@ -352,7 +361,7 @@ test "analyze_wf_results - single profitable window" {
 ///|
 test "analyze_wf_results - mixed results" {
   let results : Array[WfResult] = [
-    WfResult {
+    WfResult::{
       window_index: 0,
       in_sample_start: 0,
       in_sample_end: 50,
@@ -367,7 +376,7 @@ test "analyze_wf_results - mixed results" {
       is_trades: 10,
       oos_trades: 5,
     },
-    WfResult {
+    WfResult::{
       window_index: 1,
       in_sample_start: 10,
       in_sample_end: 60,
@@ -394,7 +403,7 @@ test "analyze_wf_results - mixed results" {
 ///|
 test "analyze_wf_results - degradation ratio calculation" {
   let results : Array[WfResult] = [
-    WfResult {
+    WfResult::{
       window_index: 0,
       in_sample_start: 0,
       in_sample_end: 50,
@@ -419,7 +428,7 @@ test "analyze_wf_results - degradation ratio calculation" {
 
 ///|
 test "passes_wf_validation - passing strategy" {
-  let summary = WfSummary {
+  let summary = WfSummary::{
     total_windows: 5,
     successful_windows: 3,
     avg_is_profit: Float::from_double(1000.0),
@@ -438,7 +447,7 @@ test "passes_wf_validation - passing strategy" {
 
 ///|
 test "passes_wf_validation - failing low success rate" {
-  let summary = WfSummary {
+  let summary = WfSummary::{
     total_windows: 5,
     successful_windows: 1,
     avg_is_profit: Float::from_double(1000.0),
@@ -458,7 +467,7 @@ test "passes_wf_validation - failing low success rate" {
 
 ///|
 test "passes_wf_validation - failing degradation" {
-  let summary = WfSummary {
+  let summary = WfSummary::{
     total_windows: 5,
     successful_windows: 3,
     avg_is_profit: Float::from_double(1000.0),
@@ -478,7 +487,7 @@ test "passes_wf_validation - failing degradation" {
 
 ///|
 test "passes_wf_validation - failing negative oos profit" {
-  let summary = WfSummary {
+  let summary = WfSummary::{
     total_windows: 5,
     successful_windows: 3,
     avg_is_profit: Float::from_double(1000.0),
@@ -506,7 +515,7 @@ test "wf_mode_enum - equality" {
 ///|
 test "robustness_score - calculation example" {
   let results : Array[WfResult] = [
-    WfResult {
+    WfResult::{
       window_index: 0,
       in_sample_start: 0,
       in_sample_end: 50,
@@ -521,7 +530,7 @@ test "robustness_score - calculation example" {
       is_trades: 10,
       oos_trades: 5,
     },
-    WfResult {
+    WfResult::{
       window_index: 1,
       in_sample_start: 10,
       in_sample_end: 60,
