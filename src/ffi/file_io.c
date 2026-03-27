@@ -11,6 +11,7 @@
 #include <direct.h>
 #else
 #include <dirent.h>
+#include <unistd.h>
 #endif
 
 // Read file content and return as Bytes
@@ -142,6 +143,64 @@ int64_t moonbit_get_file_mtime(const char *path) {
     return -1;
   }
   return (int64_t)st.st_mtime;
+}
+
+// Get current working directory
+MOONBIT_FFI_EXPORT
+moonbit_bytes_t moonbit_getcwd() {
+  char buf[4096];
+  if (getcwd(buf, sizeof(buf)) == NULL) {
+    return NULL;
+  }
+  size_t len = strlen(buf);
+  moonbit_bytes_t bytes = moonbit_make_bytes(len, 0);
+  memcpy(bytes, buf, len);
+  return bytes;
+}
+
+// Get project root directory (find moon.mod.json)
+MOONBIT_FFI_EXPORT
+moonbit_bytes_t moonbit_get_project_root() {
+  char cwd[4096];
+  if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    return NULL;
+  }
+
+  char path[4096];
+  strncpy(path, cwd, sizeof(path) - 1);
+  path[sizeof(path) - 1] = '\0';
+
+  // Try current directory first
+  char check_path[4100];
+  snprintf(check_path, sizeof(check_path), "%s/moon.mod.json", path);
+  FILE *f = fopen(check_path, "r");
+  if (f) {
+    fclose(f);
+    moonbit_bytes_t bytes = moonbit_make_bytes(strlen(path), 0);
+    memcpy(bytes, path, strlen(path));
+    return bytes;
+  }
+
+  // Walk up directory tree
+  char *last_slash = strrchr(path, '/');
+  while (last_slash != NULL) {
+    *last_slash = '\0';
+    snprintf(check_path, sizeof(check_path), "%s/moon.mod.json", path);
+    f = fopen(check_path, "r");
+    if (f) {
+      fclose(f);
+      size_t len = strlen(path);
+      moonbit_bytes_t bytes = moonbit_make_bytes(len, 0);
+      memcpy(bytes, path, len);
+      return bytes;
+    }
+    last_slash = strrchr(path, '/');
+  }
+
+  // Not found, return current directory
+  moonbit_bytes_t bytes = moonbit_make_bytes(strlen(cwd), 0);
+  memcpy(bytes, cwd, strlen(cwd));
+  return bytes;
 }
 
 // List files in directory (returns array of file names)

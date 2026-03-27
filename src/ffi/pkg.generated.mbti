@@ -4,6 +4,10 @@ package "retfings/alpha/src/ffi"
 // Values
 pub fn file_exists(String) -> Bool
 
+pub fn get_project_root() -> String?
+
+pub fn getcwd() -> String?
+
 pub fn getenv(String) -> String?
 
 pub fn mkdir_p(String) -> Bool

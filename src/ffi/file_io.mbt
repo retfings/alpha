@@ -94,3 +94,29 @@ pub fn getenv(name : String) -> String? {
     None => None
   }
 }
+
+///|
+/// Get current working directory
+extern "c" fn __getcwd() -> Bytes? = "moonbit_getcwd"
+
+///|
+/// Get project root directory (finds moon.mod.json)
+extern "c" fn __get_project_root() -> Bytes? = "moonbit_get_project_root"
+
+///|
+/// Get current working directory as String
+pub fn getcwd() -> String? {
+  match __getcwd() {
+    Some(bytes) => Some(@utf8.decode_lossy(bytes))
+    None => None
+  }
+}
+
+///|
+/// Get project root directory as String
+pub fn get_project_root() -> String? {
+  match __get_project_root() {
+    Some(bytes) => Some(@utf8.decode_lossy(bytes))
+    None => None
+  }
+}

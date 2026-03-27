@@ -1,6 +1,94 @@
 /// Main entry point for the quantitative drawdown CLI
 
 ///|
+/// Get data directory from environment or config file
+/// Priority: MOONBIT_DATA_DIR env > config.json > default "data"
+fn get_data_dir() -> String {
+  // First, try environment variable
+  match @ffi.getenv("MOONBIT_DATA_DIR") {
+    Some(dir) => {
+      println("Using data directory from MOONBIT_DATA_DIR: \{dir}")
+      dir
+    }
+    None =>
+      // Second, try to read from config.json
+      match @ffi.get_project_root() {
+        Some(root) => {
+          let config_path = root + "/config.json"
+          match @ffi.read_file(config_path) {
+            Some(content) =>
+              // Simple JSON parsing: look for "data_dir": "value"
+              match _parse_data_dir_from_json(content) {
+                Some(dir) => {
+                  println("Using data directory from config.json: \{dir}")
+                  // If data_dir is relative, make it absolute relative to project root
+                  if dir.has_prefix("/") || dir.has_suffix(":") {
+                    // Absolute path
+                    dir
+                  } else {
+                    // Relative path, resolve relative to project root
+                    root + "/" + dir
+                  }
+                }
+                None => {
+                  println("Using default data directory: data")
+                  // Default "data" is relative to project root
+                  root + "/data"
+                }
+              }
+            None => {
+              println(
+                "Config file not found, using default data directory: data",
+              )
+              // Default "data" is relative to project root
+              root + "/data"
+            }
+          }
+        }
+        None => {
+          println(
+            "Could not determine project root, using default data directory: data",
+          )
+          "data"
+        }
+      }
+  }
+}
+
+///|
+/// Simple JSON parser to extract data_dir field
+/// Looks for pattern: "data_dir": "value" or "data_dir":"value"
+fn _parse_data_dir_from_json(json : String) -> String? {
+  let target = "\"data_dir\""
+  match json.find(target) {
+    Some(pos) => {
+      // Find the colon after "data_dir"
+      let after_key = json[pos + target.length():]
+      let colon_pos = after_key.find(":")
+      if colon_pos == None {
+        return None
+      }
+      let after_colon = after_key[colon_pos.unwrap() + 1:]
+
+      // Skip whitespace and find the opening quote
+      let trimmed = after_colon.trim()
+      if !trimmed.has_prefix("\"") {
+        return None
+      }
+
+      // Find the closing quote
+      let value_start = 1 // Skip opening quote
+      let value_part = trimmed[value_start:]
+      match value_part.find("\"") {
+        Some(end_pos) => Some(value_part[:end_pos].to_string())
+        None => None
+      }
+    }
+    None => None
+  }
+}
+
+///|
 /// CLI Commands
 pub enum Command {
   Help
@@ -162,21 +250,39 @@ fn print_help() -> Unit {
   println("    --port <number>    Server port (default: 8080)")
   println("")
   println("EXAMPLES:")
-  println("    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000 --metric max_drawdown\" moon run cmd/main")
-  println("    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31\" moon run cmd/main")
-  println("    MOONBIT_CMD=monitor MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main")
-  println("    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main")
+  println(
+    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000 --metric max_drawdown\" moon run cmd/main",
+  )
+  println(
+    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31\" moon run cmd/main",
+  )
+  println(
+    "    MOONBIT_CMD=monitor MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main",
+  )
+  println(
+    "    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main",
+  )
   println("    MOONBIT_CMD=list-strategies moon run cmd/main")
-  println("    MOONBIT_CMD=serve MOONBIT_ARGS=\"--port 8080\" moon run cmd/main")
+  println(
+    "    MOONBIT_CMD=serve MOONBIT_ARGS=\"--port 8080\" moon run cmd/main",
+  )
   println("")
   println("ENVIRONMENT VARIABLES:")
-  println("    MOONBIT_CMD  - Command name (analyze, backtest, monitor, report, list-strategies, serve)")
+  println(
+    "    MOONBIT_CMD  - Command name (analyze, backtest, monitor, report, list-strategies, serve)",
+  )
   println("    MOONBIT_ARGS - Space-separated command arguments")
   println("")
   println("FULL EXAMPLES:")
-  println("    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main")
-  println("    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000\" moon run cmd/main")
-  println("    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main")
+  println(
+    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main",
+  )
+  println(
+    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000\" moon run cmd/main",
+  )
+  println(
+    "    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main",
+  )
 }
 
 ///|
@@ -226,7 +332,10 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
     )
   }
 
-  // Build file path from stock code (e.g., sh.600000 -> data/sh_600000_*.csv)
+  // Get data directory from config
+  let data_dir = get_data_dir()
+
+  // Build file path from stock code (e.g., sh.600000 -> {data_dir}/sh_600000_*.csv)
   let stock_parts = stock.split(".")
   let stock_parts_arr = stock_parts.to_array()
   if stock_parts_arr.length() < 2 {
@@ -237,7 +346,7 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
   let code = stock_parts_arr[1]
 
   // Try to find the data file by constructing path from stock code
-  // File pattern: data/{market}_{code}_*.csv (e.g., data/sh_600000_*.csv)
+  // File pattern: {data_dir}/{market}_{code}_*.csv (e.g., data/sh_600000_*.csv)
   let mut found_file : String? = None
 
   // Try to read available files from DATA_FILES environment variable
@@ -252,7 +361,7 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
         .to_array()
       for file in files {
         if file != "" && file.has_prefix(market + "_" + code) {
-          found_file = Some("data/" + file)
+          found_file = Some(data_dir + "/" + file)
           break
         }
       }
@@ -267,8 +376,8 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
       ]
       for date_range in date_ranges {
         let candidate = (base_pattern + date_range + ".csv").to_string()
-        if @ffi.file_exists("data/" + candidate) {
-          found_file = Some("data/" + candidate)
+        if @ffi.file_exists(data_dir + "/" + candidate) {
+          found_file = Some(data_dir + "/" + candidate)
           break
         }
       }
@@ -394,11 +503,14 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
     }
     None => {
       println("Error: No data file found for stock '\{stock}'")
-      println("Expected file pattern: data/\{market}_\{code}_*.csv")
+      println("Expected file pattern: \{data_dir}/\{market}_\{code}_*.csv")
       println("")
       println("Hint: Set DATA_FILES environment variable with comma-separated")
       println("      file names available in the data/ directory.")
       println("      Example: DATA_FILES=\"sh_600000_*.csv,sh_600001_*.csv\"")
+      println("")
+      println("Config: You can set MOONBIT_DATA_DIR environment variable or")
+      println("        create config.json with \"data_dir\" field to override.")
     }
   }
 }
@@ -451,6 +563,9 @@ fn _run_backtest(
     Some(_) => ignore(())
   }
 
+  // Get data directory from config
+  let data_dir = get_data_dir()
+
   // Build data file path from stock code
   let stock_parts = stock.split(".")
   let stock_parts_arr = stock_parts.to_array()
@@ -471,7 +586,7 @@ fn _run_backtest(
         .to_array()
       for file in files {
         if file != "" && file.has_prefix(market + "_" + code) {
-          found_file = Some("data/" + file)
+          found_file = Some(data_dir + "/" + file)
           break
         }
       }
@@ -484,8 +599,8 @@ fn _run_backtest(
       ]
       for date_range in date_ranges {
         let candidate = (base_pattern + date_range + ".csv").to_string()
-        if @ffi.file_exists("data/" + candidate) {
-          found_file = Some("data/" + candidate)
+        if @ffi.file_exists(data_dir + "/" + candidate) {
+          found_file = Some(data_dir + "/" + candidate)
           break
         }
       }
@@ -591,10 +706,13 @@ fn _run_backtest(
     }
     None => {
       println("Error: No data file found for stock '\{stock}'")
-      println("Expected file pattern: data/\{market}_\{code}_*.csv")
+      println("Expected file pattern: \{data_dir}/\{market}_\{code}_*.csv")
       println("")
       println("Hint: Set DATA_FILES environment variable with comma-separated")
       println("      file names available in the data/ directory.")
+      println("")
+      println("Config: You can set MOONBIT_DATA_DIR environment variable or")
+      println("        create config.json with \"data_dir\" field to override.")
     }
   }
 }
@@ -610,6 +728,9 @@ fn _run_monitor(stock : String) -> Unit {
 
   println("Starting real-time monitoring for: \{stock}")
   println("")
+
+  // Get data directory from config
+  let data_dir = get_data_dir()
 
   // Build data file path from stock code
   let stock_parts = stock.split(".")
@@ -631,7 +752,7 @@ fn _run_monitor(stock : String) -> Unit {
         .to_array()
       for file in files {
         if file != "" && file.has_prefix(market + "_" + code) {
-          found_file = Some("data/" + file)
+          found_file = Some(data_dir + "/" + file)
           break
         }
       }
@@ -644,8 +765,8 @@ fn _run_monitor(stock : String) -> Unit {
       ]
       for date_range in date_ranges {
         let candidate = (base_pattern + date_range + ".csv").to_string()
-        if @ffi.file_exists("data/" + candidate) {
-          found_file = Some("data/" + candidate)
+        if @ffi.file_exists(data_dir + "/" + candidate) {
+          found_file = Some(data_dir + "/" + candidate)
           break
         }
       }
@@ -717,7 +838,7 @@ fn _run_monitor(stock : String) -> Unit {
       }
     None => {
       println("Error: No data file found for stock '\{stock}'")
-      println("Expected file pattern: data/\{market}_\{code}_*.csv")
+      println("Expected file pattern: \{data_dir}/\{market}_\{code}_*.csv")
       println("")
       // Still show monitoring setup info
       println("Monitoring Configuration (no data available):")
@@ -752,6 +873,9 @@ fn _run_report(format : String) -> Unit {
   println("Generating \{format} report...")
   println("")
 
+  // Get data directory from config
+  let data_dir = get_data_dir()
+
   // Build data file path - try to find any available data file
   let mut found_file : String? = None
   match @ffi.getenv("DATA_FILES") {
@@ -762,7 +886,7 @@ fn _run_report(format : String) -> Unit {
         .to_array()
       for file in files {
         if file != "" && file.has_suffix(".csv") {
-          found_file = Some("data/" + file)
+          found_file = Some(data_dir + "/" + file)
           break
         }
       }
@@ -778,8 +902,8 @@ fn _run_report(format : String) -> Unit {
         for code in codes {
           for date_range in date_ranges {
             let candidate = (market + "_" + code + "_" + date_range + ".csv").to_string()
-            if @ffi.file_exists("data/" + candidate) {
-              found_file = Some("data/" + candidate)
+            if @ffi.file_exists(data_dir + "/" + candidate) {
+              found_file = Some(data_dir + "/" + candidate)
               break
             }
           }
