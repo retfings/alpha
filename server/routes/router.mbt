@@ -79,7 +79,7 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
 
   if clean_path.has_prefix("/api/industries/") && clean_path.has_suffix("/stocks") {
     let industry = clean_path[16:].to_string()
-    let industry_clean = industry.replace(old~="/stocks", new~="")
+    let industry_clean = industry.replace(old="/stocks", new="")
     return handle_get_industry_stocks(industry_clean)
   }
 
@@ -94,7 +94,7 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
 
   if clean_path.has_prefix("/api/backtest/") && clean_path.has_suffix("/result") {
     let id = clean_path[14:].to_string()
-    let id_clean = id.replace(old~="/result", new~="")
+    let id_clean = id.replace(old="/result", new="")
     return handle_get_backtest_result(id_clean)
   }
 

@@ -54,8 +54,8 @@ fn get_stock_info(code : String) -> StockInfo {
 ///|
 /// Get industry based on stock code
 fn get_industry_for_code(code : String) -> String {
-  let code_num = code[3:].to_string()
-  let prefix = code_num[0:2].to_string()
+  let code_num = code[3:]
+  let prefix = code_num[0:2]
 
   match prefix {
     "60" => "Banking"
@@ -75,8 +75,8 @@ fn get_industry_for_code(code : String) -> String {
 ///|
 /// Get stock name based on code
 fn get_name_for_code(code : String) -> String {
-  let code_num = code[3:].to_string()
-  "Stock " + code_num
+  let code_num = code[3:]
+  "Stock " + code_num.to_string()
 }
 
 ///|
@@ -165,7 +165,7 @@ pub fn filter_stocks(filter : StockFilter) -> Array[StockInfo] {
 ///|
 /// Load K-line data from CSV file
 pub fn load_klines_for_stock(code : String) -> Array[@data.KLine] {
-  let filename = "data/" + code.replace(old~=".", new~="_") + "_*.csv"
+  let filename = "data/" + code.replace(old=".", new="_") + "_*.csv"
 
   // In production, would scan for matching file and load
   // For now, return empty array (placeholder)
