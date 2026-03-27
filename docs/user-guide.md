@@ -53,14 +53,16 @@ python script/download_data.py --stocks sh.600000,sz.000001 --days 365
 
 ### 2. Run a Backtest
 
+**Important**: Due to MoonBit C backend's parameter passing mechanism, CLI commands require environment variables:
+
 ```bash
-moon run cmd/main backtest --strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
 ```
 
 ### 3. Analyze Drawdown
 
 ```bash
-moon run cmd/main analyze --stock sh.600000 --metric max_drawdown
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
 ```
 
 ## CLI Commands
@@ -71,7 +73,7 @@ Analyze historical drawdown metrics for a stock or portfolio.
 
 **Syntax:**
 ```bash
-moon run cmd/main analyze --stock <CODE> --metric <METRIC>
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock <CODE> --metric <METRIC>" moon run cmd/main
 ```
 
 **Options:**
@@ -89,13 +91,13 @@ moon run cmd/main analyze --stock <CODE> --metric <METRIC>
 **Examples:**
 ```bash
 # Analyze maximum drawdown for a single stock
-moon run cmd/main analyze --stock sh.600000
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
 
 # Analyze all metrics
-moon run cmd/main analyze --stock sz.000001 --metric all
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sz.000001 --metric all" moon run cmd/main
 
 # Analyze multiple stocks (batch mode)
-moon run cmd/main analyze --stocks sh.600000,sz.000001 --metrics all
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stocks sh.600000,sz.000001 --metrics all" moon run cmd/main
 ```
 
 ### `backtest` - Run Strategy Backtest
@@ -104,7 +106,7 @@ Execute a trading strategy backtest over historical data.
 
 **Syntax:**
 ```bash
-moon run cmd/main backtest --strategy <NAME> --stock <CODE> --start <DATE> --end <DATE>
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy <NAME> --stock <CODE> --start <DATE> --end <DATE>" moon run cmd/main
 ```
 
 **Options:**
@@ -121,10 +123,10 @@ moon run cmd/main backtest --strategy <NAME> --stock <CODE> --start <DATE> --end
 **Examples:**
 ```bash
 # Basic backtest
-moon run cmd/main backtest --strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
 
 # Backtest with custom capital
-moon run cmd/main backtest --strategy momentum --stock sz.000001 --start 2023-01-01 --end 2023-06-30 --capital 500000
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy momentum --stock sz.000001 --start 2023-01-01 --end 2023-06-30 --capital 500000" moon run cmd/main
 ```
 
 ### `list-strategies` - List Available Strategies
@@ -133,7 +135,7 @@ Display all available trading strategies.
 
 **Syntax:**
 ```bash
-moon run cmd/main list-strategies
+MOONBIT_CMD=list-strategies moon run cmd/main
 ```
 
 ### `report` - Generate Analysis Report
@@ -142,7 +144,7 @@ Generate a comprehensive analysis report in HTML format.
 
 **Syntax:**
 ```bash
-moon run cmd/main report --output <FILENAME>
+MOONBIT_CMD=report MOONBIT_ARGS="--format <FORMAT>" moon run cmd/main
 ```
 
 **Options:**
@@ -152,7 +154,7 @@ moon run cmd/main report --output <FILENAME>
 
 **Examples:**
 ```bash
-moon run cmd/main report --output my_analysis.html
+MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main
 ```
 
 ### `help` - Show Help
@@ -160,7 +162,7 @@ moon run cmd/main report --output my_analysis.html
 Display help information.
 
 ```bash
-moon run cmd/main help
+MOONBIT_CMD=help moon run cmd/main
 ```
 
 ### `serve` - Start HTTP API Server
@@ -169,7 +171,7 @@ Start the HTTP API server for programmatic access to the framework's features.
 
 **Syntax:**
 ```bash
-moon run cmd/main serve --port <PORT>
+MOONBIT_CMD=serve MOONBIT_ARGS="--port <PORT>" moon run cmd/main
 ```
 
 **Options:**
@@ -180,10 +182,10 @@ moon run cmd/main serve --port <PORT>
 **Examples:**
 ```bash
 # Start server on default port 8080
-moon run cmd/main serve
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
 
 # Start server on custom port
-moon run cmd/main serve --port 3000
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 3000" moon run cmd/main
 ```
 
 **Available API Endpoints:**
@@ -441,7 +443,7 @@ Drawdown values are expressed as negative percentages:
 
 5. **Run backtests**
    ```bash
-   moon run cmd/main backtest --strategy your_strategy --stock sh.600000
+   MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy your_strategy --stock sh.600000" moon run cmd/main
    ```
 
 6. **Review results and iterate**

@@ -480,28 +480,32 @@ pub fn is_strategy_suitable_for_kelly(win_rate : Float, win_loss_ratio : Float) 
 moonbit-drawdown - 量化回撤分析工具
 
 USAGE:
-    moon run cmd/main [COMMAND] [OPTIONS]
+    MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run cmd/main
 
 COMMANDS:
-    backtest        运行策略回测
     analyze         分析股票/组合回撤
+    backtest        运行策略回测
     monitor         实时监控模式
     report          生成分析报告
     list-strategies 列出所有可用策略
+    serve           启动 HTTP API 服务器
     help            显示帮助信息
 
 EXAMPLES:
     # 回测单个策略
-    moon run cmd/main backtest --strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31
+    MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
 
     # 分析股票最大回撤
-    moon run cmd/main analyze --stock sh.600000 --metric max_drawdown
+    MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
 
     # 批量分析多只股票
-    moon run cmd/main analyze --stocks sh.600000,sz.000001 --metrics all
+    MOONBIT_CMD=analyze MOONBIT_ARGS="--stocks sh.600000,sz.000001 --metrics all" moon run cmd/main
 
     # 生成报告
-    moon run cmd/main report --output report.html
+    MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main
+
+    # 启动服务器
+    MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
 ```
 
 ### Web 界面设计 (`www/`)

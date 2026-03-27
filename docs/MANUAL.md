@@ -1194,7 +1194,7 @@ pub struct Strategy {
 
 4. **运行回测**
    ```bash
-   moon run cmd/main backtest --strategy my_strategy
+   MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy" moon run cmd/main
    ```
 
 #### 常用策略模式

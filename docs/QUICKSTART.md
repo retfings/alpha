@@ -162,7 +162,7 @@ let ma20 = indicator::sma(closes, 20)
 1. 参考 `src/strategy/builtins/ma_cross.mbt` 学习策略结构
 2. 使用 `src/indicator/` 中的技术指标
 3. 运行 `moon test` 确保策略正确
-4. 使用 `moon run cmd/main backtest` 回测策略
+4. 使用 `MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy"` 回测策略
    ```bash
    MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy --stock sh.600000" moon run cmd/main
    ```
