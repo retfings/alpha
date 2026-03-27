@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/alpha/src/strategy/builtins"
+package "retfings/alpha/src/strategy/builtins"
 
 import {
-  "username/alpha/src/data",
-  "username/alpha/src/strategy",
+  "retfings/alpha/src/data",
+  "retfings/alpha/src/strategy",
 }
 
 // Values

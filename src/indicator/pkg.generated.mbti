@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/alpha/src/indicator"
+package "retfings/alpha/src/indicator"
 
 import {
-  "username/alpha/src/data",
+  "retfings/alpha/src/data",
 }
 
 // Values

@@ -1,5 +1,5 @@
 import {
-  "username/alpha/src/data" @data,
-  "username/alpha/src/strategy" @strategy,
-  "username/alpha/src/indicator" @indicator,
+  "retfings/alpha/src/data" @data,
+  "retfings/alpha/src/strategy" @strategy,
+  "retfings/alpha/src/indicator" @indicator,
 }

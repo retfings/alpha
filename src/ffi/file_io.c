@@ -9,6 +9,8 @@
 
 #ifdef _WIN32
 #include <direct.h>
+#else
+#include <dirent.h>
 #endif
 
 // Read file content and return as Bytes
@@ -140,4 +142,107 @@ int64_t moonbit_get_file_mtime(const char *path) {
     return -1;
   }
   return (int64_t)st.st_mtime;
+}
+
+// List files in directory (returns array of file names)
+// The result_struct is a pointer to an array of char* that will be allocated
+// The caller is responsible for freeing the returned array
+MOONBIT_FFI_EXPORT
+int32_t moonbit_list_files(const char *dir_path, const char ***result_arr, const char ***result_lens) {
+#ifdef _WIN32
+  // Windows implementation
+  WIN32_FIND_DATAA find_data;
+  HANDLE hFind;
+  char search_path[MAX_PATH];
+
+  snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
+  hFind = FindFirstFileA(search_path, &find_data);
+
+  if (hFind == INVALID_HANDLE_VALUE) {
+    *result_arr = NULL;
+    return 0;
+  }
+
+  // Count files first
+  int count = 0;
+  do {
+    if (strcmp(find_data.cFileName, ".") != 0 && strcmp(find_data.cFileName, "..") != 0) {
+      count++;
+    }
+  } while (FindNextFileA(hFind, &find_data) != 0);
+
+  FindClose(hFind);
+
+  if (count == 0) {
+    *result_arr = NULL;
+    return 0;
+  }
+
+  // Allocate array
+  char **files = (char **)malloc(count * sizeof(char *));
+  int *lens = (int *)malloc(count * sizeof(int));
+
+  // Re-scan directory
+  hFind = FindFirstFileA(search_path, &find_data);
+  int idx = 0;
+  do {
+    if (strcmp(find_data.cFileName, ".") != 0 && strcmp(find_data.cFileName, "..") != 0) {
+      size_t len = strlen(find_data.cFileName);
+      files[idx] = (char *)malloc(len + 1);
+      strcpy(files[idx], find_data.cFileName);
+      lens[idx] = (int)len;
+      idx++;
+    }
+  } while (FindNextFileA(hFind, &find_data) != 0);
+
+  FindClose(hFind);
+  *result_arr = (const char **)files;
+  *result_lens = (const char **)lens;
+  return count;
+#else
+  // POSIX implementation
+  DIR *dir = opendir(dir_path);
+  if (!dir) {
+    *result_arr = NULL;
+    return 0;
+  }
+
+  // Count files first
+  struct dirent *entry;
+  int count = 0;
+  while ((entry = readdir(dir)) != NULL) {
+    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+      count++;
+    }
+  }
+
+  rewinddir(dir);
+
+  if (count == 0) {
+    closedir(dir);
+    *result_arr = NULL;
+    return 0;
+  }
+
+  // Allocate array
+  char **files = (char **)malloc(count * sizeof(char *));
+  int *lens = (int *)malloc(count * sizeof(int));
+
+  // Read directory entries
+  int idx = 0;
+  while ((entry = readdir(dir)) != NULL) {
+    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+      size_t len = strlen(entry->d_name);
+      files[idx] = (char *)malloc(len + 1);
+      strcpy(files[idx], entry->d_name);
+      lens[idx] = (int)len;
+      idx++;
+    }
+  }
+
+  closedir(dir);
+  *result_arr = (const char **)files;
+  *result_lens = (const char **)lens;
+  return count;
+#endif
 }

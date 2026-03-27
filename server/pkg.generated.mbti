@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/alpha/server"
+package "retfings/alpha/server"
 
 // Values
 pub fn extract_backtest_id(String) -> String?

@@ -1,7 +1,10 @@
 import {
-  "username/alpha/src/ffi" @ffi,
-  "username/alpha/server" @server,
+  "retfings/alpha/src/ffi" @ffi,
+  "retfings/alpha/server" @server,
+  "retfings/alpha/src/data" @data,
+  "retfings/alpha/src/drawdown" @drawdown,
   "moonbitlang/core/strconv",
+  "moonbitlang/core/math"
 }
 
 options(

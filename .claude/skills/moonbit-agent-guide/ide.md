@@ -31,10 +31,10 @@ moon ide goto-definition -query 'Trait for Type with method'
 moon ide goto-definition -query '@moonbitlang/x encode'
 
 # Find symbol in multiple packages (searches in pkg1 OR pkg2)
-moon ide goto-definition -query '@username/mymodule/pkg1 @username/mymodule/pkg2 helper'
+moon ide goto-definition -query '@retfings/mymodule/pkg1 @retfings/mymodule/pkg2 helper'
 
 # Find symbol in nested package
-moon ide goto-definition -query '@username/mymodule/mypkg helper'
+moon ide goto-definition -query '@retfings/mymodule/mypkg helper'
 ```
 
 **Supported symbols**: functions, constants, let bindings, types, structs, enums, traits
@@ -101,7 +101,7 @@ moon ide goto-definition -tags 'error' -query '@mymodule/parser ParseError'
 moon ide goto-definition -query '@moonbitlang/x @moonbitlang/core encode'
 
 # Combine package filtering with tags
-moon ide goto-definition -tags 'pub fn' -query '@username/myapp helper'
+moon ide goto-definition -tags 'pub fn' -query '@retfings/myapp helper'
 ```
 
 ### Query Processing

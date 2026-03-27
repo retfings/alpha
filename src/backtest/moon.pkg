@@ -1,15 +1,15 @@
 import {
-  "username/alpha/src/data" @data,
-  "username/alpha/src/portfolio" @portfolio,
-  "username/alpha/src/strategy" @strategy,
-  "username/alpha/src/risk" @risk,
-  "username/alpha/src/drawdown" @drawdown,
-  "username/alpha/src/ffi" @ffi,
-  "username/alpha/server" @server,
+  "retfings/alpha/src/data" @data,
+  "retfings/alpha/src/portfolio" @portfolio,
+  "retfings/alpha/src/strategy" @strategy,
+  "retfings/alpha/src/risk" @risk,
+  "retfings/alpha/src/drawdown" @drawdown,
+  "retfings/alpha/src/ffi" @ffi,
+  "retfings/alpha/server" @server,
   "moonbitlang/core/json",
   "moonbitlang/core/math",
 }
 
 import {
-  "username/alpha/src/indicator" @indicator,
+  "retfings/alpha/src/indicator" @indicator,
 } for "test"

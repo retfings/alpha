@@ -1,4 +1,4 @@
 import {
-  "username/alpha/src/data" @data,
-  "username/alpha/src/portfolio" @portfolio,
+  "retfings/alpha/src/data" @data,
+  "retfings/alpha/src/portfolio" @portfolio,
 }

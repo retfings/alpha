@@ -1,11 +1,11 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/alpha/src/backtest"
+package "retfings/alpha/src/backtest"
 
 import {
-  "username/alpha/src/data",
-  "username/alpha/src/portfolio",
-  "username/alpha/src/risk",
-  "username/alpha/src/strategy",
+  "retfings/alpha/src/data",
+  "retfings/alpha/src/portfolio",
+  "retfings/alpha/src/risk",
+  "retfings/alpha/src/strategy",
 }
 
 // Values

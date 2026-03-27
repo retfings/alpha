@@ -16,7 +16,7 @@
 
 ## 数据类型模块 (data)
 
-**包路径**: `username/alpha/src/data`
+**包路径**: `retfings/alpha/src/data`
 
 ### 核心类型
 
@@ -224,7 +224,7 @@ pub fn annualize_volatility(Float, Int) -> Float
 
 ## 技术指标模块 (indicator)
 
-**包路径**: `username/alpha/src/indicator`
+**包路径**: `retfings/alpha/src/indicator`
 
 所有指标函数都接受数据数组并返回计算结果数组。
 
@@ -367,7 +367,7 @@ if current_price > upper[last] {
 
 ## 投资组合模块 (portfolio)
 
-**包路径**: `username/alpha/src/portfolio`
+**包路径**: `retfings/alpha/src/portfolio`
 
 ### 核心类型
 
@@ -456,7 +456,7 @@ io::println("仓位：" + String::from_float(portfolio.position_ratio() * 100) +
 
 ## 风险管理模块 (risk)
 
-**包路径**: `username/alpha/src/risk`
+**包路径**: `retfings/alpha/src/risk`
 
 ### 核心类型
 
@@ -646,7 +646,7 @@ if !result.passed {
 
 ## 回撤计算模块 (drawdown)
 
-**包路径**: `username/alpha/src/drawdown`
+**包路径**: `retfings/alpha/src/drawdown`
 
 ### 核心类型
 
@@ -874,7 +874,7 @@ if monitor.is_alert_triggered() {
 
 ## 策略引擎模块 (strategy)
 
-**包路径**: `username/alpha/src/strategy`
+**包路径**: `retfings/alpha/src/strategy`
 
 ### 核心类型
 
@@ -1043,7 +1043,7 @@ pub fn ma_cross_strategy() -> Strategy {
 
 ## 回测引擎模块 (backtest)
 
-**包路径**: `username/alpha/src/backtest`
+**包路径**: `retfings/alpha/src/backtest`
 
 ### 核心类型
 
@@ -1279,10 +1279,10 @@ io::println("胜率：" + String::from_float(result.stats.win_rate * 100) + "%")
 ### 回测单个策略
 
 ```moonbit
-import username/alpha/src/data
-import username/alpha/src/strategy
-import username/alpha/src/backtest
-import username/alpha/src/indicator
+import retfings/alpha/src/data
+import retfings/alpha/src/strategy
+import retfings/alpha/src/backtest
+import retfings/alpha/src/indicator
 
 fn main {
   // 1. 加载数据

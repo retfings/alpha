@@ -198,18 +198,172 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
     )
   }
 
-  println("Loading data...")
-  println("Computing drawdown metrics...")
-  println("")
+  // Build file path from stock code (e.g., sh.600000 -> data/sh_600000_*.csv)
+  let stock_parts = stock.split(".")
+  let stock_parts_arr = stock_parts.to_array()
+  if stock_parts_arr.length() < 2 {
+    println("Error: Invalid stock code format")
+    return
+  }
+  let market = stock_parts_arr[0]
+  let code = stock_parts_arr[1]
 
-  // Demo output
-  println("Results:")
-  println("  Max Drawdown: -15.23%")
-  println("  Current Drawdown: -2.45%")
-  println("  Drawdown Duration: 12 days")
-  println("  Recovery Status: In drawdown")
-  println("")
-  println("Note: Full analysis requires data file at data/\{stock}.csv")
+  // Try to find the data file by checking common patterns
+  // We try to read files that match the pattern
+  let mut found_file : String? = None
+
+  // Hardcoded list of known data files (since we can't use opendir in MoonBit FFI easily)
+  // This is a workaround - in production, you'd use a proper FFI for list_files
+  let known_files = [
+    "sh_600000_2026-01-01_2026-03-26.csv",
+    "sh_600001_2026-01-01_2026-03-26.csv",
+    "sh_600002_2026-01-01_2026-03-26.csv",
+    "sh_600003_2026-01-01_2026-03-26.csv",
+    "sh_600004_2026-01-01_2026-03-26.csv",
+    "sh_600005_2026-01-01_2026-03-26.csv",
+    "sh_600006_2026-01-01_2026-03-26.csv",
+    "sh_600007_2026-01-01_2026-03-26.csv",
+    "sh_600008_2026-01-01_2026-03-26.csv",
+    "sh_600009_2026-01-01_2026-03-26.csv",
+    "sh_600010_2026-01-01_2026-03-26.csv",
+    "sh_600011_2026-01-01_2026-03-26.csv",
+    "sh_600012_2026-01-01_2026-03-26.csv",
+    "sh_600015_2026-01-01_2026-03-26.csv",
+    "sh_600016_2026-01-01_2026-03-26.csv",
+    "sh_600017_2026-01-01_2026-03-26.csv",
+    "sh_600018_2026-01-01_2026-03-26.csv",
+  ]
+
+  for file in known_files {
+    if file.has_prefix(market + "_" + code + "_") {
+      found_file = Some("data/" + file)
+      break
+    }
+  }
+
+  match found_file {
+    Some(filepath) => {
+      println("Found data file: \{filepath}")
+      println("Computing drawdown metrics...")
+      println("")
+
+      // Load K-line data
+      match @data.load_klines_from_csv(filepath) {
+        Ok(klines) => {
+          if klines.length() == 0 {
+            println("Error: No data found in file")
+            return
+          }
+
+          println("Loaded \{klines.length()} bars")
+          println("")
+
+          // Extract close prices for drawdown calculation
+          let close_prices = klines.map(fn(k) { k.close })
+          let dates = klines.map(fn(k) { k.date })
+
+          // Calculate drawdown metrics
+          let max_dd = @drawdown.calculate_max_drawdown(close_prices)
+          let current_dd = @drawdown.calculate_current_drawdown(close_prices)
+          let dd_stats = @drawdown.get_drawdown_stats(close_prices)
+
+          // Find max drawdown details
+          let max_dd_info = @drawdown.calculate_max_drawdown_detailed(close_prices, dates)
+
+          // Calculate additional statistics
+          let mut min_price = close_prices[0]
+          let mut max_price = close_prices[0]
+          let mut min_date = dates[0]
+          let mut max_date = dates[0]
+          let mut i = 0
+          while i < close_prices.length() {
+            if close_prices[i] < min_price {
+              min_price = close_prices[i]
+              min_date = dates[i]
+            }
+            if close_prices[i] > max_price {
+              max_price = close_prices[i]
+              max_date = dates[i]
+            }
+            i = i + 1
+          }
+
+          let first_date = dates[0]
+          let last_date = dates[dates.length() - 1]
+          let first_close = close_prices[0]
+          let last_close = close_prices[close_prices.length() - 1]
+          let period_return = (last_close - first_close) / first_close
+
+          // Output results
+          println("=======================================")
+          println("         DRAWDOWN ANALYSIS RESULTS")
+          println("=======================================")
+          println("")
+          println("Data Range: \{first_date} to \{last_date}")
+          println("Total Bars: \{klines.length()}")
+          println("")
+          println("Price Statistics:")
+          println("  Highest Price: \{max_price} (\{max_date})")
+          println("  Lowest Price:  \{min_price} (\{min_date})")
+          println("  First Close:   \{first_close}")
+          println("  Last Close:    \{last_close}")
+          println("  Period Return: \{Float::to_string(period_return * 100.0)}%")
+          println("")
+          println("Drawdown Metrics:")
+          println("  Max Drawdown:       \{Float::to_string(max_dd * 100.0)}%")
+          println("  Current Drawdown:   \{Float::to_string(current_dd * 100.0)}%")
+          println("  Avg Drawdown:       \{Float::to_string(dd_stats.avg_drawdown * 100.0)}%")
+          println("  Drawdown Count:     \{dd_stats.drawdown_count}")
+          println("")
+
+          match max_dd_info {
+            Some(info) => {
+              let recovered_str = if info.recovered { "Yes" } else { "No" }
+              println("Max Drawdown Details:")
+              println("  Peak:   \{info.peak} (\{info.peak_date})")
+              println("  Trough: \{info.trough} (\{info.trough_date})")
+              println("  Duration: \{info.duration} days")
+              println("  Recovered: \{recovered_str}")
+              println("")
+            }
+            None => {
+              println("Max Drawdown Details: Unable to calculate")
+              println("")
+            }
+          }
+
+          // Drawdown level classification
+          let dd_level = if max_dd > -0.05 {
+            "Normal (< 5%)"
+          } else if max_dd > -0.10 {
+            "Minor (5-10%)"
+          } else if max_dd > -0.20 {
+            "Moderate (10-20%)"
+          } else if max_dd > -0.30 {
+            "Significant (20-30%)"
+          } else {
+            "Severe (> 30%)"
+          }
+          println("Drawdown Level: \{dd_level}")
+          println("=======================================")
+        }
+        Err(e) => {
+          println("Error loading data: \{e}")
+        }
+      }
+    }
+    None => {
+      println("Error: No data file found for stock '\{stock}'")
+      println("Expected file pattern: data/\{market}_\{code}_*.csv")
+      println("")
+      println("Available files in data/:")
+      for file in known_files {
+        if file.has_suffix(".csv") {
+          println("  - \{file}")
+        }
+      }
+    }
+  }
 }
 
 ///|

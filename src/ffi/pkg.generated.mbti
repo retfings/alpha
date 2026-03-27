@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/alpha/src/ffi"
+package "retfings/alpha/src/ffi"
 
 // Values
 pub fn file_exists(String) -> Bool

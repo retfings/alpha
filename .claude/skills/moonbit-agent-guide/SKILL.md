@@ -98,10 +98,10 @@ my_module
 │       ├── main.mbt
 │       └── moon.pkg     # executable package with `options("is-main": true)`
 ├── liba/                     # Library packages
-│   └── moon.pkg         # Referenced by other packages as `@username/my_module/liba`
+│   └── moon.pkg         # Referenced by other packages as `@retfings/my_module/liba`
 │   └── libb/                 # Library packages
-│       └── moon.pkg     # Referenced by other packages as `@username/my_module/liba/libb`
-├── user_pkg.mbt              # Root packages, referenced by other packages as `@username/my_module`
+│       └── moon.pkg     # Referenced by other packages as `@retfings/my_module/liba/libb`
+├── user_pkg.mbt              # Root packages, referenced by other packages as `@retfings/my_module`
 ├── user_pkg_wbtest.mbt       # White-box tests (only needed for testing internal private members, similar to Golang's package mypackage)
 └── user_pkg_test.mbt         # Black-box tests
 └── ...                       # More package files, symbols visible to current package (like Golang)
@@ -510,7 +510,7 @@ moon update                   # Update package index
 
 ```json
 {
-  "name": "username/hello", // Required format for published modules
+  "name": "retfings/hello", // Required format for published modules
   "version": "0.1.0",
   "source": ".", // Source directory(optional, default: ".")
   "repository": "", // Git repository URL
@@ -528,7 +528,7 @@ moon update                   # Update package index
 moon.pkg for simplicity
 ```
 import {
-  "username/hello/liba",
+  "retfings/hello/liba",
   "moonbitlang/x/encoding" @libb
 }
 import {...} for "test"
@@ -540,7 +540,7 @@ or moon.pkg.json (legacy mode)
 {
   "is_main": true,                 // Creates executable when true
   "import": [                      // Package dependencies
-    "username/hello/liba",         // Simple import, use @liba.foo() to call functions
+    "retfings/hello/liba",         // Simple import, use @liba.foo() to call functions
     {
       "path": "moonbitlang/x/encoding",
       "alias": "libb"              // Custom alias, use @libb.encode() to call functions
@@ -557,13 +557,13 @@ Packages are per directory and packages without a `moon.pkg` or `moon.pkg.json` 
 
 - **Import format**: `"module_name/package_path"`
 - **Usage**: `@alias.function()` to call imported functions
-- **Default alias**: Last part of path (e.g., `liba` for `username/hello/liba`)
+- **Default alias**: Last part of path (e.g., `liba` for `retfings/hello/liba`)
 - **Package reference**: Use `@packagename` in test files to reference the
   tested package
 
 **Package Alias Rules**:
 
-- Import `"username/hello/liba"` → use `@liba.function()` (default alias is the last path segment)
+- Import `"retfings/hello/liba"` → use `@liba.function()` (default alias is the last path segment)
 - Import with custom alias `import { "moonbitlang/x/encoding" @enc}` → use `@enc.function()`
   (Note that this is unnecessary when the last path segment is identical to the alias name.)
 - In `_test.mbt` or `_wbtest.mbt` files, the package being tested is auto-imported
@@ -572,7 +572,7 @@ Example:
 
 ```mbt
 ///|
-/// In main.mbt after importing "username/hello/liba" in `moon.pkg`
+/// In main.mbt after importing "retfings/hello/liba" in `moon.pkg`
 fn main {
   println(@liba.hello()) // Calls hello() from liba package
 }
@@ -595,7 +595,7 @@ To add a new package `fib` under `.`:
 
    ```
      import {
-      "username/hello/fib",
+      "retfings/hello/fib",
      }
    ```
 

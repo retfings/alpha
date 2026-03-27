@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/alpha/src/portfolio"
+package "retfings/alpha/src/portfolio"
 
 // Values
 pub fn create_portfolio(Float) -> Portfolio

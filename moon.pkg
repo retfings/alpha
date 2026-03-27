@@ -1,8 +1,8 @@
 import {
-  "username/alpha/src/data" @data,
-  "username/alpha/src/drawdown" @drawdown,
-  "username/alpha/src/strategy" @strategy,
-  "username/alpha/src/risk" @risk,
-  "username/alpha/src/portfolio" @portfolio,
-  "username/alpha/src/backtest" @backtest,
+  "retfings/alpha/src/data" @data,
+  "retfings/alpha/src/drawdown" @drawdown,
+  "retfings/alpha/src/strategy" @strategy,
+  "retfings/alpha/src/risk" @risk,
+  "retfings/alpha/src/portfolio" @portfolio,
+  "retfings/alpha/src/backtest" @backtest,
 }
