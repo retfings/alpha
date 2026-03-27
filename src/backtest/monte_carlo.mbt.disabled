@@ -7,7 +7,7 @@
 fn init_random(seed : Int?) -> Int {
   match seed {
     Some(s) => s
-    None => ffi::get_time_ms() % 100000
+    None => 12345  // Default fixed seed for reproducibility
   }
 }
 
@@ -17,7 +17,7 @@ fn random_next(seed : Int) -> (Int, Float) {
   // LCG parameters (same as glibc)
   let a = 1103515245
   let c = 12345
-  let m = 2147483648  // 2^31
+  let m = 2147483647  // 2^31 - 1 (max Int value)
 
   let new_seed = (a * seed + c) % m
   let random_value = Float::from_int(new_seed) / Float::from_int(m)
@@ -26,23 +26,24 @@ fn random_next(seed : Int) -> (Int, Float) {
 
 ///|
 /// Generate random float in range [0, 1)
-fn random_float(seed : Int) -> (Int, Float) {
+pub fn random_float(seed : Int) -> (Int, Float) {
   random_next(seed)
 }
 
 ///|
 /// Generate random integer in range [0, max)
-fn random_int(seed : Int, max : Int) -> (Int, Int) {
+pub fn random_int(seed : Int, max : Int) -> (Int, Int) {
   let (new_seed, value) = random_next(seed)
-  (new_seed, Int::from_float(value * Float::from_int(max)) % max)
+  let idx = Float::to_int(value * Float::from_int(max)) % max
+  (new_seed, idx)
 }
 
 ///|
 /// Shuffle array using Fisher-Yates algorithm
-fn shuffle_array[T](arr : Array[T], seed : Int) -> (Int, Array[T]) {
+pub fn shuffle_array[T](arr : Array[T], seed : Int) -> (Int, Array[T]) {
   let mut current_seed = seed
   let len = arr.length()
-  let mut result = arr
+  let result = arr
 
   let mut i = len - 1
   while i > 0 {
@@ -52,8 +53,8 @@ fn shuffle_array[T](arr : Array[T], seed : Int) -> (Int, Array[T]) {
     // Swap elements at i and j
     if j >= 0 && j < len && i >= 0 && i < len {
       let temp = result[i]
-      result = result.set(i, result[j])
-      result = result.set(j, temp)
+      result.set(i, result[j])
+      result.set(j, temp)
     }
     i = i - 1
   }
@@ -63,10 +64,10 @@ fn shuffle_array[T](arr : Array[T], seed : Int) -> (Int, Array[T]) {
 
 ///|
 /// Sample array with replacement (bootstrap)
-fn bootstrap_sample[T](arr : Array[T], seed : Int, size : Int) -> (Int, Array[T]) {
+pub fn bootstrap_sample[T](arr : Array[T], seed : Int, size : Int) -> (Int, Array[T]) {
   let mut current_seed = seed
   let len = arr.length()
-  let mut result : Array[T] = []
+  let result : Array[T] = []
 
   let mut i = 0
   while i < size {
@@ -83,15 +84,14 @@ fn bootstrap_sample[T](arr : Array[T], seed : Int, size : Int) -> (Int, Array[T]
 
 ///|
 /// Add noise to trade prices
-fn add_slippage_noise(trades : Array[@Trade], max_slippage : Float, seed : Int) -> (Int, Array[@Trade]) {
+pub fn add_slippage_noise(trades : Array[Trade], max_slippage : Float, seed : Int) -> (Int, Array[Trade]) {
   let mut current_seed = seed
-  let mut result : Array[@Trade] = []
+  let result : Array[Trade] = []
 
   for trade in trades {
     let (new_seed, noise1) = random_next(current_seed)
     current_seed = new_seed
-    let (new_seed2, noise2) = random_next(new_seed)
-    current_seed = new_seed2
+    let (_new_seed2, _noise2) = random_next(new_seed)
 
     // Random slippage in [-max_slippage, +max_slippage]
     let slippage = (noise1 - 0.5) * 2.0 * max_slippage
@@ -103,11 +103,12 @@ fn add_slippage_noise(trades : Array[@Trade], max_slippage : Float, seed : Int) 
       @strategy.Action::Sell => trade.price * (1.0 - slippage)
       @strategy.Action::Hold => trade.price
     }
+    ignore(adjusted_price)
 
-    result.push(@Trade::{
+    result.push(Trade::{
       stock: trade.stock,
       action: trade.action,
-      price: adjusted_price,
+      price: new_price,
       quantity: trade.quantity,
       timestamp: trade.timestamp,
       commission: trade.commission,
@@ -119,9 +120,9 @@ fn add_slippage_noise(trades : Array[@Trade], max_slippage : Float, seed : Int) 
 
 ///|
 /// Filter trades by random skipping
-fn skip_trades(trades : Array[@Trade], skip_prob : Float, seed : Int) -> (Int, Array[@Trade]) {
+fn skip_trades(trades : Array[Trade], skip_prob : Float, seed : Int) -> (Int, Array[Trade]) {
   let mut current_seed = seed
-  let mut result : Array[@Trade] = []
+  let result : Array[Trade] = []
 
   for trade in trades {
     let (new_seed, value) = random_next(current_seed)
@@ -139,7 +140,7 @@ fn skip_trades(trades : Array[@Trade], skip_prob : Float, seed : Int) -> (Int, A
 ///|
 /// Run Monte Carlo simulation on backtest result
 pub fn run_monte_carlo(
-  original_result : @BacktestResult,
+  original_result : BacktestResult,
   config : MonteCarloConfig,
 ) -> MonteCarloResult {
   let seed = init_random(config.seed)
@@ -227,7 +228,7 @@ pub fn run_monte_carlo(
 ///|
 /// Calculate statistics from trades
 fn calculate_stats_from_trades(
-  trades : Array[@Trade],
+  trades : Array[Trade],
   initial_capital : Float,
 ) -> (Float, Float, Float) {
   if trades.length() == 0 {
@@ -236,7 +237,7 @@ fn calculate_stats_from_trades(
 
   // Calculate total return from trades
   let mut capital = initial_capital
-  let mut position : @Trade? = None
+  let mut position : Trade? = None
   let mut returns : Array[Float] = []
   let mut peak = capital
   let mut max_dd = 0.0

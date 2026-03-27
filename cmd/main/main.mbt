@@ -150,6 +150,9 @@ fn print_help() -> Unit {
   println("    serve             Start HTTP API server")
   println("    help              Show this help message")
   println("")
+  println("USAGE:")
+  println("    MOONBIT_CMD=<command> MOONBIT_ARGS=\"<args>\" moon run cmd/main")
+  println("")
   println("OPTIONS:")
   println("    --stock <code>     Stock code (e.g., sh.600000)")
   println("    --strategy <name>  Strategy name (e.g., ma_cross, momentum)")
@@ -160,24 +163,21 @@ fn print_help() -> Unit {
   println("    --port <number>    Server port (default: 8080)")
   println("")
   println("EXAMPLES:")
-  println(
-    "    moon run cmd/main analyze --stock sh.600000 --metric max_drawdown",
-  )
-  println(
-    "    moon run cmd/main backtest --strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31",
-  )
-  println("    moon run cmd/main monitor --stock sh.600000")
-  println("    moon run cmd/main report --format html")
-  println("    moon run cmd/main list-strategies")
-  println("    moon run cmd/main serve --port 8080")
+  println("    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000 --metric max_drawdown\" moon run cmd/main")
+  println("    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31\" moon run cmd/main")
+  println("    MOONBIT_CMD=monitor MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main")
+  println("    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main")
+  println("    MOONBIT_CMD=list-strategies moon run cmd/main")
+  println("    MOONBIT_CMD=serve MOONBIT_ARGS=\"--port 8080\" moon run cmd/main")
   println("")
   println("ENVIRONMENT VARIABLES:")
-  println(
-    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000 --metric max_drawdown\" moon run cmd/main",
-  )
-  println(
-    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000\" moon run cmd/main",
-  )
+  println("    MOONBIT_CMD  - Command name (analyze, backtest, monitor, report, list-strategies, serve)")
+  println("    MOONBIT_ARGS - Space-separated command arguments")
+  println("")
+  println("FULL EXAMPLES:")
+  println("    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main")
+  println("    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000\" moon run cmd/main")
+  println("    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main")
 }
 
 ///|
