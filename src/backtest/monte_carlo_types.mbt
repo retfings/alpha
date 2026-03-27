@@ -70,7 +70,10 @@ pub fn trade_skip_config(num_runs : Int, skip_prob : Float) -> MonteCarloConfig 
 
 ///|
 /// Create Monte Carlo config for slippage noise
-pub fn slippage_noise_config(num_runs : Int, max_slip : Float) -> MonteCarloConfig {
+pub fn slippage_noise_config(
+  num_runs : Int,
+  max_slip : Float,
+) -> MonteCarloConfig {
   MonteCarloConfig::{
     mode: MonteCarloMode::SlippageNoise,
     num_runs,

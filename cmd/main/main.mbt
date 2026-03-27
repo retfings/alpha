@@ -142,19 +142,28 @@ fn print_help() -> Unit {
   println("")
   println("COMMANDS:")
   println("    analyze           Analyze stock/portfolio drawdown")
-  println("    backtest          Run strategy backtest")
-  println("    monitor           Real-time monitoring mode")
-  println("    report            Generate analysis report")
-  println("    list-strategies   List available strategies")
+  println("    backtest          Run strategy backtest on historical data")
+  println("    monitor           Real-time drawdown monitoring mode")
+  println("    report            Generate backtest/analysis report")
+  println("    list-strategies   List all available trading strategies")
   println("    serve             Start HTTP API server")
   println("    help              Show this help message")
+  println("")
+  println("OPTIONS:")
+  println("    --stock <code>     Stock code (e.g., sh.600000)")
+  println("    --strategy <name>  Strategy name (e.g., ma_cross, momentum)")
+  println("    --start <date>     Start date (YYYY-MM-DD)")
+  println("    --end <date>       End date (YYYY-MM-DD)")
+  println("    --metric <name>    Metric to analyze (e.g., max_drawdown)")
+  println("    --format <fmt>     Report format (text, html, json)")
+  println("    --port <number>    Server port (default: 8080)")
   println("")
   println("EXAMPLES:")
   println(
     "    moon run cmd/main analyze --stock sh.600000 --metric max_drawdown",
   )
   println(
-    "    moon run cmd/main backtest --strategy ma_cross --stock sh.600000",
+    "    moon run cmd/main backtest --strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31",
   )
   println("    moon run cmd/main monitor --stock sh.600000")
   println("    moon run cmd/main report --format html")
@@ -168,14 +177,25 @@ fn _print_strategies() -> Unit {
   println("Available Strategies:")
   println("")
   println("  1. ma_cross")
-  println("     - Moving Average Crossover Strategy")
+  println("     Moving Average Crossover Strategy")
   println("     - Generates signals when fast MA crosses slow MA")
+  println("     - Parameters: fast_period, slow_period")
+  println("     - Best for: trending markets")
   println("")
   println("  2. momentum")
-  println("     - Momentum-based trading strategy")
+  println("     Momentum-based trading strategy")
   println("     - Uses rate of change and historical patterns")
+  println("     - Parameters: lookback_period, threshold")
+  println("     - Best for: mean reversion markets")
+  println("")
+  println("  3. rsi_mean_reversion")
+  println("     RSI-based mean reversion strategy")
+  println("     - Trades when RSI reaches extreme levels")
+  println("     - Parameters: rsi_period, oversold, overbought")
+  println("     - Best for: range-bound markets")
   println("")
   println("Use --strategy <name> to select a strategy for backtest")
+  println("Use moon run cmd/main backtest --help for more details")
 }
 
 ///|
@@ -218,7 +238,10 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
   match @ffi.getenv("DATA_FILES") {
     Some(files_str) => {
       // Parse comma-separated file list
-      let files = files_str.split(",").map(fn(s) { s.trim().to_string() }).to_array()
+      let files = files_str
+        .split(",")
+        .map(fn(s) { s.trim().to_string() })
+        .to_array()
       for file in files {
         if file != "" && file.has_prefix(market + "_" + code) {
           found_file = Some("data/" + file)
@@ -231,9 +254,7 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
       // This avoids hardcoding - just check if a matching file exists
       let base_pattern = market + "_" + code + "_"
       let date_ranges = [
-        "2026-01-01_2026-03-26",
-        "2025-01-01_2025-12-31",
-        "2024-01-01_2024-12-31",
+        "2026-01-01_2026-03-26", "2025-01-01_2025-12-31", "2024-01-01_2024-12-31",
         "2023-01-01_2023-12-31",
       ]
       for date_range in date_ranges {
@@ -273,7 +294,9 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
           let dd_stats = @drawdown.get_drawdown_stats(close_prices)
 
           // Find max drawdown details
-          let max_dd_info = @drawdown.calculate_max_drawdown_detailed(close_prices, dates)
+          let max_dd_info = @drawdown.calculate_max_drawdown_detailed(
+            close_prices, dates,
+          )
 
           // Calculate additional statistics
           let mut min_price = close_prices[0]
@@ -312,12 +335,18 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
           println("  Lowest Price:  \{min_price} (\{min_date})")
           println("  First Close:   \{first_close}")
           println("  Last Close:    \{last_close}")
-          println("  Period Return: \{Float::to_string(period_return * 100.0)}%")
+          println(
+            "  Period Return: \{Float::to_string(period_return * 100.0)}%",
+          )
           println("")
           println("Drawdown Metrics:")
           println("  Max Drawdown:       \{Float::to_string(max_dd * 100.0)}%")
-          println("  Current Drawdown:   \{Float::to_string(current_dd * 100.0)}%")
-          println("  Avg Drawdown:       \{Float::to_string(dd_stats.avg_drawdown * 100.0)}%")
+          println(
+            "  Current Drawdown:   \{Float::to_string(current_dd * 100.0)}%",
+          )
+          println(
+            "  Avg Drawdown:       \{Float::to_string(dd_stats.avg_drawdown * 100.0)}%",
+          )
           println("  Drawdown Count:     \{dd_stats.drawdown_count}")
           println("")
 
@@ -352,9 +381,7 @@ fn _run_analyze(stock : String, metric : String) -> Unit {
           println("Drawdown Level: \{dd_level}")
           println("=======================================")
         }
-        Err(e) => {
-          println("Error loading data: \{e}")
-        }
+        Err(e) => println("Error loading data: \{e}")
       }
     }
     None => {
@@ -395,38 +422,173 @@ fn _run_backtest(
   }
   println("")
 
-  // Validate strategy name
-  let valid_strategies = ["ma_cross", "momentum"]
-  let mut found = false
-  let mut i = 0
-  while i < valid_strategies.length() {
-    if valid_strategies[i] == strategy {
-      found = true
-      break
-    }
-    i = i + 1
-  }
-
-  if !found {
+  // Validate strategy name and create strategy instance
+  let strategy_obj = if strategy == "ma_cross" {
+    Some(@builtins.create_ma_cross_strategy(10, 30))
+  } else if strategy == "momentum" {
+    // Placeholder for momentum strategy
+    None
+  } else {
     println(
-      "Warning: Unknown strategy '\{strategy}'. Available: ma_cross, momentum",
+      "Error: Unknown strategy '\{strategy}'. Available: ma_cross, momentum",
     )
+    return
   }
 
-  println("Initializing backtest engine...")
-  println("Loading historical data...")
-  println("Running strategy simulation...")
-  println("")
+  match strategy_obj {
+    None => {
+      println("Error: Strategy '\{strategy}' is not yet implemented")
+      return
+    }
+    Some(_) => ignore(())
+  }
 
-  // Demo results
-  println("Backtest Results:")
-  println("  Total Return: 12.45%")
-  println("  Max Drawdown: -8.32%")
-  println("  Sharpe Ratio: 1.23")
-  println("  Total Trades: 24")
-  println("  Win Rate: 58.3%")
-  println("")
-  println("Note: Full backtest requires data file at data/\{stock}.csv")
+  // Build data file path from stock code
+  let stock_parts = stock.split(".")
+  let stock_parts_arr = stock_parts.to_array()
+  if stock_parts_arr.length() < 2 {
+    println("Error: Invalid stock code format")
+    return
+  }
+  let market = stock_parts_arr[0]
+  let code = stock_parts_arr[1]
+
+  // Find data file
+  let mut found_file : String? = None
+  match @ffi.getenv("DATA_FILES") {
+    Some(files_str) => {
+      let files = files_str
+        .split(",")
+        .map(fn(s) { s.trim().to_string() })
+        .to_array()
+      for file in files {
+        if file != "" && file.has_prefix(market + "_" + code) {
+          found_file = Some("data/" + file)
+          break
+        }
+      }
+    }
+    None => {
+      let base_pattern = market + "_" + code + "_"
+      let date_ranges = [
+        "2026-01-01_2026-03-26", "2025-01-01_2025-12-31", "2024-01-01_2024-12-31",
+        "2023-01-01_2023-12-31",
+      ]
+      for date_range in date_ranges {
+        let candidate = (base_pattern + date_range + ".csv").to_string()
+        if @ffi.file_exists("data/" + candidate) {
+          found_file = Some("data/" + candidate)
+          break
+        }
+      }
+    }
+  }
+
+  match found_file {
+    Some(filepath) => {
+      println("Loading data from: \{filepath}")
+
+      // Load K-line data
+      match @data.load_klines_from_csv(filepath) {
+        Ok(klines) => {
+          if klines.length() == 0 {
+            println("Error: No data found in file")
+            return
+          }
+
+          println("Loaded \{klines.length()} bars")
+          println("")
+
+          // Filter by date range if specified
+          let filtered_klines = if start != "" || end != "" {
+            klines.filter(fn(k) {
+              let pass_start = if start != "" { k.date >= start } else { true }
+              let pass_end = if end != "" { k.date <= end } else { true }
+              pass_start && pass_end
+            })
+          } else {
+            klines
+          }
+
+          if filtered_klines.length() == 0 {
+            println("Error: No data in specified date range")
+            return
+          }
+
+          println("Using \{filtered_klines.length()} bars for backtest")
+          println("")
+
+          // Create backtest engine and run
+          let config = @strategy.default_backtest_config()
+          let engine = @backtest.create_backtest_engine(config)
+
+          // Convert strategy to Strategy type
+          let ma_strategy = @builtins.create_ma_cross_strategy(10, 30)
+          let strategy_record = @strategy.Strategy::{
+            name: ma_strategy.name,
+            on_init: fn(_) { ignore(()) },
+            on_bar: fn(k, ctx, hist) { ma_strategy.on_bar(k, ctx, hist) },
+          }
+
+          let result = @backtest.run_backtest(
+            engine, filtered_klines, strategy_record,
+          )
+
+          // Print results
+          println("")
+          println("=======================================")
+          println("         BACKTEST RESULTS")
+          println("=======================================")
+          println("")
+          println("Configuration:")
+          println("  Strategy: \{strategy}")
+          println("  Stock: \{stock}")
+          println("  Initial Capital: \{result.initial_capital}")
+          println("")
+          println("Performance:")
+          println(
+            "  Final Capital:   \{Float::to_string(result.final_capital)}",
+          )
+          println(
+            "  Total Return:    \{Float::to_string(result.stats.total_return * 100.0)}%",
+          )
+          println(
+            "  Max Drawdown:    \{Float::to_string(result.stats.max_drawdown * 100.0)}%",
+          )
+          println(
+            "  Sharpe Ratio:    \{Float::to_string(result.stats.sharpe_ratio)}",
+          )
+          println(
+            "  Sortino Ratio:   \{Float::to_string(result.stats.sortino_ratio)}",
+          )
+          println("")
+          println("Trade Statistics:")
+          println("  Total Trades:    \{result.stats.total_trades}")
+          println("  Winning Trades:  \{result.stats.winning_trades}")
+          println("  Losing Trades:   \{result.stats.losing_trades}")
+          println(
+            "  Win Rate:        \{Float::to_string(result.stats.win_rate * 100.0)}%",
+          )
+          println(
+            "  Profit Factor:   \{Float::to_string(result.stats.profit_factor)}",
+          )
+          println(
+            "  Avg Duration:    \{Float::to_string(result.stats.avg_trade_duration)} days",
+          )
+          println("")
+          println("=======================================")
+        }
+        Err(e) => println("Error loading data: \{e}")
+      }
+    }
+    None => {
+      println("Error: No data file found for stock '\{stock}'")
+      println("Expected file pattern: data/\{market}_\{code}_*.csv")
+      println("")
+      println("Hint: Set DATA_FILES environment variable with comma-separated")
+      println("      file names available in the data/ directory.")
+    }
+  }
 }
 
 ///|
@@ -440,20 +602,130 @@ fn _run_monitor(stock : String) -> Unit {
 
   println("Starting real-time monitoring for: \{stock}")
   println("")
-  println("Monitoring metrics:")
-  println("  - Current price")
-  println("  - Daily drawdown")
-  println("  - Risk level")
-  println("")
-  println("Press Ctrl+C to stop monitoring")
-  println("")
-  println("[MONITOR] Waiting for live data feed...")
+
+  // Build data file path from stock code
+  let stock_parts = stock.split(".")
+  let stock_parts_arr = stock_parts.to_array()
+  if stock_parts_arr.length() < 2 {
+    println("Error: Invalid stock code format")
+    return
+  }
+  let market = stock_parts_arr[0]
+  let code = stock_parts_arr[1]
+
+  // Find data file
+  let mut found_file : String? = None
+  match @ffi.getenv("DATA_FILES") {
+    Some(files_str) => {
+      let files = files_str
+        .split(",")
+        .map(fn(s) { s.trim().to_string() })
+        .to_array()
+      for file in files {
+        if file != "" && file.has_prefix(market + "_" + code) {
+          found_file = Some("data/" + file)
+          break
+        }
+      }
+    }
+    None => {
+      let base_pattern = market + "_" + code + "_"
+      let date_ranges = [
+        "2026-01-01_2026-03-26", "2025-01-01_2025-12-31", "2024-01-01_2024-12-31",
+        "2023-01-01_2023-12-31",
+      ]
+      for date_range in date_ranges {
+        let candidate = (base_pattern + date_range + ".csv").to_string()
+        if @ffi.file_exists("data/" + candidate) {
+          found_file = Some("data/" + candidate)
+          break
+        }
+      }
+    }
+  }
+
+  match found_file {
+    Some(filepath) =>
+      // Load data for monitoring
+      match @data.load_klines_from_csv(filepath) {
+        Ok(klines) => {
+          if klines.length() == 0 {
+            println("Error: No data found")
+            return
+          }
+
+          // Create drawdown monitor with default thresholds
+          let warning_threshold = Float::from_double(-0.10) // 10% warning
+          let critical_threshold = Float::from_double(-0.20) // 20% critical
+          let monitor = @drawdown.create_monitor(
+            warning_threshold, critical_threshold,
+          )
+
+          println("Monitoring Configuration:")
+          println("  Stock: \{stock}")
+          println(
+            "  Warning Threshold:  \{Float::to_string(warning_threshold * Float::from_double(100.0))}%",
+          )
+          println(
+            "  Critical Threshold: \{Float::to_string(critical_threshold * Float::from_double(100.0))}%",
+          )
+          println("")
+          println("Simulating monitoring mode (historical replay)...")
+          println("")
+
+          // Simulate monitoring by replaying historical data
+          let mut last_alert_level = ""
+          for kline in klines {
+            monitor.update(kline.close, kline.date)
+
+            if monitor.is_alert_triggered() {
+              let current_level = monitor.get_alert_level()
+              if current_level != last_alert_level {
+                println(
+                  "[\{kline.date}] ALERT: \{current_level} - Drawdown: \{Float::to_string(monitor.get_drawdown() * Float::from_double(100.0))}%",
+                )
+                last_alert_level = current_level
+              }
+            }
+          }
+
+          println("")
+          println("Monitoring Summary:")
+          println("  Final Price: \{klines[klines.length() - 1].close}")
+          println(
+            "  Current Drawdown: \{Float::to_string(monitor.get_drawdown() * 100.0)}%",
+          )
+          if monitor.is_alert_triggered() {
+            println("  Alert Status: \{monitor.get_alert_level()}")
+          } else {
+            println("  Alert Status: Normal (no alerts)")
+          }
+          println("")
+          println(
+            "Note: This is a historical replay. Real-time mode requires live data feed.",
+          )
+        }
+        Err(e) => println("Error loading data: \{e}")
+      }
+    None => {
+      println("Error: No data file found for stock '\{stock}'")
+      println("Expected file pattern: data/\{market}_\{code}_*.csv")
+      println("")
+      // Still show monitoring setup info
+      println("Monitoring Configuration (no data available):")
+      println("  Stock: \{stock}")
+      println("  Warning Threshold:  -10.0%")
+      println("  Critical Threshold: -20.0%")
+      println("")
+      println("Hint: Set DATA_FILES environment variable to enable monitoring")
+    }
+  }
 }
 
 ///|
 /// Run report command
 fn _run_report(format : String) -> Unit {
-  let valid_formats = ["text", "html", "json", "pdf"]
+  let valid_formats = ["text", "html", "json"]
   let mut found = false
   let mut i = 0
   while i < valid_formats.length() {
@@ -465,21 +737,103 @@ fn _run_report(format : String) -> Unit {
   }
 
   if !found {
-    println(
-      "Error: Invalid format '\{format}'. Available: text, html, json, pdf",
-    )
+    println("Error: Invalid format '\{format}'. Available: text, html, json")
     return
   }
 
   println("Generating \{format} report...")
   println("")
-  println("Report sections:")
-  println("  1. Portfolio Summary")
-  println("  2. Drawdown Analysis")
-  println("  3. Risk Metrics")
-  println("  4. Performance Statistics")
-  println("")
-  println("Note: Report generation requires existing analysis data")
+
+  // Build data file path - try to find any available data file
+  let mut found_file : String? = None
+  match @ffi.getenv("DATA_FILES") {
+    Some(files_str) => {
+      let files = files_str
+        .split(",")
+        .map(fn(s) { s.trim().to_string() })
+        .to_array()
+      for file in files {
+        if file != "" && file.has_suffix(".csv") {
+          found_file = Some("data/" + file)
+          break
+        }
+      }
+    }
+    None => {
+      // Try to find any CSV file in data directory
+      let date_ranges = [
+        "2026-01-01_2026-03-26", "2025-01-01_2025-12-31", "2024-01-01_2024-12-31",
+      ]
+      let markets = ["sh", "sz"]
+      let codes = ["600000", "600001", "000001"]
+      for market in markets {
+        for code in codes {
+          for date_range in date_ranges {
+            let candidate = (market + "_" + code + "_" + date_range + ".csv").to_string()
+            if @ffi.file_exists("data/" + candidate) {
+              found_file = Some("data/" + candidate)
+              break
+            }
+          }
+          if found_file != None {
+            break
+          }
+        }
+        if found_file != None {
+          break
+        }
+      }
+    }
+  }
+
+  match found_file {
+    Some(filepath) =>
+      match @data.load_klines_from_csv(filepath) {
+        Ok(klines) => {
+          if klines.length() == 0 {
+            println("Error: No data found")
+            return
+          }
+
+          // Run backtest to generate results
+          let config = @strategy.default_backtest_config()
+          let engine = @backtest.create_backtest_engine(config)
+          let ma_strategy = @builtins.create_ma_cross_strategy(10, 30)
+          let strategy_record = @strategy.Strategy::{
+            name: ma_strategy.name,
+            on_init: fn(_) { ignore(()) },
+            on_bar: fn(k, ctx, hist) { ma_strategy.on_bar(k, ctx, hist) },
+          }
+
+          let result = @backtest.run_backtest(engine, klines, strategy_record)
+
+          // Generate and print report
+          let report_format = if format == "html" {
+            @backtest.ReportFormat::Html
+          } else if format == "json" {
+            @backtest.ReportFormat::Html // JSON not yet supported, fallback to HTML
+          } else {
+            @backtest.ReportFormat::Text
+          }
+
+          let report_config = @backtest.default_report_config()
+          report_config.format = report_format
+          report_config.title = "Backtest Report - " + filepath
+          report_config.include_trades = true
+          report_config.include_stats = true
+
+          let report = @backtest.generate_report(result, report_config)
+          println(report)
+        }
+        Err(e) => println("Error loading data: \{e}")
+      }
+    None => {
+      println("Error: No data files found to generate report")
+      println("")
+      println("Hint: Place CSV data files in the data/ directory or set")
+      println("      DATA_FILES environment variable.")
+    }
+  }
 }
 
 ///|

@@ -10,13 +10,13 @@ pub(all) enum ReportFormat {
 ///|
 /// Report configuration
 pub(all) struct ReportConfig {
-  title : String
-  author : String
-  date : String
-  format : ReportFormat
-  include_equity_curve : Bool
-  include_trades : Bool
-  include_stats : Bool
+  mut title : String
+  mut author : String
+  mut date : String
+  mut format : ReportFormat
+  mut include_equity_curve : Bool
+  mut include_trades : Bool
+  mut include_stats : Bool
 }
 
 ///|

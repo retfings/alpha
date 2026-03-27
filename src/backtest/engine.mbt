@@ -298,8 +298,8 @@ fn calculate_stats_core(
 
   // Sharpe ratio (annualized)
   let sharpe = if returns.length() > 1 {
-    let avg_return = average(returns)
-    let std_return = std_dev(returns)
+    let avg_return = _calc_average(returns)
+    let std_return = _calc_std_dev(returns)
     if std_return > 0.0 {
       avg_return / std_return * Float::sqrt(252.0)
     } else {
@@ -311,7 +311,7 @@ fn calculate_stats_core(
 
   // Sortino ratio (uses downside deviation instead of total std dev)
   let sortino = if returns.length() > 1 {
-    let avg_return = average(returns)
+    let avg_return = _calc_average(returns)
     let downside_returns : Array[Float] = []
     for r in returns {
       if r < 0.0 {
@@ -436,8 +436,8 @@ fn calculate_returns(equities : Array[Float]) -> Array[Float] {
 }
 
 ///|
-/// Calculate average of an array
-fn average(values : Array[Float]) -> Float {
+/// Calculate average of an array (internal use)
+fn _calc_average(values : Array[Float]) -> Float {
   if values.length() == 0 {
     return Float::from_double(0.0)
   }
@@ -449,12 +449,12 @@ fn average(values : Array[Float]) -> Float {
 }
 
 ///|
-/// Calculate standard deviation
-fn std_dev(values : Array[Float]) -> Float {
+/// Calculate standard deviation (internal use)
+fn _calc_std_dev(values : Array[Float]) -> Float {
   if values.length() < 2 {
     return Float::from_double(0.0)
   }
-  let avg = average(values)
+  let avg = _calc_average(values)
   let mut sum_sq : Float = 0.0
   for v in values {
     let diff : Float = v - avg
