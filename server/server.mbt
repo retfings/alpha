@@ -24,12 +24,12 @@ extern "c" fn http_server_create(port : Int) -> Int = "moonbit_http_server_creat
 ///|
 /// Accept connection and get request
 #borrow(server_fd)
-extern "c" fn http_server_accept(server_fd : Int) -> String = "moonbit_http_server_accept"
+extern "c" fn http_server_accept(server_fd : Int) -> Bytes = "moonbit_http_server_accept"
 
 ///|
-/// Send HTTP response
-#borrow(server_fd, response)
-extern "c" fn http_server_respond(server_fd : Int, response : String) -> Int = "moonbit_http_server_respond"
+/// Send HTTP response with status code
+#borrow(server_fd, status_code, body)
+extern "c" fn http_server_respond(server_fd : Int, status_code : Int, body : Bytes) -> Int = "moonbit_http_server_respond"
 
 ///|
 /// Close server socket
@@ -70,11 +70,14 @@ pub fn start_server(port : Int) -> Unit {
   let mut request_count = 0
   while request_count < 100 {
     request_count = request_count + 1
+    println("Waiting for request \{request_count}...")
 
-    let request = http_server_accept(server_fd)
+    let request_bytes = http_server_accept(server_fd)
+    let request = @utf8.decode_lossy(request_bytes)
     let response_obj = handle_request(request)
-    let response_str = "\{response_obj.status_code} \{response_obj.body}"
-    let _ = http_server_respond(server_fd, response_str)
+    // Convert body String to Bytes for C FFI
+    let body_bytes = @utf8.encode(response_obj.body)
+    let _ = http_server_respond(server_fd, response_obj.status_code, body_bytes)
     println("Request \{request_count}: \{response_obj.status_code}")
   }
 

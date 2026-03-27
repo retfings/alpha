@@ -17,6 +17,7 @@
 #define MAX_CONNECTIONS 10
 
 static int g_server_fd = -1;
+static int g_client_fd = -1;
 
 int moonbit_http_server_create(int port) {
     int server_fd;
@@ -56,63 +57,75 @@ int moonbit_http_server_create(int port) {
     return server_fd;
 }
 
+#include "moonbit.h"
+
 char* moonbit_http_server_accept(int server_fd) {
-    int client_fd;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
 
-    client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-    if (client_fd < 0) {
+    g_client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+    if (g_client_fd < 0) {
         perror("accept failed");
         return strdup("");
     }
 
-    ssize_t bytes_read = read(client_fd, buffer, BUFFER_SIZE - 1);
+    ssize_t bytes_read = recv(g_client_fd, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_read < 0) {
-        perror("read failed");
-        close(client_fd);
+        perror("recv failed");
+        close(g_client_fd);
+        g_client_fd = -1;
         return strdup("");
     }
 
     buffer[bytes_read] = '\0';
-    close(client_fd);
-    return strdup(buffer);
+
+    // Create MoonBit Bytes object with correct length
+    moonbit_bytes_t result = moonbit_make_bytes(bytes_read, 0);
+    memcpy(result, buffer, bytes_read);
+
+    // Return as char* (MoonBit will interpret it correctly)
+    return (char*)result;
 }
 
-int moonbit_http_server_respond(int server_fd, const char* response) {
-    int client_fd;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-
-    client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-    if (client_fd < 0) {
-        perror("accept for respond failed");
+int moonbit_http_server_respond(int server_fd, int status_code, const unsigned char* body) {
+    if (g_client_fd < 0) {
+        perror("no client connection");
         return -1;
+    }
+
+    // Bytes from MoonBit is already UTF-8 encoded, just need to get length
+    // MoonBit Bytes has length stored in the object header
+    int body_len = 0;
+    const unsigned char* p = body;
+    while (*p++ != 0 && body_len < BUFFER_SIZE) {
+        body_len++;
     }
 
     char http_response[BUFFER_SIZE];
-    int body_len = strlen(response);
     int header_len = snprintf(http_response, sizeof(http_response),
-        "HTTP/1.1 200 OK\r\n"
+        "HTTP/1.1 %d OK\r\n"
         "Content-Type: application/json\r\n"
         "Content-Length: %d\r\n"
         "Connection: close\r\n"
-        "\r\n", body_len);
+        "\r\n", status_code, body_len);
 
-    if (send(client_fd, http_response, header_len, 0) < 0) {
+    if (send(g_client_fd, http_response, header_len, 0) < 0) {
         perror("send headers failed");
-        close(client_fd);
+        close(g_client_fd);
+        g_client_fd = -1;
         return -1;
     }
 
-    if (send(client_fd, response, body_len, 0) < 0) {
+    if (send(g_client_fd, body, body_len, 0) < 0) {
         perror("send body failed");
-        close(client_fd);
+        close(g_client_fd);
+        g_client_fd = -1;
         return -1;
     }
 
-    close(client_fd);
+    close(g_client_fd);
+    g_client_fd = -1;
     return 0;
 }
 
