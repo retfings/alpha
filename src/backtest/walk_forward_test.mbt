@@ -301,21 +301,17 @@ test "calculate_profit - empty returns" {
 
 ///|
 test "wf_result - struct creation" {
-  let result = WfResult::{
-    window_index: 0,
-    in_sample_start: 0,
-    in_sample_end: 50,
-    oos_start: 50,
-    oos_end: 70,
-    is_profit: Float::from_double(1000.0),
-    oos_profit: Float::from_double(500.0),
-    is_sharpe: Float::from_double(1.5),
-    oos_sharpe: Float::from_double(1.2),
-    is_max_dd: Float::from_double(0.1),
-    oos_max_dd: Float::from_double(0.15),
-    is_trades: 10,
-    oos_trades: 5,
-  }
+  let result = create_wf_result(
+    0, 0, 50, 50, 70,
+    Float::from_double(1000.0),
+    Float::from_double(500.0),
+    Float::from_double(1.5),
+    Float::from_double(1.2),
+    Float::from_double(0.1),
+    Float::from_double(0.15),
+    10,
+    5,
+  )
 
   assert_eq(result.window_index, 0)
   assert_eq(result.in_sample_end, 50)
@@ -335,21 +331,17 @@ test "analyze_wf_results - empty results" {
 ///|
 test "analyze_wf_results - single profitable window" {
   let results : Array[WfResult] = [
-    WfResult::{
-      window_index: 0,
-      in_sample_start: 0,
-      in_sample_end: 50,
-      oos_start: 50,
-      oos_end: 70,
-      is_profit: Float::from_double(1000.0),
-      oos_profit: Float::from_double(500.0),
-      is_sharpe: Float::from_double(1.5),
-      oos_sharpe: Float::from_double(1.2),
-      is_max_dd: Float::from_double(0.1),
-      oos_max_dd: Float::from_double(0.15),
-      is_trades: 10,
-      oos_trades: 5,
-    },
+    create_wf_result(
+      0, 0, 50, 50, 70,
+      Float::from_double(1000.0),
+      Float::from_double(500.0),
+      Float::from_double(1.5),
+      Float::from_double(1.2),
+      Float::from_double(0.1),
+      Float::from_double(0.15),
+      10,
+      5,
+    ),
   ]
   let summary = analyze_wf_results(results)
 
@@ -361,36 +353,28 @@ test "analyze_wf_results - single profitable window" {
 ///|
 test "analyze_wf_results - mixed results" {
   let results : Array[WfResult] = [
-    WfResult::{
-      window_index: 0,
-      in_sample_start: 0,
-      in_sample_end: 50,
-      oos_start: 50,
-      oos_end: 70,
-      is_profit: Float::from_double(1000.0),
-      oos_profit: Float::from_double(500.0),
-      is_sharpe: Float::from_double(1.5),
-      oos_sharpe: Float::from_double(1.0),
-      is_max_dd: Float::from_double(0.1),
-      oos_max_dd: Float::from_double(0.12),
-      is_trades: 10,
-      oos_trades: 5,
-    },
-    WfResult::{
-      window_index: 1,
-      in_sample_start: 10,
-      in_sample_end: 60,
-      oos_start: 60,
-      oos_end: 80,
-      is_profit: Float::from_double(800.0),
-      oos_profit: Float::from_double(-200.0),
-      is_sharpe: Float::from_double(1.2),
-      oos_sharpe: Float::from_double(-0.5),
-      is_max_dd: Float::from_double(0.15),
-      oos_max_dd: Float::from_double(0.2),
-      is_trades: 8,
-      oos_trades: 4,
-    },
+    create_wf_result(
+      0, 0, 50, 50, 70,
+      Float::from_double(1000.0),
+      Float::from_double(500.0),
+      Float::from_double(1.5),
+      Float::from_double(1.0),
+      Float::from_double(0.1),
+      Float::from_double(0.12),
+      10,
+      5,
+    ),
+    create_wf_result(
+      1, 10, 60, 60, 80,
+      Float::from_double(800.0),
+      Float::from_double(-200.0),
+      Float::from_double(1.2),
+      Float::from_double(-0.5),
+      Float::from_double(0.15),
+      Float::from_double(0.2),
+      8,
+      4,
+    ),
   ]
   let summary = analyze_wf_results(results)
 
@@ -403,21 +387,17 @@ test "analyze_wf_results - mixed results" {
 ///|
 test "analyze_wf_results - degradation ratio calculation" {
   let results : Array[WfResult] = [
-    WfResult::{
-      window_index: 0,
-      in_sample_start: 0,
-      in_sample_end: 50,
-      oos_start: 50,
-      oos_end: 70,
-      is_profit: Float::from_double(1000.0),
-      oos_profit: Float::from_double(500.0),
-      is_sharpe: Float::from_double(2.0),
-      oos_sharpe: Float::from_double(1.0),
-      is_max_dd: Float::from_double(0.1),
-      oos_max_dd: Float::from_double(0.12),
-      is_trades: 10,
-      oos_trades: 5,
-    },
+    create_wf_result(
+      0, 0, 50, 50, 70,
+      Float::from_double(1000.0),
+      Float::from_double(500.0),
+      Float::from_double(2.0),
+      Float::from_double(1.0),
+      Float::from_double(0.1),
+      Float::from_double(0.12),
+      10,
+      5,
+    ),
   ]
   let summary = analyze_wf_results(results)
 
@@ -428,38 +408,36 @@ test "analyze_wf_results - degradation ratio calculation" {
 
 ///|
 test "passes_wf_validation - passing strategy" {
-  let summary = WfSummary::{
-    total_windows: 5,
-    successful_windows: 3,
-    avg_is_profit: Float::from_double(1000.0),
-    avg_oos_profit: Float::from_double(500.0),
-    avg_is_sharpe: Float::from_double(1.5),
-    avg_oos_sharpe: Float::from_double(1.0),
-    avg_is_max_dd: Float::from_double(0.1),
-    avg_oos_max_dd: Float::from_double(0.12),
-    oos_success_rate: Float::from_double(0.6),
-    degradation_ratio: Float::from_double(0.67),
-    robustness_score: Float::from_double(75.0),
-  }
+  let summary = create_wf_summary(
+    5, 3,
+    Float::from_double(1000.0),
+    Float::from_double(500.0),
+    Float::from_double(1.5),
+    Float::from_double(1.0),
+    Float::from_double(0.1),
+    Float::from_double(0.12),
+    Float::from_double(0.6),
+    Float::from_double(0.67),
+    Float::from_double(75.0),
+  )
 
   assert_true(passes_wf_validation(summary))
 }
 
 ///|
 test "passes_wf_validation - failing low success rate" {
-  let summary = WfSummary::{
-    total_windows: 5,
-    successful_windows: 1,
-    avg_is_profit: Float::from_double(1000.0),
-    avg_oos_profit: Float::from_double(500.0),
-    avg_is_sharpe: Float::from_double(1.5),
-    avg_oos_sharpe: Float::from_double(1.0),
-    avg_is_max_dd: Float::from_double(0.1),
-    avg_oos_max_dd: Float::from_double(0.12),
-    oos_success_rate: Float::from_double(0.2),
-    degradation_ratio: Float::from_double(0.67),
-    robustness_score: Float::from_double(50.0),
-  }
+  let summary = create_wf_summary(
+    5, 1,
+    Float::from_double(1000.0),
+    Float::from_double(500.0),
+    Float::from_double(1.5),
+    Float::from_double(1.0),
+    Float::from_double(0.1),
+    Float::from_double(0.12),
+    Float::from_double(0.2),
+    Float::from_double(0.67),
+    Float::from_double(50.0),
+  )
 
   // Success rate < 50%
   assert_true(!passes_wf_validation(summary))
@@ -467,19 +445,18 @@ test "passes_wf_validation - failing low success rate" {
 
 ///|
 test "passes_wf_validation - failing degradation" {
-  let summary = WfSummary::{
-    total_windows: 5,
-    successful_windows: 3,
-    avg_is_profit: Float::from_double(1000.0),
-    avg_oos_profit: Float::from_double(500.0),
-    avg_is_sharpe: Float::from_double(2.0),
-    avg_oos_sharpe: Float::from_double(0.5),
-    avg_is_max_dd: Float::from_double(0.1),
-    avg_oos_max_dd: Float::from_double(0.12),
-    oos_success_rate: Float::from_double(0.6),
-    degradation_ratio: Float::from_double(0.25),
-    robustness_score: Float::from_double(50.0),
-  }
+  let summary = create_wf_summary(
+    5, 3,
+    Float::from_double(1000.0),
+    Float::from_double(500.0),
+    Float::from_double(2.0),
+    Float::from_double(0.5),
+    Float::from_double(0.1),
+    Float::from_double(0.12),
+    Float::from_double(0.6),
+    Float::from_double(0.25),
+    Float::from_double(50.0),
+  )
 
   // Degradation ratio < 0.5
   assert_true(!passes_wf_validation(summary))
@@ -487,19 +464,18 @@ test "passes_wf_validation - failing degradation" {
 
 ///|
 test "passes_wf_validation - failing negative oos profit" {
-  let summary = WfSummary::{
-    total_windows: 5,
-    successful_windows: 3,
-    avg_is_profit: Float::from_double(1000.0),
-    avg_oos_profit: Float::from_double(-100.0),
-    avg_is_sharpe: Float::from_double(1.5),
-    avg_oos_sharpe: Float::from_double(1.0),
-    avg_is_max_dd: Float::from_double(0.1),
-    avg_oos_max_dd: Float::from_double(0.12),
-    oos_success_rate: Float::from_double(0.6),
-    degradation_ratio: Float::from_double(0.67),
-    robustness_score: Float::from_double(60.0),
-  }
+  let summary = create_wf_summary(
+    5, 3,
+    Float::from_double(1000.0),
+    Float::from_double(-100.0),
+    Float::from_double(1.5),
+    Float::from_double(1.0),
+    Float::from_double(0.1),
+    Float::from_double(0.12),
+    Float::from_double(0.6),
+    Float::from_double(0.67),
+    Float::from_double(60.0),
+  )
 
   // Negative OOS profit
   assert_true(!passes_wf_validation(summary))
@@ -507,44 +483,36 @@ test "passes_wf_validation - failing negative oos profit" {
 
 ///|
 test "wf_mode_enum - equality" {
-  assert_true(WfMode::Rolling == WfMode::Rolling)
-  assert_true(WfMode::Anchored == WfMode::Anchored)
-  assert_true(WfMode::Rolling != WfMode::Anchored)
+  assert_true(wf_mode_rolling() == wf_mode_rolling())
+  assert_true(wf_mode_anchored() == wf_mode_anchored())
+  assert_true(wf_mode_rolling() != wf_mode_anchored())
 }
 
 ///|
 test "robustness_score - calculation example" {
   let results : Array[WfResult] = [
-    WfResult::{
-      window_index: 0,
-      in_sample_start: 0,
-      in_sample_end: 50,
-      oos_start: 50,
-      oos_end: 70,
-      is_profit: Float::from_double(1000.0),
-      oos_profit: Float::from_double(500.0),
-      is_sharpe: Float::from_double(1.5),
-      oos_sharpe: Float::from_double(1.2),
-      is_max_dd: Float::from_double(0.1),
-      oos_max_dd: Float::from_double(0.12),
-      is_trades: 10,
-      oos_trades: 5,
-    },
-    WfResult::{
-      window_index: 1,
-      in_sample_start: 10,
-      in_sample_end: 60,
-      oos_start: 60,
-      oos_end: 80,
-      is_profit: Float::from_double(800.0),
-      oos_profit: Float::from_double(400.0),
-      is_sharpe: Float::from_double(1.3),
-      oos_sharpe: Float::from_double(1.1),
-      is_max_dd: Float::from_double(0.12),
-      oos_max_dd: Float::from_double(0.14),
-      is_trades: 8,
-      oos_trades: 4,
-    },
+    create_wf_result(
+      0, 0, 50, 50, 70,
+      Float::from_double(1000.0),
+      Float::from_double(500.0),
+      Float::from_double(1.5),
+      Float::from_double(1.2),
+      Float::from_double(0.1),
+      Float::from_double(0.12),
+      10,
+      5,
+    ),
+    create_wf_result(
+      1, 10, 60, 60, 80,
+      Float::from_double(800.0),
+      Float::from_double(400.0),
+      Float::from_double(1.3),
+      Float::from_double(1.1),
+      Float::from_double(0.12),
+      Float::from_double(0.14),
+      8,
+      4,
+    ),
   ]
   let summary = analyze_wf_results(results)
 
@@ -562,7 +530,7 @@ test "walk_forward_realistic_scenario" {
     252,           // 1 year window
     63,            // Roll quarterly
     Float::from_double(0.3),  // 30% OOS
-    WfMode::Rolling,
+    wf_mode_rolling(),
     21,            // Min 1 month OOS
   )
 
@@ -572,7 +540,11 @@ test "walk_forward_realistic_scenario" {
   assert_true(windows.length() >= 3)
 
   // Verify window structure
-  for (is_start, is_end, oos_start, oos_end) in windows {
+  for window in windows {
+    let is_start = window.0
+    let is_end = window.1
+    let oos_start = window.2
+    let oos_end = window.3
     assert_true(is_end > is_start)
     assert_true(oos_end > oos_start)
     assert_true(oos_start == is_end)
