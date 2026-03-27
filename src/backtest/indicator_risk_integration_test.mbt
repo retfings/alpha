@@ -1163,7 +1163,7 @@ test "integration: multi-indicator confluence with full backtest flow" {
   ]
 
   // Calculate indicators
-  let closes: Array[Float] = []
+  let closes : Array[Float] = []
   let mut i = 0
   while i < klines.length() {
     closes.push(klines[i].close)
@@ -1247,7 +1247,7 @@ test "integration: drawdown monitoring with portfolio rebalancing trigger" {
   ]
 
   // Calculate closes for drawdown
-  let closes: Array[Float] = []
+  let closes : Array[Float] = []
   let mut i = 0
   while i < klines.length() {
     closes.push(klines[i].close)
@@ -1342,7 +1342,7 @@ test "integration: rapid price swings with stop-loss logic" {
 
   // Simulate trailing stop calculation (2x ATR)
   let entry_price = Float::from_double(100.0)
-  let trailing_stop = entry_price - (Float::from_double(2.0) * current_atr)
+  let trailing_stop = entry_price - Float::from_double(2.0) * current_atr
 
   // Current price
   let current_price = klines[klines.length() - 1].close
@@ -1476,7 +1476,8 @@ test "integration: portfolio drawdown aggregation across positions" {
   let stock_c_dd = (stock_c_current - stock_c_peak) / stock_c_peak
 
   // Portfolio weighted average drawdown (equal weights)
-  let portfolio_dd = (stock_a_dd + stock_b_dd + stock_c_dd) / Float::from_double(3.0)
+  let portfolio_dd = (stock_a_dd + stock_b_dd + stock_c_dd) /
+    Float::from_double(3.0)
 
   // Verify portfolio drawdown calculation
   assert_true(portfolio_dd < Float::from_double(0.0))
@@ -1486,29 +1487,16 @@ test "integration: portfolio drawdown aggregation across positions" {
   let worst_dd = stock_c_dd
   assert_true(worst_dd == stock_c_dd)
 
-  // Create portfolio drawdown tracker
-  let portfolio = @drawdown.create_portfolio_drawdown()
-  @drawdown.portfolio_add_stock(
-    portfolio,
-    "stock_a",
-    stock_a_current,
-    stock_a_peak,
-  )
-  @drawdown.portfolio_add_stock(
-    portfolio,
-    "stock_b",
-    stock_b_current,
-    stock_b_peak,
-  )
-  @drawdown.portfolio_add_stock(
-    portfolio,
-    "stock_c",
-    stock_c_current,
-    stock_c_peak,
-  )
+  // Create portfolio drawdown tracker with all stock drawdowns
+  let stock_drawdowns : Array[(String, Float)] = [
+    ("stock_a", stock_a_dd),
+    ("stock_b", stock_b_dd),
+    ("stock_c", stock_c_dd),
+  ]
+  let portfolio = @drawdown.create_portfolio_drawdown(stock_drawdowns)
 
   // Verify portfolio aggregation
-  let agg_dd = @drawdown.portfolio_aggregate_drawdown(portfolio)
+  let agg_dd = portfolio.total_drawdown
   assert_true(agg_dd < Float::from_double(0.0))
 
   // Risk engine check with portfolio-level drawdown
