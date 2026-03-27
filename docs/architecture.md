@@ -103,7 +103,8 @@ alpha/
 │   │   ├── moon.pkg
 │   │   ├── rules.mbt          # 风控规则（止损、仓位等）
 │   │   ├── engine.mbt         # 风控引擎
-│   │   └── types.mbt          # 风控类型
+│   │   ├── types.mbt          # 风控类型
+│   │   └── trailing_stop.mbt  # 追踪止损（动态止损）
 │   │
 │   ├── portfolio/             # 组合管理
 │   │   ├── moon.pkg
