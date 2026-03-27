@@ -2194,12 +2194,10 @@ test "integration: Stop-loss logic with rapid price swings" {
   let stop_loss_strategy = @strategy.Strategy::{
     name: "ATR Stop-Loss Strategy",
     on_init: fn(_) {  },
-    on_bar: fn(kline, ctx, close_history) {
+    on_bar: fn(kline, _ctx, close_history) {
       let stop_loss_pct = Float::from_double(0.05) // 5% stop loss
-      let atr_multiplier = Float::from_double(2.0) // 2x ATR stop
 
-      // Check for existing position in context (simulated)
-      // Note: This is a simplified test - in real code, entry_price would come from StrategyContext.position
+      // Use a fixed entry price for testing
       let entry_price_opt : Float? = Some(Float::from_double(100.0))
 
       match entry_price_opt {

@@ -13,7 +13,7 @@
 ///
 /// Returns:
 /// - Typical price value
-fn typical_price(kline : @data.KLine) -> Float {
+pub fn typical_price(kline : @data.KLine) -> Float {
   (kline.high + kline.low + kline.close) / Float::from_double(3.0)
 }
 
