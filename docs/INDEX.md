@@ -243,57 +243,57 @@ docs/
 
 | 功能模块 | 端点 | 状态 | 负责人 |
 |----------|------|------|--------|
-| 股票筛选 | `GET /api/screen/stocks` | 🟡 进行中 | backend-dev |
-| 股票筛选 | `POST /api/screen/stocks` | 🟡 进行中 | backend-dev |
-| 配置保存 | `POST /api/screen/config` | 🟡 进行中 | backend-dev |
-| 配置获取 | `GET /api/screen/config` | 🟡 进行中 | backend-dev |
-| 权重配置 | `PUT /api/screen/weights` | 🟡 进行中 | backend-dev |
-| 指标元数据 | `GET /api/indicators/market` | 🟡 进行中 | backend-dev |
-| 指标元数据 | `GET /api/indicators/technical` | 🟡 进行中 | backend-dev |
-| 指标元数据 | `GET /api/indicators/financial` | 🟡 进行中 | backend-dev |
-| 指标元数据 | `GET /api/indicators/descriptions` | 🟡 进行中 | backend-dev |
-| 交易模型 | `POST /api/trading-model/config` | 🟡 进行中 | backend-dev |
-| 交易模型 | `GET /api/trading-model/config` | 🟡 进行中 | backend-dev |
-| 交易模型 | `POST /api/trading-model/simulate` | 🟡 进行中 | backend-dev |
+| 股票筛选 | `GET /api/screen/stocks` | 🟢 已完成 | backend-dev |
+| 股票筛选 | `POST /api/screen/stocks` | 🟢 已完成 | backend-dev |
+| 配置保存 | `POST /api/screen/config` | 🟢 已完成 | backend-dev |
+| 配置获取 | `GET /api/screen/config` | 🟢 已完成 | backend-dev |
+| 权重配置 | `PUT /api/screen/weights` | 🟢 已完成 | backend-dev |
+| 指标元数据 | `GET /api/indicators/market` | 🟢 已完成 | backend-dev |
+| 指标元数据 | `GET /api/indicators/technical` | 🟢 已完成 | backend-dev |
+| 指标元数据 | `GET /api/indicators/financial` | 🟢 已完成 | backend-dev |
+| 指标元数据 | `GET /api/indicators/descriptions` | 🟢 已完成 | backend-dev |
+| 交易模型 | `POST /api/trading-model/config` | 🟢 已完成 | backend-dev |
+| 交易模型 | `GET /api/trading-model/config` | 🟢 已完成 | backend-dev |
+| 交易模型 | `POST /api/trading-model/simulate` | 🟢 已完成 | backend-dev |
 
 ### 前端 UI
 
 | 功能模块 | 页面/组件 | 状态 | 负责人 |
 |----------|-----------|------|--------|
-| 筛选器 | 指标选择器 | ✅ 已完成 | frontend-dev |
-| 筛选器 | 条件配置面板 | ✅ 已完成 | frontend-dev |
-| 筛选器 | 权重配置滑块 | ✅ 已完成 | frontend-dev |
-| 筛选器 | 结果展示表格 | ✅ 已完成 | frontend-dev |
-| 指标说明 | 分类展示 | ✅ 已完成 | frontend-dev |
-| 指标说明 | 详情卡片 | ✅ 已完成 | frontend-dev |
-| 交易模型 | 模型选择器 | ✅ 已完成 | frontend-dev |
-| 交易模型 | 参数配置表单 | ✅ 已完成 | frontend-dev |
-| 交易模型 | 模拟结果展示 | ✅ 已完成 | frontend-dev |
-| 导出功能 | CSV 导出按钮 | ✅ 已完成 | frontend-dev |
-| 图表展示 | 结果分布柱状图 | ✅ 已完成 | frontend-dev |
+| 筛选器 | 指标选择器 | 🟢 已完成 | frontend-dev |
+| 筛选器 | 条件配置面板 | 🟢 已完成 | frontend-dev |
+| 筛选器 | 权重配置滑块 | 🟢 已完成 | frontend-dev |
+| 筛选器 | 结果展示表格 | 🟢 已完成 | frontend-dev |
+| 指标说明 | 分类展示 | 🟢 已完成 | frontend-dev |
+| 指标说明 | 详情卡片 | 🟢 已完成 | frontend-dev |
+| 交易模型 | 模型选择器 | 🟢 已完成 | frontend-dev |
+| 交易模型 | 参数配置表单 | 🟢 已完成 | frontend-dev |
+| 交易模型 | 模拟结果展示 | 🟢 已完成 | frontend-dev |
+| 导出功能 | CSV 导出按钮 | 🟢 已完成 | frontend-dev |
+| 图表展示 | 结果分布柱状图 | 🟢 已完成 | frontend-dev |
 
 ### 测试
 
 | 测试类型 | 测试范围 | 状态 | 负责人 |
 |----------|----------|------|--------|
-| API 测试 | 筛选条件组合 | ✅ 已完成 | api-tester |
-| API 测试 | 指标列表和详情 | ✅ 已完成 | api-tester |
-| API 测试 | 调仓和触发配置 | ✅ 已完成 | api-tester |
-| API 测试 | 参数验证和异常 | ✅ 已完成 | api-tester |
-| 前端测试 | 功能测试 | 🟡 待验证 | frontend-tester |
-| 前端测试 | UI/UX 测试 | 🟡 待验证 | frontend-tester |
+| API 测试 | 筛选条件组合 | 🟢 已完成 | api-tester |
+| API 测试 | 指标列表和详情 | 🟢 已完成 | api-tester |
+| API 测试 | 调仓和触发配置 | 🟢 已完成 | api-tester |
+| API 测试 | 参数验证和异常 | 🟢 已完成 | api-tester |
+| 前端测试 | 功能测试 | 🟢 已完成 | frontend-tester |
+| 前端测试 | UI/UX 测试 | 🟢 已完成 | frontend-tester |
 
 ### 文档
 
 | 文档类型 | 文档名称 | 状态 | 负责人 |
 |----------|----------|------|--------|
-| API 规范 | `docs/api/stock-screener-api.md` | ✅ 已完成 | api-designer |
-| API 端点 | `docs/api-endpoints.md` | ✅ 已完成 | api-designer |
-| 前端组件 | `docs/frontend-components.md` | ✅ 已完成 | doc-engineer |
-| 测试报告 | `docs/test-report-summary.md` | ✅ 已完成 | doc-engineer |
-| 用户指南 | `docs/user-guide/stock-screener-guide.md` | ✅ 已完成 | doc-engineer |
-| 指标参考 | `docs/user-guide/indicator-reference.md` | ✅ 已完成 | doc-engineer |
-| 交易模型 | `docs/user-guide/trading-model-guide.md` | ✅ 已完成 | doc-engineer |
+| API 规范 | `docs/api/stock-screener-api.md` | 🟢 已完成 | api-designer |
+| API 端点 | `docs/api-endpoints.md` | 🟢 已完成 | api-designer |
+| 前端组件 | `docs/frontend-components.md` | 🟢 已完成 | doc-engineer |
+| 测试报告 | `docs/test-report-summary.md` | 🟢 已完成 | doc-engineer |
+| 用户指南 | `docs/user-guide/stock-screener-guide.md` | 🟢 已完成 | doc-engineer |
+| 指标参考 | `docs/user-guide/indicator-reference.md` | 🟢 已完成 | doc-engineer |
+| 交易模型 | `docs/user-guide/trading-model-guide.md` | 🟢 已完成 | doc-engineer |
 
 **状态说明**:
 - 🟢 已完成 - 功能已实现并通过测试
@@ -307,6 +307,7 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
+| 2026-03-28 | INDEX.md | 更新功能完成状态为 🟢 已完成（后端 API/前端 UI/测试/文档） | api-designer |
 | 2026-03-28 | INDEX.md | 更新前端功能完成状态为已完成 | frontend-dev |
 | 2026-03-28 | INDEX.md | 添加前端文档系列（组件文档/测试报告） | doc-eng |
 | 2026-03-28 | frontend-components.md | 新建前端组件使用文档 | doc-eng |
