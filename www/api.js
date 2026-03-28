@@ -650,6 +650,57 @@ export async function getRankingAnalysis(strategy, period) {
 }
 
 // ============================================================================
+// Screener API
+// ============================================================================
+
+/**
+ * Get list of available indicators with metadata
+ * @returns {Promise<Array<{id: string, name: string, category: string, unit: string, description: string, formula: string, range: string}>>}
+ */
+export async function getIndicators() {
+  return apiFetch('/screener/indicators');
+}
+
+/**
+ * Get detailed information about a specific indicator
+ * @param {string} indicatorId - Indicator ID (e.g., "roe", "rsi")
+ * @returns {Promise<{id: string, name: string, description: string, formula: string, category: string, unit: string, range: string}>}
+ */
+export async function getIndicatorDetail(indicatorId) {
+  return apiFetch(`/screener/indicators/${indicatorId}`);
+}
+
+/**
+ * Run stock screener with specified conditions
+ * @param {Object} config - Screener configuration
+ * @param {Array<Object>} config.filters - Array of filter conditions
+ * @param {Array<Object>} config.weights - Indicator weights for sorting
+ * @param {string} config.sortBy - Sort field
+ * @param {string} config.sortOrder - Sort order (asc/desc)
+ * @param {number} config.limit - Maximum results
+ * @returns {Promise<{results: Array<StockResult>, total: number}>}
+ */
+export async function runScreener(config) {
+  return apiFetch('/screener', {
+    method: 'POST',
+    body: JSON.stringify(config),
+    timeout: 60000
+  });
+}
+
+/**
+ * Get stocks matching specific conditions
+ * @param {Object} conditions - Filter conditions
+ * @returns {Promise<Array<{code: string, name: string, indicators: Object}>>}
+ */
+export async function getStocksByConditions(conditions) {
+  return apiFetch('/stocks/filter', {
+    method: 'POST',
+    body: JSON.stringify(conditions)
+  });
+}
+
+// ============================================================================
 // Benchmark API
 // ============================================================================
 

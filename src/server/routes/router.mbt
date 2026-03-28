@@ -21,7 +21,7 @@ fn handle_portfolio_drawdown() -> HttpResponse {
 
 ///|
 /// Handler: Get content type based on file extension
-fn get_content_type(file_path : String) -> String {
+pub fn get_content_type(file_path : String) -> String {
   if file_path.has_suffix(".html") {
     "text/html; charset=utf-8"
   } else if file_path.has_suffix(".css") {
@@ -154,6 +154,37 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
     let industry = clean_path[16:].to_string()
     let industry_clean = industry.replace(old="/stocks", new="")
     return handle_get_industry_stocks(industry_clean)
+  }
+
+  // ===== Screening Endpoints =====
+  if clean_path == "/api/screen" && http_method == "POST" {
+    return handle_screen(None)
+  }
+
+  if clean_path == "/api/indicators" && http_method == "GET" {
+    return handle_list_indicators()
+  }
+
+  if clean_path.has_prefix("/api/indicators/") && http_method == "GET" {
+    let id = clean_path[15:].to_string()
+    // Check if it's a category request
+    if id == "financial" || id == "technical" || id == "market" || id == "all" {
+      return handle_get_indicators_by_category(id)
+    }
+    // Otherwise it's a specific indicator request
+    return handle_get_indicator(id)
+  }
+
+  if clean_path == "/api/trading-models" && http_method == "GET" {
+    return handle_list_trading_models()
+  }
+
+  if clean_path == "/api/weights" && http_method == "GET" {
+    return handle_get_weights()
+  }
+
+  if clean_path == "/api/weights" && http_method == "POST" {
+    return handle_set_weights("{}")
   }
 
   // ===== Backtest Endpoints =====
