@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "retfings/alpha/src/server"
+
+import {
+  "retfings/alpha/src/server/routes",
+}
+
+// Values
+pub fn handle_request(String) -> @routes.HttpResponse
+
+pub fn make_response(Int, String) -> @routes.HttpResponse
+
+pub fn start_server(Int) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @routes {type HttpResponse}
+
+// Traits
+

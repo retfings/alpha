@@ -1,0 +1,441 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "retfings/alpha/src/server/routes"
+
+import {
+  "retfings/alpha/src/data",
+}
+
+// Values
+pub fn apply_filters(Array[ScreenResult], ScreenRequest) -> Array[ScreenResult]
+
+pub fn calculate_market_price_indicators(Array[@data.KLine], Int) -> MarketPriceIndicators
+
+pub fn calculate_price_change_indicators(Array[@data.KLine], Int) -> PriceChangeIndicators
+
+pub fn calculate_turnover_indicators(Array[@data.KLine], Float, Int) -> TurnoverIndicators
+
+pub fn calculate_volume_indicators(Array[@data.KLine], Int) -> VolumeIndicators
+
+pub fn copy_results(Array[ScreenResult]) -> Array[ScreenResult]
+
+pub fn evaluate_trigger_conditions(Array[TriggerCondition], Map[String, Float], Map[String, Float]?, String) -> Bool
+
+pub fn extract_backtest_id(String) -> String?
+
+pub fn extract_query_string(String) -> String?
+
+pub fn extract_stock_code(String) -> String?
+
+pub fn filter_stocks(StockFilter) -> Array[StockInfo]
+
+pub fn get_all_industries() -> Array[String]
+
+pub fn get_all_stocks() -> Array[StockInfo]
+
+pub fn get_builtin_strategies() -> Array[BuiltInStrategy]
+
+pub fn get_content_type(String) -> String
+
+pub fn get_field(ScreenResult, String) -> Float
+
+pub fn get_industry_for_code(String) -> String
+
+pub fn get_mock_financials() -> Array[ScreenResult]
+
+pub fn get_name_for_code(String) -> String
+
+pub fn get_path_without_query(String) -> String
+
+pub fn get_stock_info(String) -> StockInfo
+
+pub fn get_stocks_by_industry(String) -> Array[StockInfo]
+
+pub fn get_trading_models() -> Array[TradingModel]
+
+pub fn handle_create_periodic_model(String?) -> HttpResponse
+
+pub fn handle_create_strategy(String) -> HttpResponse
+
+pub fn handle_create_trigger_model(String?) -> HttpResponse
+
+pub fn handle_delete_backtest(String) -> HttpResponse
+
+pub fn handle_delete_strategy(String) -> HttpResponse
+
+pub fn handle_filter_stocks(String?) -> HttpResponse
+
+pub fn handle_get_all_indicators() -> HttpResponse
+
+pub fn handle_get_backtest_result(String) -> HttpResponse
+
+pub fn handle_get_indicator(String) -> HttpResponse
+
+pub fn handle_get_indicator_detail(String) -> HttpResponse
+
+pub fn handle_get_indicators_by_category(String) -> HttpResponse
+
+pub fn handle_get_industry_stocks(String) -> HttpResponse
+
+pub fn handle_get_klines(String) -> HttpResponse
+
+pub fn handle_get_model_examples() -> HttpResponse
+
+pub fn handle_get_rebalance_frequencies() -> HttpResponse
+
+pub fn handle_get_screen_indicator(String) -> HttpResponse
+
+pub fn handle_get_stock(String) -> HttpResponse
+
+pub fn handle_get_strategy(String) -> HttpResponse
+
+pub fn handle_get_trigger_types() -> HttpResponse
+
+pub fn handle_get_weights() -> HttpResponse
+
+pub fn handle_list_all_trading_models() -> HttpResponse
+
+pub fn handle_list_backtests() -> HttpResponse
+
+pub fn handle_list_indicators() -> HttpResponse
+
+pub fn handle_list_industries() -> HttpResponse
+
+pub fn handle_list_stocks() -> HttpResponse
+
+pub fn handle_list_strategies() -> HttpResponse
+
+pub fn handle_list_trading_models() -> HttpResponse
+
+pub fn handle_request(String) -> HttpResponse
+
+pub fn handle_run_backtest(String) -> HttpResponse
+
+pub fn handle_screen(String?) -> HttpResponse
+
+pub fn handle_screener(String?) -> HttpResponse
+
+pub fn handle_set_weights(String) -> HttpResponse
+
+pub fn handle_update_strategy(String, String) -> HttpResponse
+
+pub fn load_klines_for_stock(String) -> Array[@data.KLine]
+
+pub fn load_klines_for_stock_with_date_range(String, String?, String?) -> Array[@data.KLine]
+
+pub fn make_html_response(String) -> HttpResponse
+
+pub fn make_response(Int, String) -> HttpResponse
+
+pub fn make_response_with_type(Int, String, String) -> HttpResponse
+
+pub fn parse_request_path(String) -> String
+
+pub fn route_request(String, String, String) -> HttpResponse
+
+pub fn scan_stock_files() -> Array[String]
+
+pub fn sort_results(Array[ScreenResult], String, Bool) -> Array[ScreenResult]
+
+pub fn string_view_to_string(StringView) -> String
+
+// Errors
+
+// Types and methods
+pub struct BacktestRequest {
+  stock : String
+  strategy : String
+  start_date : String
+  end_date : String
+  initial_capital : Float
+  commission_rate : Float
+  slippage : Float
+}
+
+pub struct BuiltInStrategy {
+  name : String
+  description : String
+  default_parameters : String
+  category : String
+}
+pub fn BuiltInStrategy::create(String, String, String, String) -> Self
+
+pub struct ComprehensiveScreenRequest {
+  price_filters : Array[ScreenFilterCondition]
+  volume_filters : Array[ScreenFilterCondition]
+  financial_filters : Array[ScreenFilterCondition]
+  technical_filters : Array[ScreenFilterCondition]
+  weights : Map[String, Float]
+  sort_by : String
+  sort_desc : Bool
+  limit : Int
+}
+pub fn ComprehensiveScreenRequest::default() -> Self
+
+pub struct ConditionTriggerConfig {
+  conditions : Array[TriggerCondition]
+  logic_operator : String
+  action : String
+  cooldown_days : Int
+  stop_loss_pct : Float?
+  take_profit_pct : Float?
+}
+pub fn ConditionTriggerConfig::default() -> Self
+pub impl Show for ConditionTriggerConfig
+pub impl ToJson for ConditionTriggerConfig
+
+pub struct FinancialIndicators {
+  code : String
+  date : String
+  roe_avg : Float
+  np_margin : Float
+  gp_margin : Float
+  net_profit : Float
+  eps_ttm : Float
+  mb_revenue : Float
+  total_share : Float
+  liqa_share : Float
+}
+pub impl Show for FinancialIndicators
+pub impl ToJson for FinancialIndicators
+
+pub struct HttpResponse {
+  status_code : Int
+  body : String
+  content_type : String
+}
+pub impl Show for HttpResponse
+pub impl ToJson for HttpResponse
+
+pub struct MarketPriceIndicators {
+  code : String
+  date : String
+  open : Float
+  close : Float
+  high : Float
+  low : Float
+  avg_price_n : Float
+  price_change : Float
+  price_change_pct : Float
+}
+pub impl Show for MarketPriceIndicators
+pub impl ToJson for MarketPriceIndicators
+
+pub struct PeriodicRebalanceConfig {
+  frequency : RebalanceFrequency
+  day_of_week : Int?
+  day_of_month : Int?
+  holding_count : Int
+  reinvest_dividends : Bool
+}
+pub fn PeriodicRebalanceConfig::default() -> Self
+pub impl Show for PeriodicRebalanceConfig
+pub impl ToJson for PeriodicRebalanceConfig
+
+pub struct PriceChangeIndicators {
+  code : String
+  date : String
+  daily_change : Float
+  avg_change_n : Float
+  cumulative_change_n : Float
+  high_n : Float
+  low_n : Float
+}
+pub impl Show for PriceChangeIndicators
+pub impl ToJson for PriceChangeIndicators
+
+pub enum RebalanceFrequency {
+  Weekly
+  BiWeekly
+  Monthly
+  Quarterly
+}
+pub fn RebalanceFrequency::from_string(String) -> Self
+pub fn RebalanceFrequency::to_string(Self) -> String
+pub impl Eq for RebalanceFrequency
+pub impl Show for RebalanceFrequency
+pub impl ToJson for RebalanceFrequency
+
+pub struct ScreenFilterCondition {
+  field : String
+  operator : String
+  min_value : Float?
+  max_value : Float?
+}
+
+pub struct ScreenRequest {
+  min_roe : Float?
+  min_np_margin : Float?
+  min_eps : Float?
+  min_price : Float?
+  max_price : Float?
+  min_volume : Float?
+  min_health : String?
+  sort_by : String?
+  sort_order : String?
+  limit : Int?
+}
+pub fn ScreenRequest::default() -> Self
+
+pub struct ScreenResult {
+  code : String
+  name : String
+  roe : Float
+  np_margin : Float
+  eps : Float
+  price : Float
+  volume : Float
+  health : String
+  score : Float
+}
+pub impl Show for ScreenResult
+pub impl ToJson for ScreenResult
+
+pub struct ScreenerFilter {
+  indicator : String
+  operator : String
+  value : Float?
+  min : Float?
+  max : Float?
+}
+
+pub struct ScreenerRequest {
+  filters : Array[ScreenerFilter]
+  weights : Map[String, Int]
+  sort_by : String
+  sort_order : String
+  limit : Int
+}
+
+pub struct ScreenerStockResult {
+  code : String
+  name : String
+  price : Float
+  rsi : Float
+  macd : Float
+  kdj : Float
+  roe : Float
+  np_margin : Float
+  eps : Float
+  volume : Float
+  score : Float
+}
+pub impl Show for ScreenerStockResult
+pub impl ToJson for ScreenerStockResult
+
+pub struct StockFilter {
+  industry : String?
+  market : String?
+  status : String?
+}
+pub fn StockFilter::create(String?, String?, String?) -> Self
+pub fn StockFilter::empty() -> Self
+
+pub struct StockInfo {
+  code : String
+  name : String
+  industry : String
+  market : String
+  list_date : String
+  status : String
+}
+
+pub struct StockScreenerResult {
+  code : String
+  name : String
+  price : MarketPriceIndicators
+  volume : VolumeIndicators
+  turnover : TurnoverIndicators
+  price_change : PriceChangeIndicators
+  financial : FinancialIndicators
+  score : Float
+  health : String
+}
+pub impl Show for StockScreenerResult
+pub impl ToJson for StockScreenerResult
+
+pub struct TradingModel {
+  id : String
+  name : String
+  description : String
+  model_type : String
+  parameters : Array[String]
+  output : String
+}
+
+pub struct TradingModelInstance {
+  id : String
+  name : String
+  model_type : TradingModelType
+  config : Json
+  created_at : String
+  is_active : Bool
+}
+pub impl Show for TradingModelInstance
+pub impl ToJson for TradingModelInstance
+
+pub enum TradingModelType {
+  PeriodicRebalance
+  ConditionTrigger
+  ScoreRanking
+  MultiFactor
+}
+pub impl Eq for TradingModelType
+pub impl Show for TradingModelType
+pub impl ToJson for TradingModelType
+
+pub struct TriggerCondition {
+  condition_type : TriggerConditionType
+  field : String
+  operator : String
+  threshold : Float
+  period : Int?
+}
+pub fn TriggerCondition::create(TriggerConditionType, String, String, Float, Int?) -> Self
+pub fn TriggerCondition::evaluate(Self, Float, Float?) -> Bool
+pub fn TriggerCondition::price(String, Float) -> Self
+pub fn TriggerCondition::technical(String, String, Float, Int?) -> Self
+pub impl Show for TriggerCondition
+pub impl ToJson for TriggerCondition
+
+pub enum TriggerConditionType {
+  Technical
+  Price
+  Volume
+  Financial
+}
+pub impl Eq for TriggerConditionType
+pub impl Show for TriggerConditionType
+pub impl ToJson for TriggerConditionType
+
+pub struct TurnoverIndicators {
+  code : String
+  date : String
+  turnover_rate : Float
+  avg_turnover_rate_n : Float
+  free_shares : Float
+}
+pub impl Show for TurnoverIndicators
+pub impl ToJson for TurnoverIndicators
+
+pub struct VolumeIndicators {
+  code : String
+  date : String
+  volume : Float
+  avg_volume_n : Float
+  volume_ratio : Float
+  amount : Float
+  avg_amount_n : Float
+}
+pub impl Show for VolumeIndicators
+pub impl ToJson for VolumeIndicators
+
+pub struct WeightConfig {
+  indicator : String
+  weight : Float
+  direction : String
+}
+
+// Type aliases
+
+// Traits
+

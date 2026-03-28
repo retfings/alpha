@@ -1,0 +1,10 @@
+import {
+  "retfings/alpha/src/server/routes",
+  "moonbitlang/core/json",
+  "moonbitlang/core/encoding/utf8",
+}
+
+options(
+  "native-stub": [ "http_server.c" ],
+  targets: { "server.mbt": [ "native" ] },
+)

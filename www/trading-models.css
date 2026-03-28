@@ -1,0 +1,475 @@
+/* Trading Models Selection Page */
+
+/* Layout */
+.trading-models-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr 280px;
+  gap: 16px;
+  min-height: calc(100vh - 180px);
+}
+
+/* Panel Base */
+.tm-panel {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Model Cards Container */
+.model-cards-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+/* Model Card */
+.model-card {
+  padding: 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.model-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.model-card.selected {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+.model-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.model-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.model-card-type {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #f5f5f5;
+  color: #666;
+}
+
+.model-card-description {
+  font-size: 12px;
+  color: #666;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.model-card-params {
+  font-size: 11px;
+  color: #999;
+}
+
+.model-card-params strong {
+  color: #666;
+}
+
+/* Model Info Section */
+.model-info-section {
+  padding: 16px;
+  border-bottom: 1px solid #e8e8e8;
+  background: #fafafa;
+}
+
+.model-info-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.model-info-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.model-type-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #1890ff;
+  color: #fff;
+}
+
+.model-description {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Config Form Container */
+.config-form-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.config-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  font-size: 14px;
+}
+
+/* Config Form */
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-section {
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.form-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #333;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.form-group input[type="number"],
+.form-group input[type="text"],
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #1890ff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.form-group .help-text {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Conditions List */
+.conditions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.condition-item {
+  display: grid;
+  grid-template-columns: 1fr 100px 120px 40px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+}
+
+.condition-item select,
+.condition-item input {
+  padding: 6px 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.btn-remove-condition {
+  padding: 4px 8px;
+  border: 1px solid #ff4d4f;
+  background: #fff;
+  color: #ff4d4f;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-remove-condition:hover {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+.btn-add-condition {
+  padding: 8px 16px;
+  border: 1px dashed #d9d9d9;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-condition:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+/* Screen Selection */
+.screen-selection-section {
+  padding: 16px;
+  border-top: 1px solid #e8e8e8;
+  background: #fafafa;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.section-header .help-text {
+  font-size: 11px;
+  color: #999;
+}
+
+.screen-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.btn-new-screen {
+  padding: 8px 16px;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-new-screen:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+/* Summary Panel */
+.summary-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.summary-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #999;
+}
+
+.summary-item {
+  margin-bottom: 16px;
+}
+
+.summary-item-label {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.summary-item-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.summary-stat {
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.summary-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.summary-stat-label {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+
+/* Summary Actions */
+.summary-actions {
+  padding: 16px;
+  border-top: 1px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-backtest,
+.btn-simulate {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-backtest {
+  background: #1890ff;
+  color: #fff;
+}
+
+.btn-backtest:hover {
+  background: #40a9ff;
+}
+
+.btn-simulate {
+  background: #52c41a;
+  color: #fff;
+}
+
+.btn-simulate:hover {
+  background: #73d13d;
+}
+
+/* Save Model Button */
+.btn-save-model {
+  padding: 6px 16px;
+  border: 1px solid #1890ff;
+  background: #fff;
+  color: #1890ff;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-save-model:hover {
+  background: #1890ff;
+  color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .trading-models-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .tm-panel {
+    max-height: none;
+  }
+}
+
+/* Model Type Colors */
+.model-card[data-type="rebalancing"] .model-card-type {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.model-card[data-type="conditional"] .model-card-type {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.model-card[data-type="strategy"] .model-card-type {
+  background: #fff7e6;
+  color: #fa8c16;
+}

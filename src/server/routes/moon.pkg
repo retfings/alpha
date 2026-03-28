@@ -1,0 +1,12 @@
+import {
+  "retfings/alpha/src/data",
+  "retfings/alpha/src/ffi",
+  "retfings/alpha/src/indicator",
+  "retfings/alpha/src/strategy",
+  "retfings/alpha/src/backtest",
+  "retfings/alpha/src/portfolio",
+  "retfings/alpha/src/risk",
+  "retfings/alpha/src/drawdown",
+  "retfings/alpha/src/strategy/builtins" @builtins,
+  "moonbitlang/core/encoding/utf8" @utf8,
+}

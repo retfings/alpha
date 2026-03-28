@@ -1,0 +1,8 @@
+import {
+  "retfings/alpha/alpha/handlers" @alpha/handlers,
+  "retfings/alpha/alpha/parsers" @alpha/parsers,
+}
+
+options(
+  "is-main": true,
+)

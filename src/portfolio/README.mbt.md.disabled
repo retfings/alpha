@@ -1,0 +1,210 @@
+# Portfolio Package
+
+Portfolio and position management.
+
+## Overview
+
+The `@portfolio` package provides structures for managing a portfolio of positions:
+
+- `Position` - Single stock position tracking
+- `Portfolio` - Multi-position portfolio management
+- Trade execution (buy/sell)
+- P&L calculation
+
+## Usage
+
+### Creating a Portfolio
+
+```mbt check
+let portfolio = create_portfolio(100000.0)
+// Portfolio with 100,000 initial capital, no positions
+```
+
+### Buying Stock
+
+```mbt check
+let portfolio = create_portfolio(100000.0)
+let success = portfolio.buy("sh.600000", 1000.0, 10.5)
+// Buys 1000 shares at 10.5 per share
+```
+
+### Selling Stock
+
+```mbt check
+let portfolio = create_portfolio(100000.0)
+portfolio.buy("sh.600000", 1000.0, 10.5)
+let success = portfolio.sell("sh.600000", 500.0, 11.0)
+// Sells 500 shares at 11.0 per share
+```
+
+### Getting Portfolio Value
+
+```mbt check
+let portfolio = create_portfolio(100000.0)
+portfolio.buy("sh.600000", 1000.0, 10.5)
+let total = portfolio.total_value()
+let pos_value = portfolio.position_value()
+let ratio = portfolio.position_ratio()
+```
+
+### Calculating P&L
+
+```mbt check
+let portfolio = create_portfolio(100000.0)
+portfolio.buy("sh.600000", 1000.0, 10.5)
+let pnl = portfolio.total_pnl()
+let pnl_pct = portfolio.total_pnl_pct()
+```
+
+### Position P&L
+
+```mbt check
+let position = Position::{
+  stock: "sh.600000",
+  quantity: 1000.0,
+  avg_cost: 10.5,
+  current_price: 11.0,
+}
+let value = position.value()      // 11000.0
+let pnl = position.pnl()          // 500.0
+let pnl_pct = position.pnl_pct()  // 0.0476 (4.76%)
+```
+
+### Updating Prices
+
+```mbt check
+let portfolio = create_portfolio(100000.0)
+portfolio.buy("sh.600000", 1000.0, 10.5)
+
+let price_map = { "sh.600000": 11.0 }
+let get_price = fn(code) { price_map[code] ?? 0.0 }
+portfolio.update_prices(get_price)
+```
+
+## Types
+
+### Position
+
+```mbt
+pub struct Position {
+  stock : StockCode      // Stock code
+  mut quantity : Float   // Number of shares
+  mut avg_cost : Float   // Average cost per share
+  mut current_price : Float  // Current market price
+}
+```
+
+### Portfolio
+
+```mbt
+pub struct Portfolio {
+  positions : Array[Position]  // List of positions
+  mut cash : Float             // Available cash
+  initial_capital : Float      // Initial capital
+}
+```
+
+## Position Methods
+
+### value
+
+Calculate position market value.
+
+```mbt
+pub fn Position::value(self : Position) -> Float
+```
+
+### pnl
+
+Calculate unrealized P&L.
+
+```mbt
+pub fn Position::pnl(self : Position) -> Float
+```
+
+### pnl_pct
+
+Calculate P&L percentage.
+
+```mbt
+pub fn Position::pnl_pct(self : Position) -> Float
+```
+
+## Portfolio Methods
+
+### total_value
+
+Get total portfolio value (cash + positions).
+
+```mbt
+pub fn Portfolio::total_value(self : Portfolio) -> Float
+```
+
+### position_value
+
+Get total position value (excludes cash).
+
+```mbt
+pub fn Portfolio::position_value(self : Portfolio) -> Float
+```
+
+### position_ratio
+
+Get position ratio (position / total).
+
+```mbt
+pub fn Portfolio::position_ratio(self : Portfolio) -> Float
+```
+
+### total_pnl
+
+Get total P&L.
+
+```mbt
+pub fn Portfolio::total_pnl(self : Portfolio) -> Float
+```
+
+### total_pnl_pct
+
+Get total P&L percentage.
+
+```mbt
+pub fn Portfolio::total_pnl_pct(self : Portfolio) -> Float
+```
+
+### buy
+
+Buy stock (add or create position).
+
+```mbt
+pub fn Portfolio::buy(
+  self : Portfolio,
+  stock : StockCode,
+  quantity : Float,
+  price : Float,
+) -> Bool
+```
+
+### sell
+
+Sell stock (reduce or close position).
+
+```mbt
+pub fn Portfolio::sell(
+  self : Portfolio,
+  stock : StockCode,
+  quantity : Float,
+  price : Float,
+) -> Bool
+```
+
+### update_prices
+
+Update current prices for all positions.
+
+```mbt
+pub fn Portfolio::update_prices(
+  self : Portfolio,
+  get_price : (StockCode) -> Float,
+) -> Unit
+```

@@ -1,0 +1,541 @@
+/// Monte Carlo simulation engine
+///
+/// Performs Monte Carlo simulations to test strategy robustness.
+
+///|
+/// Initialize random number generator with seed
+fn init_random(seed : Int?) -> Int {
+  match seed {
+    Some(s) => s
+    None => 12345  // Default fixed seed for reproducibility
+  }
+}
+
+///|
+/// Simple linear congruential generator for random numbers
+fn random_next(seed : Int) -> (Int, Float) {
+  // LCG parameters (same as glibc)
+  let a = 1103515245
+  let c = 12345
+  let m = 2147483647  // 2^31 - 1 (max Int value)
+
+  let new_seed = (a * seed + c) % m
+  let random_value = Float::from_int(new_seed) / Float::from_int(m)
+  (new_seed, random_value)
+}
+
+///|
+/// Generate random float in range [0, 1)
+pub fn random_float(seed : Int) -> (Int, Float) {
+  random_next(seed)
+}
+
+///|
+/// Generate random integer in range [0, max)
+pub fn random_int(seed : Int, max : Int) -> (Int, Int) {
+  let (new_seed, value) = random_next(seed)
+  let idx = Float::to_int(value * Float::from_int(max)) % max
+  (new_seed, idx)
+}
+
+///|
+/// Shuffle array using Fisher-Yates algorithm
+pub fn shuffle_array[T](arr : Array[T], seed : Int) -> (Int, Array[T]) {
+  let mut current_seed = seed
+  let len = arr.length()
+  let result = arr
+
+  let mut i = len - 1
+  while i > 0 {
+    let (new_seed, j) = random_int(current_seed, i + 1)
+    current_seed = new_seed
+
+    // Swap elements at i and j
+    if j >= 0 && j < len && i >= 0 && i < len {
+      let temp = result[i]
+      result.set(i, result[j])
+      result.set(j, temp)
+    }
+    i = i - 1
+  }
+
+  (current_seed, result)
+}
+
+///|
+/// Sample array with replacement (bootstrap)
+pub fn bootstrap_sample[T](arr : Array[T], seed : Int, size : Int) -> (Int, Array[T]) {
+  let mut current_seed = seed
+  let len = arr.length()
+  let result : Array[T] = []
+
+  let mut i = 0
+  while i < size {
+    let (new_seed, idx) = random_int(current_seed, len)
+    current_seed = new_seed
+    if idx >= 0 && idx < len {
+      result.push(arr[idx])
+    }
+    i = i + 1
+  }
+
+  (current_seed, result)
+}
+
+///|
+/// Add noise to trade prices
+pub fn add_slippage_noise(trades : Array[Trade], max_slippage : Float, seed : Int) -> (Int, Array[Trade]) {
+  let mut current_seed = seed
+  let result : Array[Trade] = []
+
+  for trade in trades {
+    let (new_seed, noise1) = random_next(current_seed)
+    current_seed = new_seed
+    let (_new_seed2, _noise2) = random_next(new_seed)
+
+    // Random slippage in [-max_slippage, +max_slippage]
+    let slippage = (noise1 - 0.5) * 2.0 * max_slippage
+    let new_price = trade.price * (1.0 + slippage)
+
+    // For buy, slippage increases price; for sell, decreases
+    let adjusted_price = match trade.action {
+      @strategy.Action::Buy => new_price
+      @strategy.Action::Sell => trade.price * (1.0 - slippage)
+      @strategy.Action::Hold => trade.price
+    }
+    ignore(adjusted_price)
+
+    result.push(Trade::{
+      stock: trade.stock,
+      action: trade.action,
+      price: new_price,
+      quantity: trade.quantity,
+      timestamp: trade.timestamp,
+      commission: trade.commission,
+    })
+  }
+
+  (current_seed, result)
+}
+
+///|
+/// Filter trades by random skipping
+fn skip_trades(trades : Array[Trade], skip_prob : Float, seed : Int) -> (Int, Array[Trade]) {
+  let mut current_seed = seed
+  let result : Array[Trade] = []
+
+  for trade in trades {
+    let (new_seed, value) = random_next(current_seed)
+    current_seed = new_seed
+
+    // Keep trade if random value > skip_prob
+    if value > skip_prob {
+      result.push(trade)
+    }
+  }
+
+  (current_seed, result)
+}
+
+///|
+/// Run Monte Carlo simulation on backtest result
+pub fn run_monte_carlo(
+  original_result : BacktestResult,
+  config : MonteCarloConfig,
+) -> MonteCarloResult {
+  let seed = init_random(config.seed)
+  let mut current_seed = seed
+  let mut runs : Array[MonteCarloRun] = []
+
+  let original_trades = original_result.trades
+  let original_equity = original_result.equity_curve
+
+  let mut run_id = 0
+  while run_id < config.num_runs {
+    let mut run_trades = original_trades
+
+    // Apply transformation based on mode
+    match config.mode {
+      MonteCarloMode::TradeShuffle => {
+        let (new_seed, shuffled) = shuffle_array(original_trades, current_seed)
+        current_seed = new_seed
+        run_trades = shuffled
+      }
+      MonteCarloMode::TradeSkip => {
+        let (new_seed, filtered) = skip_trades(original_trades, config.skip_probability, current_seed)
+        current_seed = new_seed
+        run_trades = filtered
+      }
+      MonteCarloMode::SlippageNoise => {
+        let (new_seed, noisy) = add_slippage_noise(original_trades, config.max_slippage, current_seed)
+        current_seed = new_seed
+        run_trades = noisy
+      }
+      MonteCarloMode::Bootstrap => {
+        let (new_seed, sampled) = bootstrap_sample(original_equity, current_seed, original_equity.length())
+        current_seed = new_seed
+        // For bootstrap, we sample equity curve and calculate stats
+        let sampled_returns = calculate_returns_from_equity(sampled)
+        let (total_ret, max_dd, sharpe) = calculate_stats_from_returns(sampled_returns)
+
+        runs.push(MonteCarloRun::{
+          run_id,
+          total_return: total_ret,
+          max_drawdown: max_dd,
+          sharpe_ratio: sharpe,
+          final_capital: original_result.initial_capital * (1.0 + total_ret),
+          num_trades: original_trades.length(),
+          is_profitable: total_ret > 0.0,
+        })
+        run_id = run_id + 1
+        continue
+      }
+      MonteCarloMode::Combined => {
+        // Apply all transformations
+        let (s1, shuffled) = shuffle_array(original_trades, current_seed)
+        let (s2, filtered) = skip_trades(shuffled, config.skip_probability, s1)
+        let (s3, noisy) = add_slippage_noise(filtered, config.max_slippage, s2)
+        current_seed = s3
+        run_trades = noisy
+      }
+    }
+
+    // Calculate stats for this run
+    let stats = calculate_stats_from_trades(run_trades, original_result.initial_capital)
+
+    runs.push(MonteCarloRun::{
+      run_id,
+      total_return: stats.0,
+      max_drawdown: stats.1,
+      sharpe_ratio: stats.2,
+      final_capital: original_result.initial_capital * (1.0 + stats.0),
+      num_trades: run_trades.length(),
+      is_profitable: stats.0 > 0.0,
+    })
+
+    run_id = run_id + 1
+  }
+
+  let summary = calculate_monte_carlo_summary(runs, original_result.total_return)
+
+  MonteCarloResult::{
+    runs,
+    summary,
+    config,
+  }
+}
+
+///|
+/// Calculate statistics from trades
+fn calculate_stats_from_trades(
+  trades : Array[Trade],
+  initial_capital : Float,
+) -> (Float, Float, Float) {
+  if trades.length() == 0 {
+    return (0.0, 0.0, 0.0)
+  }
+
+  // Calculate total return from trades
+  let mut capital = initial_capital
+  let mut position : Trade? = None
+  let mut returns : Array[Float] = []
+  let mut peak = capital
+  let mut max_dd = 0.0
+
+  for trade in trades {
+    match trade.action {
+      @strategy.Action::Buy => {
+        position = Some(trade)
+      }
+      @strategy.Action::Sell => {
+        match position {
+          Some(buy_trade) => {
+            let buy_cost = buy_trade.quantity * buy_trade.price + buy_trade.commission
+            let sell_proceeds = trade.quantity * trade.price - trade.commission
+            let pnl = sell_proceeds - buy_cost
+            let ret = pnl / capital
+
+            capital = capital + pnl
+            returns.push(ret)
+
+            if capital > peak {
+              peak = capital
+            }
+            let dd = (peak - capital) / peak
+            if dd > max_dd {
+              max_dd = dd
+            }
+
+            position = None
+          }
+          None => ignore(())
+        }
+      }
+      @strategy.Action::Hold => ignore(())
+    }
+  }
+
+  // Calculate Sharpe ratio
+  let sharpe = if returns.length() > 1 {
+    let avg = average(returns)
+    let std = std_dev(returns)
+    if std > 0.0 {
+      avg / std * Float::sqrt(252.0)
+    } else {
+      0.0
+    }
+  } else {
+    0.0
+  }
+
+  let total_return = (capital - initial_capital) / initial_capital
+
+  (total_return, -max_dd, sharpe)
+}
+
+///|
+/// Calculate returns from equity curve
+fn calculate_returns_from_equity(equity : Array[@EquityPoint]) -> Array[Float] {
+  if equity.length() < 2 {
+    return []
+  }
+
+  let mut returns : Array[Float] = []
+  let mut i = 1
+  while i < equity.length() {
+    let prev_eq = equity[i - 1].equity
+    let curr_eq = equity[i].equity
+    if prev_eq > 0.0 {
+      returns.push((curr_eq - prev_eq) / prev_eq)
+    }
+    i = i + 1
+  }
+  returns
+}
+
+///|
+/// Calculate stats from returns array
+fn calculate_stats_from_returns(returns : Array[Float]) -> (Float, Float, Float) {
+  if returns.length() == 0 {
+    return (0.0, 0.0, 0.0)
+  }
+
+  // Total return (compounded)
+  let mut total = 1.0
+  for r in returns {
+    total = total * (1.0 + r)
+  }
+  let total_return = total - 1.0
+
+  // Max drawdown from cumulative returns
+  let mut peak = 1.0
+  let mut cumulative = 1.0
+  let mut max_dd = 0.0
+  for r in returns {
+    cumulative = cumulative * (1.0 + r)
+    if cumulative > peak {
+      peak = cumulative
+    }
+    let dd = (peak - cumulative) / peak
+    if dd > max_dd {
+      max_dd = dd
+    }
+  }
+
+  // Sharpe ratio
+  let sharpe = if returns.length() > 1 {
+    let avg = average(returns)
+    let std = std_dev(returns)
+    if std > 0.0 {
+      avg / std * Float::sqrt(252.0)
+    } else {
+      0.0
+    }
+  } else {
+    0.0
+  }
+
+  (total_return, -max_dd, sharpe)
+}
+
+///|
+/// Calculate average
+fn average(values : Array[Float]) -> Float {
+  if values.length() == 0 {
+    return 0.0
+  }
+  let mut sum : Float = 0.0
+  for v in values {
+    sum = sum + v
+  }
+  sum / Float::from_int(values.length())
+}
+
+///|
+/// Calculate standard deviation
+fn std_dev(values : Array[Float]) -> Float {
+  if values.length() < 2 {
+    return 0.0
+  }
+  let avg = average(values)
+  let mut sum_sq : Float = 0.0
+  for v in values {
+    let diff = v - avg
+    sum_sq = sum_sq + diff * diff
+  }
+  Float::sqrt(sum_sq / Float::from_int(values.length() - 1))
+}
+
+///|
+/// Calculate Monte Carlo summary statistics
+pub fn calculate_monte_carlo_summary(
+  runs : Array[MonteCarloRun],
+  original_return : Float,
+) -> MonteCarloSummary {
+  if runs.length() == 0 {
+    return create_monte_carlo_summary(original_return)
+  }
+
+  let returns = runs.map(fn(r) { r.total_return })
+  let drawdowns = runs.map(fn(r) { r.max_drawdown })
+  let sharpes = runs.map(fn(r) { r.sharpe_ratio })
+
+  // Sort returns for percentiles
+  let sorted_returns = sort_array(returns)
+
+  let n = sorted_returns.length()
+  let p5_idx = Int::from_float(Float::from_int(n) * 0.05)
+  let p95_idx = Int::from_float(Float::from_int(n) * 0.95)
+
+  let percentile_5 = if p5_idx < n { sorted_returns[p5_idx] } else { sorted_returns[0] }
+  let percentile_95 = if p95_idx < n { sorted_returns[p95_idx] } else { sorted_returns[n - 1] }
+
+  // Count profitable runs
+  let profitable_count = runs.filter(fn(r) { r.is_profitable }).length()
+  let profit_rate = Float::from_int(profitable_count) / Float::from_int(runs.length())
+
+  // Count runs beating original
+  let beat_original_count = runs.filter(fn(r) { r.total_return > original_return }).length()
+  let beat_original_rate = Float::from_int(beat_original_count) / Float::from_int(runs.length())
+
+  // Calculate robustness score
+  // Higher score = more robust (less variance, higher profit rate, better worst case)
+  let return_variance = std_dev(returns)
+  let worst_case = sorted_returns[0]
+
+  // Robustness = profit_rate * 50 + (1 - variance) * 25 + (1 + worst_case) * 25
+  // Normalized to 0-100
+  let robustness_score = Float::max(0.0, Float::min(100.0,
+    profit_rate * 50.0 +
+    (1.0 - Float::min(return_variance, 1.0)) * 25.0 +
+    (1.0 + Float::max(worst_case, -1.0)) * 25.0
+  ))
+
+  MonteCarloSummary::{
+    num_runs: runs.length(),
+    mean_return: average(returns),
+    median_return: if n % 2 == 0 {
+      (sorted_returns[n / 2 - 1] + sorted_returns[n / 2]) / 2.0
+    } else {
+      sorted_returns[n / 2]
+    },
+    std_return: return_variance,
+    min_return: sorted_returns[0],
+    max_return: sorted_returns[n - 1],
+    percentile_5,
+    percentile_95,
+    profit_rate,
+    mean_drawdown: average(drawdowns),
+    worst_drawdown: drawdowns.fold(fn(acc, x) { if x < acc { x } else { acc } }, 0.0),
+    mean_sharpe: average(sharpes),
+    beat_original_rate,
+    robustness_score,
+    original_return,
+  }
+}
+
+///|
+/// Sort array of floats (ascending)
+fn sort_array(arr : Array[Float]) -> Array[Float] {
+  let mut result = arr
+  let len = result.length()
+
+  let mut i = 0
+  while i < len {
+    let mut min_idx = i
+    let mut j = i + 1
+    while j < len {
+      if result[j] < result[min_idx] {
+        min_idx = j
+      }
+      j = j + 1
+    }
+    if min_idx != i {
+      let temp = result[i]
+      result = result.set(i, result[min_idx])
+      result = result.set(min_idx, temp)
+    }
+    i = i + 1
+  }
+
+  result
+}
+
+///|
+/// Format Monte Carlo summary as report
+pub fn format_monte_carlo_report(result : MonteCarloResult) -> String {
+  let summary = result.summary
+  let mode_str = match result.config.mode {
+    MonteCarloMode::TradeShuffle => "Trade Shuffle"
+    MonteCarloMode::TradeSkip => "Trade Skip"
+    MonteCarloMode::SlippageNoise => "Slippage Noise"
+    MonteCarloMode::Bootstrap => "Bootstrap"
+    MonteCarloMode::Combined => "Combined"
+  }
+
+  let mut report = "\n========================================\n"
+  report = report + "Monte Carlo Simulation Report\n"
+  report = report + "Mode: " + mode_str + "\n"
+  report = report + "========================================\n\n"
+
+  report = report + "Simulation Parameters:\n"
+  report = report + "  Number of Runs: " + Int::to_string(result.config.num_runs) + "\n"
+  report = report + "  Original Return: " + format_pct(summary.original_return) + "\n\n"
+
+  report = report + "Return Statistics:\n"
+  report = report + "  Mean Return: " + format_pct(summary.mean_return) + "\n"
+  report = report + "  Median Return: " + format_pct(summary.median_return) + "\n"
+  report = report + "  Std Deviation: " + format_pct(summary.std_return) + "\n"
+  report = report + "  Min Return: " + format_pct(summary.min_return) + "\n"
+  report = report + "  Max Return: " + format_pct(summary.max_return) + "\n"
+  report = report + "  5th Percentile: " + format_pct(summary.percentile_5) + "\n"
+  report = report + "  95th Percentile: " + format_pct(summary.percentile_95) + "\n\n"
+
+  report = report + "Risk Statistics:\n"
+  report = report + "  Mean Drawdown: " + format_pct(summary.mean_drawdown) + "\n"
+  report = report + "  Worst Drawdown: " + format_pct(summary.worst_drawdown) + "\n"
+  report = report + "  Mean Sharpe: " + Float::to_string(summary.mean_sharpe) + "\n\n"
+
+  report = report + "Success Metrics:\n"
+  report = report + "  Profit Rate: " + format_pct(summary.profit_rate) + "\n"
+  report = report + "  Beat Original Rate: " + format_pct(summary.beat_original_rate) + "\n"
+  report = report + "  Robustness Score: " + Float::to_string(summary.robustness_score) + "/100\n\n"
+
+  report = report + "Interpretation:\n"
+  if summary.robustness_score >= 70.0 {
+    report = report + "  Strategy appears ROBUST - Monte Carlo results are consistent\n"
+  } else if summary.robustness_score >= 40.0 {
+    report = report + "  Strategy shows MODERATE robustness - some variance in results\n"
+  } else {
+    report = report + "  Strategy may be OVERFIT - high variance in Monte Carlo results\n"
+  }
+
+  report = report + "\n========================================\n"
+  report
+}
+
+///|
+/// Format percentage
+fn format_pct(value : Float) -> String {
+  Float::to_string(value * 100.0) + "%"
+}

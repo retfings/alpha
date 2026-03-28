@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "retfings/alpha/alpha/parsers"
+
+// Values
+pub fn _get_env_command() -> Command
+
+pub fn _parse_analyze_args(Array[String]) -> Command
+
+pub fn _parse_args(Array[String]) -> Command
+
+pub fn _parse_backtest_args(Array[String]) -> Command
+
+pub fn _parse_serve_args(Array[String]) -> Command
+
+// Errors
+
+// Types and methods
+pub enum Command {
+  Help
+  Analyze(String, String)
+  Backtest(String, String, String, String)
+  Serve(Int)
+}
+
+// Type aliases
+
+// Traits
+

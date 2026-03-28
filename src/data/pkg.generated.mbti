@@ -1,0 +1,245 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "retfings/alpha/src/data"
+
+// Values
+pub fn adjust_klines(Array[KLine], AdjustType, Float) -> Array[KLine]
+
+pub fn adjust_type_backward() -> AdjustType
+
+pub fn adjust_type_forward() -> AdjustType
+
+pub fn adjust_type_none() -> AdjustType
+
+pub fn annualize_volatility(Float, Int) -> Float
+
+pub fn apply_backward_adjustment(Array[KLine], Float) -> Array[KLine]
+
+pub fn apply_forward_adjustment(Array[KLine], Float) -> Array[KLine]
+
+pub fn calculate_log_returns(Array[KLine]) -> Array[Float]
+
+pub fn calculate_price_change_stats(Array[KLine], Int) -> PriceChangeStats
+
+pub fn calculate_price_stats(Array[KLine], Int) -> PriceStats
+
+pub fn calculate_returns(Array[KLine]) -> Array[Float]
+
+pub fn calculate_rolling_volatility(Array[Float], Int) -> Array[Float]
+
+pub fn calculate_stock_indicators(Array[KLine], Int) -> StockIndicatorSummary
+
+pub fn calculate_turnover_rate_stats(Array[KLine], Int) -> TurnoverRateStats
+
+pub fn calculate_turnover_stats(Array[KLine], Int) -> TurnoverStats
+
+pub fn calculate_volume_stats(Array[KLine], Int) -> VolumeStats
+
+pub fn compare_by_eps(FinancialMetrics, FinancialMetrics) -> Bool
+
+pub fn compare_by_np_margin(FinancialMetrics, FinancialMetrics) -> Bool
+
+pub fn compare_by_roe(FinancialMetrics, FinancialMetrics) -> Bool
+
+pub fn create_adjust_factor(String, Float, Float) -> AdjustFactor
+
+pub fn create_financial_metrics(Float, Float, Float, Float, Float, Float, Float, Float) -> FinancialMetrics
+
+pub fn create_stock_financials(String, FinancialMetrics) -> StockFinancials
+
+pub fn empty_financial_metrics() -> FinancialMetrics
+
+pub fn evaluate_financial_health(FinancialMetrics) -> FinancialHealth
+
+pub fn extract_stock_code_from_filename(String) -> String?
+
+pub fn filter_by_health(Array[StockFinancials], FinancialHealth) -> Array[StockFinancials]
+
+pub fn filter_invalid_klines(Array[KLine]) -> Array[KLine]
+
+pub fn is_growth_stock(FinancialMetrics) -> Bool
+
+pub fn is_quality_stock(FinancialMetrics) -> Bool
+
+pub fn is_value_stock(FinancialMetrics, Float) -> Bool
+
+pub fn kline_to_csv_line(KLine) -> String
+
+pub fn load_klines_from_csv(String) -> Result[Array[KLine], String]
+
+pub fn normalize_price_series(Array[KLine]) -> Array[Float]
+
+pub fn normalize_to_date(Array[KLine], String, Array[AdjustFactor]) -> Array[KLine]
+
+pub fn normalize_volume(Array[KLine], Int) -> Array[Float]
+
+pub fn parse_csv_content(String) -> Result[Array[KLine], String]
+
+pub fn resample_klines(Array[KLine], Frequency) -> Array[KLine]
+
+pub fn screen_by_financials(Array[StockFinancials], Float, Float, Float) -> Array[StockFinancials]
+
+pub fn sma(Array[Float], Int) -> Array[Float]
+
+pub fn sort_by_eps_desc(Array[StockFinancials]) -> Array[StockFinancials]
+
+pub fn sort_by_np_margin_desc(Array[StockFinancials]) -> Array[StockFinancials]
+
+pub fn sort_by_roe_desc(Array[StockFinancials]) -> Array[StockFinancials]
+
+pub fn sort_klines_by_date(Array[KLine]) -> Array[KLine]
+
+pub fn trim_klines_to_range(Array[KLine], String, String) -> Array[KLine]
+
+pub fn validate_kline(KLine) -> Bool
+
+// Errors
+
+// Types and methods
+pub struct AdjustFactor {
+  date : String
+  ratio : Float
+  dividend : Float
+  rights_ratio : Float
+  rights_price : Float
+}
+pub impl Show for AdjustFactor
+
+pub enum AdjustType {
+  None
+  Forward
+  Backward
+}
+pub impl Eq for AdjustType
+pub impl Show for AdjustType
+
+pub enum FinancialHealth {
+  Excellent
+  Good
+  Fair
+  Poor
+  Critical
+}
+pub impl Eq for FinancialHealth
+pub impl Show for FinancialHealth
+pub impl ToJson for FinancialHealth
+
+pub struct FinancialMetrics {
+  roe_avg : Float
+  np_margin : Float
+  gp_margin : Float
+  net_profit : Float
+  eps_ttm : Float
+  mb_revenue : Float
+  total_share : Float
+  liqa_share : Float
+}
+pub impl Show for FinancialMetrics
+pub impl ToJson for FinancialMetrics
+
+pub(all) enum Frequency {
+  Daily
+  Weekly
+  Monthly
+  Minute5
+  Minute15
+  Minute30
+  Minute60
+}
+pub impl Eq for Frequency
+pub impl Show for Frequency
+
+pub struct KLine {
+  code : String
+  date : String
+  time : String?
+  open : Float
+  high : Float
+  low : Float
+  close : Float
+  volume : Float
+  amount : Float
+  turn : Float
+}
+pub fn KLine::create(String, String, Float, Float, Float, Float, Float, Float, Float, time? : String) -> Self
+pub fn KLine::daily(String, String, Float, Float, Float, Float, Float, Float, Float) -> Self
+pub impl Eq for KLine
+pub impl Show for KLine
+pub impl ToJson for KLine
+
+pub struct PriceChangeStats {
+  daily_change : Float
+  daily_change_pct : Float
+  avg_change : Float
+  avg_change_pct : Float
+  period_change : Float
+  period_change_pct : Float
+}
+pub impl Show for PriceChangeStats
+pub impl ToJson for PriceChangeStats
+
+pub struct PriceStats {
+  open : Float
+  close : Float
+  high : Float
+  low : Float
+  avg_close : Float
+  avg_high : Float
+  avg_low : Float
+}
+pub impl Show for PriceStats
+pub impl ToJson for PriceStats
+
+pub struct StockFinancials {
+  code : String
+  metrics : FinancialMetrics
+  health : FinancialHealth
+}
+pub impl Show for StockFinancials
+pub impl ToJson for StockFinancials
+
+pub struct StockIndicatorSummary {
+  code : String
+  date : String
+  price : PriceStats
+  volume : VolumeStats
+  turnover : TurnoverStats
+  turnover_rate : TurnoverRateStats
+  price_change : PriceChangeStats
+}
+pub impl Show for StockIndicatorSummary
+pub impl ToJson for StockIndicatorSummary
+
+pub struct TurnoverRateStats {
+  daily_turnover_rate : Float
+  avg_turnover_rate : Float
+  rate_ratio : Float
+  max_turnover_rate : Float
+}
+pub impl Show for TurnoverRateStats
+pub impl ToJson for TurnoverRateStats
+
+pub struct TurnoverStats {
+  daily_turnover : Float
+  avg_turnover : Float
+  turnover_ratio : Float
+}
+pub impl Show for TurnoverStats
+pub impl ToJson for TurnoverStats
+
+pub struct VolumeStats {
+  daily_volume : Float
+  avg_volume : Float
+  volume_ratio : Float
+  max_volume : Float
+  min_volume : Float
+}
+pub impl Show for VolumeStats
+pub impl ToJson for VolumeStats
+
+// Type aliases
+pub type StockCode = String
+
+pub type TimeSeries[T] = Array[(Int64, T)]
+
+// Traits
+

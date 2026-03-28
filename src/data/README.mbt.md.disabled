@@ -1,0 +1,108 @@
+# Data Package
+
+Data types and CSV loader for quantitative trading.
+
+## Overview
+
+The `@data` package provides core data structures for representing financial market data:
+
+- `KLine` - OHLCV candlestick data
+- `StockCode` - Stock identifier type
+- `Frequency` - Trading frequency enumeration
+- `parse_csv_content` - CSV parsing function
+
+## Usage
+
+### Creating K-line data
+
+```mbt check
+let kline = KLine::{
+  code: "sh.600000",
+  date: "2023-01-01",
+  time: None,
+  open: 10.5,
+  high: 11.0,
+  low: 10.3,
+  close: 10.8,
+  volume: 1000000.0,
+  amount: 10800000.0,
+  turn: 0.05,
+}
+```
+
+### Parsing CSV content
+
+```mbt check
+let csv = "date,open,high,low,close,volume,amount,turn
+2023-01-01,10.5,11.0,10.3,10.8,1000000,10800000,0.05
+2023-01-02,10.8,11.2,10.6,11.0,1200000,13200000,0.06"
+
+let result = parse_csv_content(csv)
+```
+
+### Extracting stock code from filename
+
+```mbt check
+let filename = "sh_600000_2023-01-01_2023-12-31.csv"
+let code = extract_stock_code_from_filename(filename)
+// Returns: Some("sh.600000")
+```
+
+## Types
+
+### KLine
+
+```mbt
+pub struct KLine {
+  code : StockCode       // Stock code (e.g., "sh.600000")
+  date : String          // Trading date (YYYY-MM-DD)
+  time : String?         // Optional time for minute data
+  open : Float           // Opening price
+  high : Float           // Highest price
+  low : Float            // Lowest price
+  close : Float          // Closing price
+  volume : Float         // Trading volume
+  amount : Float         // Trading amount (CNY)
+  turn : Float           // Turnover rate (%)
+}
+```
+
+### Frequency
+
+```mbt
+pub enum Frequency {
+  Daily       // Daily bars
+  Weekly      // Weekly bars
+  Monthly     // Monthly bars
+  Minute5     // 5-minute bars
+  Minute15    // 15-minute bars
+  Minute30    // 30-minute bars
+  Minute60    // 60-minute bars
+}
+```
+
+## Functions
+
+### parse_csv_content
+
+Parse CSV string content into K-line array.
+
+```mbt
+pub fn parse_csv_content(content : String) -> Result[Array[KLine], String]
+```
+
+### kline_to_csv_line
+
+Convert K-line to CSV format string.
+
+```mbt
+pub fn kline_to_csv_line(kline : KLine) -> String
+```
+
+### extract_stock_code_from_filename
+
+Extract stock code from filename.
+
+```mbt
+pub fn extract_stock_code_from_filename(filename : String) -> String?
+```
