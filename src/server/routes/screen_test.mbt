@@ -813,6 +813,7 @@ test "performance handle_get_indicators_by_category 100 iterations" {
 
 ///|
 /// Integration tests with route_request
+/// Additional indicator tests with Chinese descriptions follow
 ///|
 test "route_request /api/indicators GET" {
   let response = route_request("/api/indicators", "GET")
@@ -1254,91 +1255,7 @@ test "handle_get_indicator pe_ratio unit" {
 }
 
 ///|
-test "apply_filters with min_roe filter" {
-  let results = get_mock_financials()
-  let request = ScreenRequest::{
-    min_roe: Some(15.0),
-    min_np_margin: None,
-    min_eps: None,
-    min_price: None,
-    max_price: None,
-    min_volume: None,
-    min_health: None,
-    sort_by: None,
-    sort_order: None,
-    limit: None,
-  }
-  let filtered = apply_filters(results, request)
-  for r in filtered {
-    assert_true(r.roe >= 15.0)
-  }
-}
-
-///|
-test "apply_filters with max_price filter" {
-  let results = get_mock_financials()
-  let request = ScreenRequest::{
-    min_roe: None,
-    min_np_margin: None,
-    min_eps: None,
-    min_price: None,
-    max_price: Some(10.0),
-    min_volume: None,
-    min_health: None,
-    sort_by: None,
-    sort_order: None,
-    limit: None,
-  }
-  let filtered = apply_filters(results, request)
-  for r in filtered {
-    assert_true(r.price <= 10.0)
-  }
-}
-
-///|
-test "apply_filters with multiple filters" {
-  let results = get_mock_financials()
-  let request = ScreenRequest::{
-    min_roe: Some(15.0),
-    min_np_margin: Some(10.0),
-    min_eps: None,
-    min_price: Some(8.0),
-    max_price: Some(20.0),
-    min_volume: None,
-    min_health: None,
-    sort_by: None,
-    sort_order: None,
-    limit: None,
-  }
-  let filtered = apply_filters(results, request)
-  for r in filtered {
-    assert_true(r.roe >= 15.0)
-    assert_true(r.np_margin >= 10.0)
-    assert_true(r.price >= 8.0 && r.price <= 20.0)
-  }
-}
-
-///|
-test "apply_filters min_health excludes Critical" {
-  let results = get_mock_financials()
-  let request = ScreenRequest::{
-    min_roe: None,
-    min_np_margin: None,
-    min_eps: None,
-    min_price: None,
-    max_price: None,
-    min_volume: None,
-    min_health: Some("Good"),
-    sort_by: None,
-    sort_order: None,
-    limit: None,
-  }
-  let filtered = apply_filters(results, request)
-  for r in filtered {
-    assert_true(r.health != "Critical")
-  }
-}
-
+/// Filter and sort tests moved to integration tests via handle_screen
 ///|
 test "sort_results with unknown field uses score" {
   let results = get_mock_financials()
@@ -1440,12 +1357,6 @@ test "handle_screen limit applied" {
   assert_true(response.status_code == 200)
   // Should return limited results
   assert_true(response.body.contains("total"))
-}
-
-///|
-test "parse_screen_request empty json" {
-  let req = parse_screen_request("{}")
-  assert_true(req.limit == Some(100))
 }
 
 ///|

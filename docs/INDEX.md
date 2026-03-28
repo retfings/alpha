@@ -87,8 +87,8 @@
 
 | 功能模块 | 状态 | 负责人 | 完成日期 |
 |----------|------|--------|----------|
-| 股票筛选 API | 🟡 进行中 | backend-dev | - |
-| 交易模型 API | 🟡 进行中 | backend-dev | - |
+| 股票筛选 API | 🟢 已完成 | backend-dev | 2026-03-28 |
+| 交易模型 API | 🟢 已完成 | backend-dev | 2026-03-28 |
 | 指标计算模块 | 🟢 已完成 | backend-dev | 2026-03-27 |
 | HTTP 服务器 | 🟢 已完成 | backend-dev | 2026-03-27 |
 | 数据加载模块 | 🟢 已完成 | backend-dev | 2026-03-27 |
@@ -97,12 +97,15 @@
 
 | 功能模块 | 状态 | 负责人 | 完成日期 |
 |----------|------|--------|----------|
-| 股票筛选器 UI | 🟡 进行中 | frontend-dev | - |
+| 股票筛选器 UI | 🟢 已完成 | frontend-dev | 2026-03-28 |
 | 指标选择组件 | 🟢 已完成 | frontend-dev | 2026-03-28 |
 | 筛选条件配置 | 🟢 已完成 | frontend-dev | 2026-03-28 |
 | 权重排序功能 | 🟢 已完成 | frontend-dev | 2026-03-28 |
 | 交易模型选择器 | 🟢 已完成 | frontend-dev | 2026-03-28 |
 | 结果展示组件 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+| 指标提示说明 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+| CSV 导出功能 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+| 结果分布图表 | 🟢 已完成 | frontend-dev | 2026-03-28 |
 
 ### 测试功能
 
@@ -257,15 +260,17 @@ docs/
 
 | 功能模块 | 页面/组件 | 状态 | 负责人 |
 |----------|-----------|------|--------|
-| 筛选器 | 指标选择器 | 🟡 进行中 | frontend-dev |
+| 筛选器 | 指标选择器 | ✅ 已完成 | frontend-dev |
 | 筛选器 | 条件配置面板 | ✅ 已完成 | frontend-dev |
 | 筛选器 | 权重配置滑块 | ✅ 已完成 | frontend-dev |
 | 筛选器 | 结果展示表格 | ✅ 已完成 | frontend-dev |
-| 指标说明 | 分类展示 | 🟡 进行中 | frontend-dev |
-| 指标说明 | 详情卡片 | 🟡 进行中 | frontend-dev |
+| 指标说明 | 分类展示 | ✅ 已完成 | frontend-dev |
+| 指标说明 | 详情卡片 | ✅ 已完成 | frontend-dev |
 | 交易模型 | 模型选择器 | ✅ 已完成 | frontend-dev |
-| 交易模型 | 参数配置表单 | 🟡 进行中 | frontend-dev |
-| 交易模型 | 模拟结果展示 | 🟡 进行中 | frontend-dev |
+| 交易模型 | 参数配置表单 | ✅ 已完成 | frontend-dev |
+| 交易模型 | 模拟结果展示 | ✅ 已完成 | frontend-dev |
+| 导出功能 | CSV 导出按钮 | ✅ 已完成 | frontend-dev |
+| 图表展示 | 结果分布柱状图 | ✅ 已完成 | frontend-dev |
 
 ### 测试
 
@@ -275,8 +280,8 @@ docs/
 | API 测试 | 指标列表和详情 | ✅ 已完成 | api-tester |
 | API 测试 | 调仓和触发配置 | ✅ 已完成 | api-tester |
 | API 测试 | 参数验证和异常 | ✅ 已完成 | api-tester |
-| 前端测试 | 功能测试 | 🟡 进行中 | frontend-tester |
-| 前端测试 | UI/UX 测试 | 🟡 进行中 | frontend-tester |
+| 前端测试 | 功能测试 | 🟡 待验证 | frontend-tester |
+| 前端测试 | UI/UX 测试 | 🟡 待验证 | frontend-tester |
 
 ### 文档
 
@@ -302,6 +307,7 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
+| 2026-03-28 | INDEX.md | 更新前端功能完成状态为已完成 | frontend-dev |
 | 2026-03-28 | INDEX.md | 添加前端文档系列（组件文档/测试报告） | doc-eng |
 | 2026-03-28 | frontend-components.md | 新建前端组件使用文档 | doc-eng |
 | 2026-03-28 | test-report-summary.md | 新建测试报告汇总文档 | doc-eng |

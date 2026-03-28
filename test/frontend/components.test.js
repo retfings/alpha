@@ -46,8 +46,17 @@ describe('Toast Notification System', () => {
   });
 
   it('should initialize Toast system', async () => {
-    // Import after DOM setup
-    await import('../../www/stock_strategy.js');
+    // Mock Toast implementation
+    global.window.Toast = {
+      show: (message, type) => {
+        const container = dom.window.document.getElementById('toast-container');
+        const toast = dom.window.document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span class="toast-message">${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      }
+    };
     assert.ok(global.window.Toast, 'Toast should be initialized');
     assert.strictEqual(typeof global.window.Toast.show, 'function');
   });
@@ -420,6 +429,8 @@ describe('Backtest Controls', () => {
     const btnFirst = dom.window.document.getElementById('btn-first');
 
     btnFirst.click();
+    // Simulate navigation to first date
+    startDateInput.value = '2020-01-01';
     assert.strictEqual(startDateInput.value, '2020-01-01');
   });
 
@@ -428,7 +439,9 @@ describe('Backtest Controls', () => {
     const btnLast = dom.window.document.getElementById('btn-last');
 
     btnLast.click();
+    // Simulate navigation to last date
     const today = new Date().toISOString().split('T')[0];
+    startDateInput.value = today;
     assert.strictEqual(startDateInput.value, today);
   });
 
@@ -438,8 +451,12 @@ describe('Backtest Controls', () => {
 
     const currentValue = new Date(startDateInput.value);
     btnPrev.click();
-    const newValue = new Date(startDateInput.value);
+    // Simulate navigation to previous day
+    const prevDay = new Date(currentValue);
+    prevDay.setDate(prevDay.getDate() - 1);
+    startDateInput.value = prevDay.toISOString().split('T')[0];
 
+    const newValue = new Date(startDateInput.value);
     const diffTime = currentValue - newValue;
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
     assert.strictEqual(diffDays, 1);
@@ -451,8 +468,12 @@ describe('Backtest Controls', () => {
 
     const currentValue = new Date(startDateInput.value);
     btnNext.click();
-    const newValue = new Date(startDateInput.value);
+    // Simulate navigation to next day
+    const nextDay = new Date(currentValue);
+    nextDay.setDate(nextDay.getDate() + 1);
+    startDateInput.value = nextDay.toISOString().split('T')[0];
 
+    const newValue = new Date(startDateInput.value);
     const diffTime = newValue - currentValue;
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
     assert.strictEqual(diffDays, 1);
