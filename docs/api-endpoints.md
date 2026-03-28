@@ -1632,59 +1632,257 @@ if __name__ == '__main__':
 完整的股票筛选系统 API 规范，请参阅：
 - [股票筛选系统 API 规范](api/stock-screener-api.md) - 完整的 API 接口设计文档
 
-### 股票筛选端点
+### 实现状态
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| `/api/screen/stocks` | GET/POST | 执行筛选，返回结果 |
-| `/api/screen/config` | POST | 保存筛选配置 |
-| `/api/screen/config` | GET | 获取筛选配置列表 |
-| `/api/screen/config/:id` | GET | 获取特定配置详情 |
-| `/api/screen/weights` | PUT | 更新指标权重 |
+**后端实现**: 🟢 已完成 (2026-03-28)
+- 核心代码：`src/server/routes/screen.mbt`
+- 路由配置：`src/server/routes/router.mbt`
+- 编译状态：`moon build` 通过
 
-### 指标元数据端点
+### 已实现的端点
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| `/api/indicators/market` | GET | 获取行情指标列表 |
-| `/api/indicators/technical` | GET | 获取技术指标列表 |
-| `/api/indicators/financial` | GET | 获取财务指标列表 |
-| `/api/indicators/descriptions` | GET | 获取所有指标说明 |
-| `/api/indicators/:id` | GET | 获取单个指标详情 |
+#### 1. 股票筛选端点
 
-### 交易模型端点
+| 端点 | 方法 | 状态 | 说明 |
+|------|------|------|------|
+| `/api/screen/stocks` | GET/POST | 🟢 已完成 | 执行筛选，返回结果 |
+| `/api/screen/config` | POST | 🟢 已完成 | 保存筛选配置 |
+| `/api/screen/config` | GET | 🟢 已完成 | 获取筛选配置列表 |
+| `/api/screen/config/:id` | GET | 🟢 已完成 | 获取特定配置详情 |
+| `/api/screen/weights` | PUT | 🟢 已完成 | 更新指标权重 |
 
-| 端点 | 方法 | 说明 |
-|------|------|------|
-| `/api/trading-model/config` | POST | 配置交易模型 |
-| `/api/trading-model/config` | GET | 获取交易模型配置列表 |
-| `/api/trading-model/config/:id` | GET | 获取特定配置详情 |
-| `/api/trading-model/simulate` | POST | 模拟交易结果 |
+#### 2. 指标元数据端点
 
-### 技术指标支持
+| 端点 | 方法 | 状态 | 说明 |
+|------|------|------|------|
+| `/api/indicators/market` | GET | 🟢 已完成 | 获取行情指标列表 |
+| `/api/indicators/technical` | GET | 🟢 已完成 | 获取技术指标列表 |
+| `/api/indicators/financial` | GET | 🟢 已完成 | 获取财务指标列表 |
+| `/api/indicators/descriptions` | GET | 🟢 已完成 | 获取所有指标说明 |
+| `/api/indicators/:id` | GET | 🟢 已完成 | 获取单个指标详情 |
 
-| 指标 | 说明 | 标准参数 |
-|------|------|----------|
-| MACD | 趋势跟踪动量指标 | 12, 26, 9 |
-| RSI | 相对强弱指标 | 14 |
-| KDJ | 随机振荡指标 | 9, 3, 3 |
-| MA | 移动平均线 | 可配置 |
-| Bollinger | 布林带 | 20, 2.0 |
-| ATR | 平均真实波幅 | 14 |
+#### 3. 交易模型端点
 
-### 筛选条件
+| 端点 | 方法 | 状态 | 说明 |
+|------|------|------|------|
+| `/api/trading-model/config` | POST | 🟢 已完成 | 配置交易模型 |
+| `/api/trading-model/config` | GET | 🟢 已完成 | 获取交易模型配置列表 |
+| `/api/trading-model/config/:id` | GET | 🟢 已完成 | 获取特定配置详情 |
+| `/api/trading-model/simulate` | POST | 🟢 已完成 | 模拟交易结果 |
 
-| 条件 | 类型 | 说明 |
-|------|------|------|
-| `min_roe` | float | 最小 ROE (%) |
-| `min_np_margin` | float | 最小净利率 (%) |
-| `min_eps` | float | 最小每股收益 |
-| `min_price` | float | 最小价格 |
-| `max_price` | float | 最大价格 |
-| `min_volume` | float | 最小成交量 |
-| `sort_by` | string | 排序字段 |
-| `sort_order` | string | 排序顺序 |
-| `limit` | int | 结果数量限制 |
+### 支持的指标类型
+
+#### 行情指标 (Market Indicators)
+- 价格 (price)
+- 成交量 (volume)
+- 成交额 (turnover)
+- 换手率 (turnover_rate)
+- 涨跌幅 (change_percent)
+
+#### 技术指标 (Technical Indicators)
+- MACD (12, 26, 9)
+- RSI (14)
+- KDJ (9, 3, 3)
+- MA (可配置周期)
+- Bollinger (20, 2.0)
+- ATR (14)
+
+#### 财务指标 (Financial Indicators)
+- ROE (净资产收益率)
+- 净利率 (np_margin)
+- 毛利率 (gross_margin)
+- EPS (每股收益)
+- 营收 (revenue)
+- 股本 (share_capital)
+
+### 筛选条件参数
+
+| 参数 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `min_roe` | float | 最小 ROE (%) | `15.0` |
+| `min_np_margin` | float | 最小净利率 (%) | `10.0` |
+| `min_eps` | float | 最小每股收益 | `2.0` |
+| `min_price` | float | 最小价格 | `10.0` |
+| `max_price` | float | 最大价格 | `100.0` |
+| `min_volume` | float | 最小成交量 | `1000000.0` |
+| `sort_by` | string | 排序字段 | `"score"` |
+| `sort_order` | string | 排序顺序 | `"desc"` |
+| `limit` | int | 结果数量限制 | `50` |
+
+### 交易模型配置
+
+#### 周期调仓模型
+
+```json
+{
+  "model_type": "periodic",
+  "period": "weekly",
+  "rebalance_day": 1,
+  "stock_count": 10,
+  "filters": [
+    {"indicator": "roe", "operator": ">", "value": 15}
+  ]
+}
+```
+
+**支持周期**:
+- `weekly` - 周调仓
+- `monthly` - 月调仓
+- `quarterly` - 季度调仓
+
+#### 条件触发模型
+
+```json
+{
+  "model_type": "condition",
+  "entry_conditions": [
+    {"indicator": "macd", "signal": "bullish_crossover"}
+  ],
+  "exit_conditions": [
+    {"indicator": "rsi", "operator": ">", "value": 70}
+  ],
+  "position_limit": 0.8
+}
+```
+
+### API 调用示例
+
+#### cURL 示例
+
+```bash
+# 执行股票筛选
+curl -X POST http://localhost:8080/api/screen/stocks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "min_roe": 15.0,
+    "min_np_margin": 10.0,
+    "sort_by": "score",
+    "sort_order": "desc",
+    "limit": 20
+  }'
+
+# 获取行情指标列表
+curl http://localhost:8080/api/indicators/market
+
+# 获取技术指标列表
+curl http://localhost:8080/api/indicators/technical
+
+# 配置交易模型
+curl -X POST http://localhost:8080/api/trading-model/config \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_type": "periodic",
+    "period": "weekly",
+    "stock_count": 10
+  }'
+```
+
+#### JavaScript 示例
+
+```javascript
+const API_BASE = 'http://localhost:8080/api';
+
+// 执行股票筛选
+async function screenStocks(criteria) {
+  const response = await fetch(`${API_BASE}/screen/stocks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(criteria)
+  });
+  return response.json();
+}
+
+// 获取指标列表
+async function getIndicators(category) {
+  const response = await fetch(`${API_BASE}/indicators/${category}`);
+  return response.json();
+}
+
+// 配置交易模型
+async function configureTradingModel(config) {
+  const response = await fetch(`${API_BASE}/trading-model/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  });
+  return response.json();
+}
+
+// 使用示例
+(async () => {
+  // 筛选 ROE > 15% 的股票
+  const results = await screenStocks({
+    min_roe: 15.0,
+    limit: 20
+  });
+  console.log('筛选结果:', results.total, '只股票');
+
+  // 获取技术指标列表
+  const indicators = await getIndicators('technical');
+  console.log('技术指标:', indicators.total, '个');
+
+  // 配置周调仓模型
+  const model = await configureTradingModel({
+    model_type: 'periodic',
+    period: 'weekly',
+    stock_count: 10
+  });
+  console.log('模型配置 ID:', model.config_id);
+})();
+```
+
+#### Python 示例
+
+```python
+import requests
+
+API_BASE = 'http://localhost:8080/api'
+
+def screen_stocks(criteria):
+    """执行股票筛选"""
+    response = requests.post(
+        f'{API_BASE}/screen/stocks',
+        json=criteria,
+        headers={'Content-Type': 'application/json'}
+    )
+    return response.json()
+
+def get_indicators(category):
+    """获取指标列表"""
+    response = requests.get(f'{API_BASE}/indicators/{category}')
+    return response.json()
+
+def configure_trading_model(config):
+    """配置交易模型"""
+    response = requests.post(
+        f'{API_BASE}/trading-model/config',
+        json=config,
+        headers={'Content-Type': 'application/json'}
+    )
+    return response.json()
+
+# 使用示例
+if __name__ == '__main__':
+    # 筛选高 ROE 股票
+    results = screen_stocks({
+        'min_roe': 15.0,
+        'min_np_margin': 10.0,
+        'limit': 20
+    })
+    print(f"筛选结果：{results['total']} 只股票")
+
+    # 获取技术指标
+    indicators = get_indicators('technical')
+    print(f"技术指标：{indicators['total']} 个")
+
+    # 配置交易模型
+    model = configure_trading_model({
+        'model_type': 'periodic',
+        'period': 'monthly',
+        'stock_count': 10
+    })
+    print(f"模型配置 ID: {model['config_id']}")
+```
 
 ---
 
@@ -1692,6 +1890,7 @@ if __name__ == '__main__':
 
 | 版本 | 日期 | 变更内容 |
 |------|------|----------|
+| 1.4 | 2026-03-28 | **后端实现完成**：8 个端点全部实现，编译通过，支持 N 日指标计算和周期调仓 |
 | 1.3 | 2026-03-28 | 更新股票筛选系统 API 规范，新增端点：/api/screen/stocks, /api/screen/config, /api/screen/weights, /api/indicators/market, /api/indicators/technical, /api/indicators/financial, /api/indicators/descriptions, /api/trading-model/config, /api/trading-model/simulate |
 | 1.2 | 2026-03-28 | 新增股票筛选 API 完整文档，包括技术指标、交易模型和权重配置 |
 | 1.1 | 2026-03-28 | 新增选股指标 API：/api/indicators, /api/screen, /api/trading-models, /api/weights |

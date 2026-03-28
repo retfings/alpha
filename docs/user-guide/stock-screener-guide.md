@@ -1,20 +1,25 @@
 # 股票筛选器用户指南
 
-**版本**: 1.0
+**版本**: 1.1
 **创建日期**: 2026-03-28
 **最后更新**: 2026-03-28
+
+**更新日志**:
+- v1.1: 添加完整的 API 调用示例（cURL、JavaScript、Python）
 
 ---
 
 ## 目录
 
 1. [快速开始](#快速开始)
-2. [股票池配置](#股票池配置)
-3. [基础筛选](#基础筛选)
-4. [技术指标筛选](#技术指标筛选)
-5. [财务指标筛选](#财务指标筛选)
-6. [选股策略保存](#选股策略保存)
-7. [常见问题](#常见问题)
+2. [API 调用示例](#api-调用示例)
+3. [股票池配置](#股票池配置)
+4. [基础筛选](#基础筛选)
+5. [技术指标筛选](#技术指标筛选)
+6. [财务指标筛选](#财务指标筛选)
+7. [选股策略保存](#选股策略保存)
+8. [结果展示与导出](#结果展示与导出)
+9. [常见问题](#常见问题)
 
 ---
 
@@ -59,6 +64,412 @@ MOONBIT_CMD=stock-screener MOONBIT_ARGS="--industry 银行 --max-pe 20" moon run
 2. 选择"银行"行业
 3. 设置市盈率 < 20
 4. 点击"执行筛选"
+
+---
+
+## API 调用示例
+
+### 1. 股票筛选 API
+
+#### GET 请求 - 简单筛选
+
+```bash
+# 筛选 ROE > 15% 且每股收益 > 2.0 的股票
+curl "http://localhost:8080/api/screen/stocks?min_roe=15.0&min_eps=2.0&limit=50"
+```
+
+**响应示例**:
+
+```json
+{
+  "screen_id": "scr_20260328_001",
+  "timestamp": "2026-03-28T10:30:00Z",
+  "results": {
+    "total_matches": 45,
+    "returned": 45,
+    "stocks": [
+      {
+        "code": "sh.600001",
+        "name": "Stock 600001",
+        "score": 90.0,
+        "rank": 1,
+        "indicators": {
+          "roe": 25.0,
+          "np_margin": 18.0,
+          "eps": 3.5,
+          "price": 15.8,
+          "volume": 1500000.0
+        },
+        "health": "Excellent"
+      }
+    ]
+  }
+}
+```
+
+#### POST 请求 - 复杂筛选
+
+```bash
+# 使用 JSON 请求体进行多条件筛选
+curl -X POST "http://localhost:8080/api/screen/stocks" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filters": {
+      "min_roe": 15.0,
+      "min_np_margin": 10.0,
+      "min_eps": 1.5,
+      "min_market_cap": 10000000000,
+      "max_pe": 30
+    },
+    "sort_by": "score",
+    "sort_order": "desc",
+    "limit": 100
+  }'
+```
+
+### 2. 指标元数据 API
+
+#### 获取技术指标列表
+
+```bash
+curl "http://localhost:8080/api/indicators/technical"
+```
+
+**响应示例**:
+
+```json
+{
+  "category": "technical",
+  "indicators": [
+    {
+      "id": "macd",
+      "name": "MACD",
+      "description": "指数平滑异同移动平均线",
+      "unit": "price",
+      "parameters": {"fast": 12, "slow": 26, "signal": 9}
+    },
+    {
+      "id": "rsi",
+      "name": "RSI",
+      "description": "相对强弱指数",
+      "unit": "index",
+      "range": "0-100",
+      "parameters": {"period": 14}
+    },
+    {
+      "id": "kdj",
+      "name": "KDJ",
+      "description": "随机指标",
+      "unit": "index",
+      "range": "0-100",
+      "parameters": {"k_period": 9, "d_period": 3}
+    }
+  ],
+  "total": 6
+}
+```
+
+#### 获取财务指标列表
+
+```bash
+curl "http://localhost:8080/api/indicators/financial"
+```
+
+#### 获取所有指标说明
+
+```bash
+curl "http://localhost:8080/api/indicators/descriptions"
+```
+
+### 3. 筛选配置管理 API
+
+#### 保存筛选配置
+
+```bash
+curl -X POST "http://localhost:8080/api/screen/config" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "高 ROE 成长股",
+    "description": "筛选高 ROE 且利润率增长强劲的股票",
+    "filters": {
+      "min_roe": 20.0,
+      "min_np_margin": 15.0,
+      "min_eps": 1.5
+    },
+    "weights": {
+      "roe": 0.4,
+      "np_margin": 0.3,
+      "eps": 0.3
+    },
+    "is_public": false
+  }'
+```
+
+**响应示例**:
+
+```json
+{
+  "status": "created",
+  "config_id": "cfg_20260328_001",
+  "name": "高 ROE 成长股"
+}
+```
+
+#### 获取筛选配置列表
+
+```bash
+curl "http://localhost:8080/api/screen/config"
+```
+
+#### 获取特定配置详情
+
+```bash
+curl "http://localhost:8080/api/screen/config/cfg_20260328_001"
+```
+
+### 4. 权重配置 API
+
+#### 更新指标权重
+
+```bash
+curl -X PUT "http://localhost:8080/api/screen/weights" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "价值导向型",
+    "weights": [
+      {"indicator": "roe", "weight": 0.30, "direction": "asc"},
+      {"indicator": "np_margin", "weight": 0.20, "direction": "asc"},
+      {"indicator": "pe_ratio", "weight": 0.25, "direction": "desc"},
+      {"indicator": "pb_ratio", "weight": 0.15, "direction": "desc"},
+      {"indicator": "rsi", "weight": 0.10, "direction": "neutral"}
+    ]
+  }'
+```
+
+**响应示例**:
+
+```json
+{
+  "status": "updated",
+  "config_id": "wgt_usr_001",
+  "validation": {"sum": 1.0, "valid": true}
+}
+```
+
+### 5. 交易模型 API
+
+#### 配置交易模型
+
+```bash
+curl -X POST "http://localhost:8080/api/trading-model/config" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_id": "periodic_rebalancing",
+    "name": "月度调仓策略",
+    "parameters": {
+      "frequency": "Monthly",
+      "rebalance_day": 1,
+      "max_positions": 10
+    },
+    "screen_config_id": "cfg_20260328_001",
+    "weight_config_id": "wgt_usr_001"
+  }'
+```
+
+**响应示例**:
+
+```json
+{
+  "status": "created",
+  "config_id": "tmc_20260328_001",
+  "name": "月度调仓策略"
+}
+```
+
+#### 获取交易模型配置列表
+
+```bash
+curl "http://localhost:8080/api/trading-model/config"
+```
+
+#### 模拟交易结果
+
+```bash
+curl -X POST "http://localhost:8080/api/trading-model/simulate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "config_id": "tmc_20260328_001",
+    "start_date": "2025-01-01",
+    "end_date": "2025-12-31",
+    "initial_capital": 100000,
+    "transaction_cost": 0.001
+  }'
+```
+
+**响应示例**:
+
+```json
+{
+  "simulation_id": "sim_20260328_001",
+  "status": "completed",
+  "period": {"start": "2025-01-01", "end": "2025-12-31", "trading_days": 245},
+  "results": {
+    "initial_capital": 100000,
+    "final_capital": 125300,
+    "total_return": 0.253,
+    "max_drawdown": -0.085,
+    "sharpe_ratio": 1.45,
+    "total_trades": 48,
+    "win_rate": 0.625
+  },
+  "equity_curve": [
+    {"date": "2025-01-02", "equity": 100000, "drawdown": 0},
+    {"date": "2025-01-03", "equity": 101200, "drawdown": 0}
+  ],
+  "trades": [
+    {"date": "2025-01-06", "action": "buy", "stock": "sh.600001", "quantity": 1000, "price": 15.50}
+  ]
+}
+```
+
+### 6. JavaScript 使用示例
+
+```javascript
+const API_BASE = 'http://localhost:8080/api';
+
+// 执行股票筛选
+async function screenStocks(criteria) {
+  const params = new URLSearchParams();
+  if (criteria.min_roe) params.append('min_roe', criteria.min_roe);
+  if (criteria.min_eps) params.append('min_eps', criteria.min_eps);
+  if (criteria.limit) params.append('limit', criteria.limit);
+
+  const response = await fetch(`${API_BASE}/screen/stocks?${params}`);
+  return response.json();
+}
+
+// 获取技术指标
+async function getTechnicalIndicators() {
+  const response = await fetch(`${API_BASE}/indicators/technical`);
+  return response.json();
+}
+
+// 保存筛选配置
+async function saveScreenConfig(config) {
+  const response = await fetch(`${API_BASE}/screen/config`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(config)
+  });
+  return response.json();
+}
+
+// 更新权重配置
+async function updateWeights(weights) {
+  const response = await fetch(`${API_BASE}/screen/weights`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({weights})
+  });
+  return response.json();
+}
+
+// 使用示例
+async function runExample() {
+  // 1. 获取技术指标列表
+  const indicators = await getTechnicalIndicators();
+  console.log('技术指标:', indicators);
+
+  // 2. 执行筛选
+  const results = await screenStocks({
+    min_roe: 15.0,
+    min_eps: 2.0,
+    limit: 50
+  });
+  console.log('筛选结果:', results);
+
+  // 3. 保存配置
+  const config = await saveScreenConfig({
+    name: '高 ROE 成长股',
+    filters: {min_roe: 15.0, min_eps: 2.0}
+  });
+  console.log('配置已保存:', config);
+}
+```
+
+### 7. Python 使用示例
+
+```python
+import requests
+import json
+
+API_BASE = 'http://localhost:8080/api'
+
+def screen_stocks(min_roe=None, min_eps=None, limit=100):
+    """执行股票筛选"""
+    params = {}
+    if min_roe:
+        params['min_roe'] = min_roe
+    if min_eps:
+        params['min_eps'] = min_eps
+    params['limit'] = limit
+
+    response = requests.get(f'{API_BASE}/screen/stocks', params=params)
+    return response.json()
+
+def get_indicators(category):
+    """获取指标列表"""
+    response = requests.get(f'{API_BASE}/indicators/{category}')
+    return response.json()
+
+def save_config(name, filters, weights=None):
+    """保存筛选配置"""
+    payload = {
+        'name': name,
+        'filters': filters
+    }
+    if weights:
+        payload['weights'] = weights
+
+    response = requests.post(
+        f'{API_BASE}/screen/config',
+        json=payload
+    )
+    return response.json()
+
+def simulate_trading(config_id, start_date, end_date, initial_capital=100000):
+    """模拟交易"""
+    payload = {
+        'config_id': config_id,
+        'start_date': start_date,
+        'end_date': end_date,
+        'initial_capital': initial_capital
+    }
+
+    response = requests.post(
+        f'{API_BASE}/trading-model/simulate',
+        json=payload
+    )
+    return response.json()
+
+# 使用示例
+if __name__ == '__main__':
+    # 1. 获取财务指标列表
+    indicators = get_indicators('financial')
+    print('财务指标:', json.dumps(indicators, indent=2))
+
+    # 2. 执行筛选
+    results = screen_stocks(min_roe=15.0, min_eps=2.0, limit=50)
+    print(f'筛选到 {results["results"]["total_matches"]} 只股票')
+
+    # 3. 保存配置
+    config = save_config(
+        name='高 ROE 成长股',
+        filters={'min_roe': 15.0, 'min_eps': 2.0},
+        weights={'roe': 0.5, 'eps': 0.5}
+    )
+    print(f'配置已保存：{config["config_id"]}')
+```
 
 ---
 
@@ -794,4 +1205,4 @@ MOONBIT_CMD=stock-screener MOONBIT_ARGS="
 ---
 
 *文档维护者：doc-eng*
-*最后更新：2026-03-28*
+*最后更新：2026-03-28 (v1.1 - 添加 API 调用示例)*
