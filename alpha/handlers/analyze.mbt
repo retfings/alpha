@@ -5,7 +5,7 @@
 pub fn _run_analyze(stock : String, metric : String) -> Unit {
   if stock == "" {
     println("Error: --stock is required for analyze command")
-    println("Usage: moon run cmd/main analyze --stock sh.600000")
+    println("Usage: moon run alpha analyze --stock sh.600000")
     return
   }
 

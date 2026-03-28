@@ -25,7 +25,7 @@ Environment variables take precedence over the configuration file:
 
 - **`MOONBIT_DATA_DIR`**: Override the data directory path
   ```bash
-  MOONBIT_DATA_DIR=/custom/data/path moon run cmd/main
+  MOONBIT_DATA_DIR=/custom/data/path moon run alpha
   ```
 
 - **`MOONBIT_CMD`**: Command to execute (analyze, backtest, monitor, report, serve, help)
@@ -44,16 +44,16 @@ Environment variables take precedence over the configuration file:
 
 ```bash
 # Uses config.json or default "data" directory
-MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run alpha
 
 # Override with environment variable
-MOONBIT_DATA_DIR=/custom/data MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
+MOONBIT_DATA_DIR=/custom/data MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run alpha
 ```
 
 ### From Build Directory
 
 ```bash
-cd _build/native/debug/build/cmd/main
+cd _build/native/debug/build/alpha
 
 # Uses config.json (finds project root automatically)
 MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" ./main.exe

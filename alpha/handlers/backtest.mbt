@@ -11,7 +11,7 @@ pub fn _run_backtest(
   if stock == "" {
     println("Error: --stock is required for backtest command")
     println(
-      "Usage: moon run cmd/main backtest --strategy ma_cross --stock sh.600000",
+      "Usage: moon run alpha backtest --strategy ma_cross --stock sh.600000",
     )
     return
   }

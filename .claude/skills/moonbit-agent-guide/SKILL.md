@@ -184,7 +184,7 @@ my_module
 ## Essential Commands
 
 - `moon new my_project` - Create new project
-- `moon run cmd/main` - Run main package
+- `moon run alpha` - Run main package
 - `moon run - < hello.mbt` - Run code from stdin (useful for quick experiments)
   Example:
   ```bash
@@ -379,7 +379,7 @@ When the user asks: "Can you rename the function `compute_sum` to `calculate_sum
 $ moon ide rename compute_sum calculate_sum --loc math_utils.mbt:2
 
 *** Begin Patch
-*** Update File: cmd/main/main.mbt
+*** Update File: alpha/main.mbt
 @@
  ///|
  fn main {

@@ -5,7 +5,7 @@
 pub fn _run_monitor(stock : String) -> Unit {
   if stock == "" {
     println("Error: --stock is required for monitor command")
-    println("Usage: moon run cmd/main monitor --stock sh.600000")
+    println("Usage: moon run alpha monitor --stock sh.600000")
     return
   }
 

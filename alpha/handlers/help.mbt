@@ -6,7 +6,7 @@ pub fn print_help() -> Unit {
   println("moonbit-drawdown - Quantitative Drawdown Analysis Tool")
   println("")
   println("USAGE:")
-  println("    MOONBIT_CMD=<command> MOONBIT_ARGS=\"<args>\" moon run cmd/main")
+  println("    MOONBIT_CMD=<command> MOONBIT_ARGS=\"<args>\" moon run alpha")
   println("")
   println("COMMANDS:")
   println("    analyze           Analyze stock/portfolio drawdown")
@@ -18,7 +18,7 @@ pub fn print_help() -> Unit {
   println("    help              Show this help message")
   println("")
   println("USAGE:")
-  println("    MOONBIT_CMD=<command> MOONBIT_ARGS=\"<args>\" moon run cmd/main")
+  println("    MOONBIT_CMD=<command> MOONBIT_ARGS=\"<args>\" moon run alpha")
   println("")
   println("OPTIONS:")
   println("    --stock <code>     Stock code (e.g., sh.600000)")
@@ -31,20 +31,20 @@ pub fn print_help() -> Unit {
   println("")
   println("EXAMPLES:")
   println(
-    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000 --metric max_drawdown\" moon run cmd/main",
+    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000 --metric max_drawdown\" moon run alpha",
   )
   println(
-    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31\" moon run cmd/main",
+    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31\" moon run alpha",
   )
   println(
-    "    MOONBIT_CMD=monitor MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main",
+    "    MOONBIT_CMD=monitor MOONBIT_ARGS=\"--stock sh.600000\" moon run alpha",
   )
   println(
-    "    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main",
+    "    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run alpha",
   )
-  println("    MOONBIT_CMD=list-strategies moon run cmd/main")
+  println("    MOONBIT_CMD=list-strategies moon run alpha")
   println(
-    "    MOONBIT_CMD=serve MOONBIT_ARGS=\"--port 8080\" moon run cmd/main",
+    "    MOONBIT_CMD=serve MOONBIT_ARGS=\"--port 8080\" moon run alpha",
   )
   println("")
   println("ENVIRONMENT VARIABLES:")
@@ -55,13 +55,13 @@ pub fn print_help() -> Unit {
   println("")
   println("FULL EXAMPLES:")
   println(
-    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000\" moon run cmd/main",
+    "    MOONBIT_CMD=analyze MOONBIT_ARGS=\"--stock sh.600000\" moon run alpha",
   )
   println(
-    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000\" moon run cmd/main",
+    "    MOONBIT_CMD=backtest MOONBIT_ARGS=\"--strategy ma_cross --stock sh.600000\" moon run alpha",
   )
   println(
-    "    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run cmd/main",
+    "    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run alpha",
   )
 }
 
@@ -89,5 +89,5 @@ pub fn _print_strategies() -> Unit {
   println("     - Best for: range-bound markets")
   println("")
   println("Use --strategy <name> to select a strategy for backtest")
-  println("Use moon run cmd/main backtest --help for more details")
+  println("Use moon run alpha backtest --help for more details")
 }

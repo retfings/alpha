@@ -2,12 +2,12 @@
 
 ## Overview
 
-The `cmd/main` package provides a CLI for quantitative drawdown analysis. It supports multiple commands for analyzing stocks, running backtests, monitoring positions, and generating reports.
+The `alpha` package provides a CLI for quantitative drawdown analysis. It supports multiple commands for analyzing stocks, running backtests, monitoring positions, and generating reports.
 
 ## Usage Pattern
 
 ```bash
-MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run cmd/main
+MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run alpha
 ```
 
 Commands are executed via environment variables:
@@ -21,7 +21,7 @@ Commands are executed via environment variables:
 Show help message with usage examples.
 
 ```bash
-MOONBIT_CMD=help moon run cmd/main
+MOONBIT_CMD=help moon run alpha
 ```
 
 ### analyze
@@ -29,7 +29,7 @@ MOONBIT_CMD=help moon run cmd/main
 Analyze drawdown metrics for a specific stock.
 
 ```bash
-MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run alpha
 ```
 
 **Options:**
@@ -41,7 +41,7 @@ MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon 
 Run a trading strategy backtest on historical data.
 
 ```bash
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31" moon run alpha
 ```
 
 **Options:**
@@ -55,7 +55,7 @@ MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start
 Monitor drawdown levels for a stock with alert thresholds.
 
 ```bash
-MOONBIT_CMD=monitor MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
+MOONBIT_CMD=monitor MOONBIT_ARGS="--stock sh.600000" moon run alpha
 ```
 
 **Options:**
@@ -70,7 +70,7 @@ MOONBIT_CMD=monitor MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
 Generate backtest/analysis reports in various formats.
 
 ```bash
-MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main
+MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run alpha
 ```
 
 **Options:**
@@ -81,7 +81,7 @@ MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main
 List all available trading strategies.
 
 ```bash
-MOONBIT_CMD=list-strategies moon run cmd/main
+MOONBIT_CMD=list-strategies moon run alpha
 ```
 
 ### serve
@@ -89,7 +89,7 @@ MOONBIT_CMD=list-strategies moon run cmd/main
 Start the HTTP API server.
 
 ```bash
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha
 ```
 
 **Options:**
@@ -107,7 +107,7 @@ The data directory is resolved in the following priority order:
 
 ```bash
 # Using environment variable
-MOONBIT_DATA_DIR=/path/to/data MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
+MOONBIT_DATA_DIR=/path/to/data MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run alpha
 ```
 
 ```json
@@ -122,7 +122,7 @@ MOONBIT_DATA_DIR=/path/to/data MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.6000
 Specify available data files for faster lookup:
 
 ```bash
-DATA_FILES="sh_600000_*.csv,sh_600001_*.csv" MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
+DATA_FILES="sh_600000_*.csv,sh_600001_*.csv" MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run alpha
 ```
 
 ## Available Strategies
@@ -138,23 +138,23 @@ DATA_FILES="sh_600000_*.csv,sh_600001_*.csv" MOONBIT_CMD=analyze MOONBIT_ARGS="-
 ### Analyze a stock's maximum drawdown
 
 ```bash
-MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000" moon run alpha
 ```
 
 ### Run a full backtest
 
 ```bash
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31" moon run alpha
 ```
 
 ### Generate an HTML report
 
 ```bash
-MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main
+MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run alpha
 ```
 
 ### Start the API server on port 3000
 
 ```bash
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 3000" moon run cmd/main
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 3000" moon run alpha
 ```
