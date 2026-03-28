@@ -10,10 +10,6 @@ pub fn _parse_args(Array[String]) -> Command
 
 pub fn _parse_backtest_args(Array[String]) -> Command
 
-pub fn _parse_monitor_args(Array[String]) -> Command
-
-pub fn _parse_report_args(Array[String]) -> Command
-
 pub fn _parse_serve_args(Array[String]) -> Command
 
 // Errors
@@ -23,9 +19,6 @@ pub enum Command {
   Help
   Analyze(String, String)
   Backtest(String, String, String, String)
-  Monitor(String)
-  Report(String)
-  ListStrategies
   Serve(Int)
 }
 

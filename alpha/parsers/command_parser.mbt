@@ -16,9 +16,6 @@ pub enum Command {
   Help
   Analyze(String, String) // stock, metric
   Backtest(String, String, String, String) // strategy, stock, start, end
-  Monitor(String) // stock
-  Report(String) // output format
-  ListStrategies
   Serve(Int) // port
 }
 
@@ -33,9 +30,6 @@ pub fn _parse_args(args : Array[String]) -> Command {
     "help" => Command::Help
     "analyze" => _parse_analyze_args(args)
     "backtest" => _parse_backtest_args(args)
-    "monitor" => _parse_monitor_args(args)
-    "report" => _parse_report_args(args)
-    "list-strategies" => Command::ListStrategies
     "serve" => _parse_serve_args(args)
     _ => Command::Help
   }
@@ -89,40 +83,6 @@ pub fn _parse_backtest_args(args : Array[String]) -> Command {
   }
 
   Command::Backtest(strategy, stock, start, end)
-}
-
-///|
-pub fn _parse_monitor_args(args : Array[String]) -> Command {
-  let mut stock = ""
-
-  let mut i = 1
-  while i < args.length() {
-    if args[i] == "--stock" && i + 1 < args.length() {
-      stock = args[i + 1]
-      i = i + 2
-    } else {
-      i = i + 1
-    }
-  }
-
-  Command::Monitor(stock)
-}
-
-///|
-pub fn _parse_report_args(args : Array[String]) -> Command {
-  let mut output = "text"
-
-  let mut i = 1
-  while i < args.length() {
-    if args[i] == "--format" && i + 1 < args.length() {
-      output = args[i + 1]
-      i = i + 2
-    } else {
-      i = i + 1
-    }
-  }
-
-  Command::Report(output)
 }
 
 ///|

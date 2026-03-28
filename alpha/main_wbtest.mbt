@@ -106,15 +106,12 @@ test "_parse_args serve without port uses default" {
 
 ///|
 test "test all command variants via parsers" {
-  // Test all commands via parser functions instead of direct construction
+  // Test remaining commands via parser functions
   let help_cmd = _parse_args(["help"])
   let analyze_cmd = _parse_args(["analyze", "--stock", "sh.600000"])
   let backtest_cmd = _parse_args([
     "backtest", "--strategy", "ma_cross", "--stock", "sh.600000",
   ])
-  let monitor_cmd = _parse_args(["monitor", "--stock", "sh.600000"])
-  let report_cmd = _parse_args(["report", "--format", "html"])
-  let list_cmd = _parse_args(["list-strategies"])
   let serve_cmd = _parse_args(["serve", "--port", "8080"])
 
   // Verify commands parsed correctly via pattern matching
@@ -129,18 +126,6 @@ test "test all command variants via parsers" {
   match backtest_cmd {
     Command::Backtest(_, _, _, _) => assert_true(true)
     _ => fail("Expected Command::Backtest")
-  }
-  match monitor_cmd {
-    Command::Monitor(_) => assert_true(true)
-    _ => fail("Expected Command::Monitor")
-  }
-  match report_cmd {
-    Command::Report(_) => assert_true(true)
-    _ => fail("Expected Command::Report")
-  }
-  match list_cmd {
-    Command::ListStrategies => assert_true(true)
-    _ => fail("Expected Command::ListStrategies")
   }
   match serve_cmd {
     Command::Serve(_) => assert_true(true)

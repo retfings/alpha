@@ -1,14 +1,6 @@
 ///|
 /// Main entry point for the quantitative drawdown CLI
-using @alpha/handlers {
-  _run_analyze,
-  _run_backtest,
-  _run_monitor,
-  _run_report,
-  _run_serve,
-  print_help,
-  _print_strategies,
-}
+using @alpha/handlers {_run_analyze, _run_backtest, _run_serve, print_help}
 
 ///|
 using @alpha/parsers {type Command, _get_env_command}
@@ -21,9 +13,6 @@ fn _execute_command(cmd : Command) -> Unit {
     Command::Analyze(stock, metric) => _run_analyze(stock, metric)
     Command::Backtest(strategy, stock, start, end) =>
       _run_backtest(strategy, stock, start, end)
-    Command::Monitor(stock) => _run_monitor(stock)
-    Command::Report(format) => _run_report(format)
-    Command::ListStrategies => _print_strategies()
     Command::Serve(port) => _run_serve(port)
   }
 }

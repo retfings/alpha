@@ -2,15 +2,9 @@
 package "retfings/alpha/alpha/handlers"
 
 // Values
-pub fn _print_strategies() -> Unit
-
 pub fn _run_analyze(String, String) -> Unit
 
 pub fn _run_backtest(String, String, String, String) -> Unit
-
-pub fn _run_monitor(String) -> Unit
-
-pub fn _run_report(String) -> Unit
 
 pub fn _run_serve(Int) -> Unit
 
