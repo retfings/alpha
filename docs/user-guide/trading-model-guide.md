@@ -403,7 +403,7 @@ println("总交易数：" + result.total_trades.to_string())
 
 **CLI 使用**:
 ```bash
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000" moon run alpha
 ```
 
 ### 动量策略 (Momentum)
@@ -423,7 +423,7 @@ MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000" moon r
 
 **CLI 使用**:
 ```bash
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy momentum --stock sz.000001" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy momentum --stock sz.000001" moon run alpha
 ```
 
 ### RSI 均值回归策略
@@ -442,7 +442,7 @@ MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy momentum --stock sz.000001" moon r
 
 **CLI 使用**:
 ```bash
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy rsi_mean_reversion --stock sh.600000" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy rsi_mean_reversion --stock sh.600000" moon run alpha
 ```
 
 ---

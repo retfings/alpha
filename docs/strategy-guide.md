@@ -424,7 +424,7 @@ pub fn create_custom_strategy(
 
 ```bash
 # 设置环境变量运行回测
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2024-01-01 --end 2024-12-31" moon run alpha
 ```
 
 **命令行参数**:

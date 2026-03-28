@@ -51,19 +51,19 @@ moon test     # 运行所有测试
 
 ```bash
 # 基本格式
-MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run cmd/main
+MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run alpha
 
 # 分析回撤
-MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run alpha
 
 # 运行回测
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run alpha
 
 # 列出策略
-MOONBIT_CMD=list-strategies moon run cmd/main
+MOONBIT_CMD=list-strategies moon run alpha
 
 # 启动服务器
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha
 ```
 
 ### 输出示例
@@ -141,7 +141,7 @@ let ma20 = indicator::sma(closes, 20)
 | `moon test` | 运行测试 | 执行单元测试 |
 | `moon fmt` | 格式化代码 | 统一代码风格 |
 | `moon info` | 生成接口 | 生成公共接口文件 |
-| `moon run cmd/main ...` | 运行程序 | 执行回测/分析 |
+| `moon run alpha ...` | 运行程序 | 执行回测/分析 |
 
 ## 6. 下一步
 
@@ -164,7 +164,7 @@ let ma20 = indicator::sma(closes, 20)
 3. 运行 `moon test` 确保策略正确
 4. 使用 `MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy"` 回测策略
    ```bash
-   MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy --stock sh.600000" moon run cmd/main
+   MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy --stock sh.600000" moon run alpha
    ```
 
 ## 7. 获取帮助
@@ -172,7 +172,7 @@ let ma20 = indicator::sma(closes, 20)
 ### 查看帮助
 
 ```bash
-MOONBIT_CMD=help moon run cmd/main
+MOONBIT_CMD=help moon run alpha
 ```
 
 ### 查阅文档

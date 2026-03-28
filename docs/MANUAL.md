@@ -45,20 +45,20 @@
 
 **基本格式**:
 ```bash
-MOONBIT_CMD=<command> MOONBIT_ARGS="<arguments>" moon run cmd/main
+MOONBIT_CMD=<command> MOONBIT_ARGS="<arguments>" moon run alpha
 ```
 
 **可用命令**:
 
 | 命令 | 参数 | 说明 | 示例 |
 |------|------|------|------|
-| `analyze` | `--stock`, `--metric` | 分析股票回撤 | `MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main` |
-| `backtest` | `--strategy`, `--stock`, `--start`, `--end` | 运行策略回测 | `MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main` |
-| `monitor` | `--stock` | 实时监控模式 | `MOONBIT_CMD=monitor MOONBIT_ARGS="--stock sh.600000" moon run cmd/main` |
-| `report` | `--format` | 生成分析报告 | `MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main` |
-| `list-strategies` | 无 | 列出可用策略 | `MOONBIT_CMD=list-strategies moon run cmd/main` |
-| `serve` | `--port` | 启动 HTTP API 服务器 | `MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main` |
-| `help` | 无 | 显示帮助信息 | `MOONBIT_CMD=help moon run cmd/main` |
+| `analyze` | `--stock`, `--metric` | 分析股票回撤 | `MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run alpha` |
+| `backtest` | `--strategy`, `--stock`, `--start`, `--end` | 运行策略回测 | `MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run alpha` |
+| `monitor` | `--stock` | 实时监控模式 | `MOONBIT_CMD=monitor MOONBIT_ARGS="--stock sh.600000" moon run alpha` |
+| `report` | `--format` | 生成分析报告 | `MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run alpha` |
+| `list-strategies` | 无 | 列出可用策略 | `MOONBIT_CMD=list-strategies moon run alpha` |
+| `serve` | `--port` | 启动 HTTP API 服务器 | `MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha` |
+| `help` | 无 | 显示帮助信息 | `MOONBIT_CMD=help moon run alpha` |
 
 **参数说明**:
 
@@ -120,19 +120,19 @@ moon test     # 运行测试
 
 ```bash
 # 基本格式
-MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run cmd/main
+MOONBIT_CMD=<command> MOONBIT_ARGS="<args>" moon run alpha
 
 # 分析回撤
-MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run alpha
 
 # 运行回测
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run alpha
 
 # 列出策略
-MOONBIT_CMD=list-strategies moon run cmd/main
+MOONBIT_CMD=list-strategies moon run alpha
 
 # 启动服务器
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha
 ```
 
 ---
@@ -1194,7 +1194,7 @@ pub struct Strategy {
 
 4. **运行回测**
    ```bash
-   MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy" moon run cmd/main
+   MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy my_strategy" moon run alpha
    ```
 
 #### 常用策略模式

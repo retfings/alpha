@@ -29,7 +29,7 @@ http://localhost:8080/api
 ### Starting the Server
 
 ```bash
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha
 ```
 
 ### Authentication
@@ -492,7 +492,7 @@ If you're migrating from CLI-based screening to the API:
 
 ### CLI Example
 ```bash
-MOONBIT_CMD=stock-screener MOONBIT_ARGS="--min-roe 15 --limit 20" moon run cmd/main
+MOONBIT_CMD=stock-screener MOONBIT_ARGS="--min-roe 15 --limit 20" moon run alpha
 ```
 
 ### API Equivalent

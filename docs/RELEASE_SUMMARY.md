@@ -229,7 +229,7 @@ moon check
 moon build
 
 # 运行 CLI
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross" moon run alpha
 
 # 运行测试
 moon test

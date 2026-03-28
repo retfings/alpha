@@ -104,7 +104,7 @@ let result = @backtest.run_backtest(engine, klines, strategy)
 ### Running from CLI
 
 ```bash
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run alpha
 ```
 
 ### Tips
@@ -168,7 +168,7 @@ let result = @backtest.run_backtest(engine, klines, strategy)
 ### Running from CLI
 
 ```bash
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy momentum --stock sz.000001 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy momentum --stock sz.000001 --start 2023-01-01 --end 2023-12-31" moon run alpha
 ```
 
 ### RSI Interpretation

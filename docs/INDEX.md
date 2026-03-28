@@ -13,6 +13,7 @@
 | [API 参考手册](MANUAL.md) | 完整 API 参考手册 | 开发者 |
 | [API 参考](api-reference.md) | 核心模块 API 文档 | 开发者 |
 | [HTTP API 端点](api-endpoints.md) | HTTP API 端点参考（含策略 API） | 开发者 |
+| [股票筛选 API](api/stock-screening.md) | 股票筛选和指标 API 参考 | 开发者 |
 | [架构设计](architecture.md) | 系统架构说明 | 开发者/架构师 |
 | [股票策略架构](stock-strategy-architecture.md) | 股票策略系统架构 | 开发者/架构师 |
 | [开发者指南](developer-guide.md) | 开发环境和规范 | 开发者 |
@@ -35,6 +36,7 @@
 | [API 参考文档](dev-guide/api-reference.md) | 内部 API 接口参考 | 开发者 |
 | [添加新指标指南](dev-guide/adding-indicators.md) | 如何开发和注册新指标 | 开发者 |
 | [测试指南](dev-guide/testing.md) | 测试编写和执行指南 | 开发者/QA |
+| [指标测试指南](../indicator-testing.md) | 选股指标专项测试指南 | 开发者/QA |
 
 ## 开发和设计文档
 
@@ -108,10 +110,13 @@ docs/
 ├── MANUAL.md                     # API 参考手册（完整版）
 ├── api-reference.md              # API 参考文档
 ├── api-endpoints.md              # HTTP API 端点参考
+├── api/                          # API 文档目录
+│   └── stock-screening.md        # 股票筛选 API 参考
 ├── architecture.md               # 架构设计
 ├── stock-strategy-architecture.md # 股票策略架构
 ├── developer-guide.md            # 开发者指南
 ├── test-plan.md                  # 测试计划
+├── indicator-testing.md          # 指标测试指南
 ├── data-download-guide.md        # 数据下载指南
 ├── baostock-api.md               # Baostock API 参考
 ├── baostock-integration-project.md # Baostock 集成项目
@@ -156,6 +161,9 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
+| 2026-03-28 | INDEX.md | 添加选股指标文档系列（API/测试指南） | doc-eng |
+| 2026-03-28 | api/stock-screening.md | 新建股票筛选 API 参考文档 | doc-eng |
+| 2026-03-28 | indicator-testing.md | 新建选股指标测试指南 | doc-eng |
 | 2026-03-28 | INDEX.md | 添加股票选择系统文档系列索引 | doc-eng |
 | 2026-03-28 | dev-guide/architecture.md | 新建股票选择系统架构设计文档 | doc-eng |
 | 2026-03-28 | dev-guide/api-reference.md | 新建 API 参考文档 | doc-eng |

@@ -28,7 +28,7 @@ http://localhost:8080/api
 
 **启动服务器**:
 ```bash
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha
 ```
 
 ### 认证

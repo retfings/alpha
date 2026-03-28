@@ -720,21 +720,21 @@ pub struct BuiltinStrategyFactory {
 
 ```bash
 # 股票筛选
-moon run cmd/main --cmd stock-screener \
+moon run alpha --cmd stock-screener \
   --industry 银行 \
   --max-pe 20 \
   --min-roe 0.15 \
   --export-csv results.csv
 
 # 回测执行
-moon run cmd/main --cmd backtest \
+moon run alpha --cmd backtest \
   --strategy ma_cross \
   --stock sh.600000 \
   --start 2023-01-01 \
   --end 2023-12-31
 
 # 启动服务
-moon run cmd/main --cmd serve --port 8080
+moon run alpha --cmd serve --port 8080
 ```
 
 #### HTTP API 接口

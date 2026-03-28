@@ -9,7 +9,7 @@
 使用 MoonBit 内置 HTTP 服务器启动服务：
 
 ```bash
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha
 ```
 
 **参数**:

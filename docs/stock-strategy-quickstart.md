@@ -70,7 +70,7 @@ moon test
 
 ```bash
 # 启动 HTTP 服务器（默认端口 8080）
-MOONBIT_CMD=serve moon run cmd/main
+MOONBIT_CMD=serve moon run alpha
 ```
 
 ### 2. 验证服务器
@@ -147,7 +147,7 @@ curl -X POST http://localhost:8080/api/backtest \
 # 运行回测
 MOONBIT_CMD=backtest \
 MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" \
-moon run cmd/main
+moon run alpha
 ```
 
 ---
