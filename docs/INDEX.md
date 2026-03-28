@@ -20,6 +20,7 @@
 | [测试计划](test-plan.md) | 测试流程和示例 | 开发者/QA |
 | [测试报告汇总](test-report-summary.md) | 测试结果和问题汇总 | 开发者/QA |
 | [数据下载指南](data-download-guide.md) | Baostock 数据下载和管理 | 数据工程师 |
+| [CLI 数据工具](data-cli-guide.md) | 命令行数据下载工具 | 数据工程师 |
 
 ## 用户指南系列 (docs/user-guide/)
 
@@ -198,6 +199,7 @@ docs/
 ├── test-plan.md                  # 测试计划
 ├── indicator-testing.md          # 指标测试指南
 ├── data-download-guide.md        # 数据下载指南
+├── data-cli-guide.md             # CLI 数据工具使用指南
 ├── baostock-api.md               # Baostock API 参考
 ├── baostock-integration-project.md # Baostock 集成项目
 ├── baostock-data-guide.md        # Baostock 数据指南
@@ -325,6 +327,8 @@ docs/
 | 2026-03-28 | INDEX.md | 添加前端测试报告文档索引 | frontend-tester |
 | 2026-03-28 | tests/screener-frontend-test-report.md | 新建选股器前端测试报告 (55 用例) | frontend-tester |
 | 2026-03-28 | tests/frontend-test-summary.md | 新建前端测试完成总结 (151 用例) | frontend-tester |
+| 2026-03-28 | data-cli-guide.md | 新建 CLI 数据工具使用指南 | data-eng |
+| 2026-03-28 | script/data_download/data_cli.py | 新建 CLI 数据下载工具 | data-eng |
 | 2026-03-28 | INDEX.md | 添加前端文档系列（组件文档/测试报告） | doc-eng |
 | 2026-03-28 | frontend-components.md | 新建前端组件使用文档 | doc-eng |
 | 2026-03-28 | test-report-summary.md | 新建测试报告汇总文档 | doc-eng |
