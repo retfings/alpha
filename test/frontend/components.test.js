@@ -103,7 +103,7 @@ describe('Toast Notification System', () => {
     assert.ok(toast.classList.contains('info'));
   });
 
-  it('should remove toast after duration', (done) => {
+  it('should remove toast after duration', async () => {
     const container = dom.window.document.getElementById('toast-container');
     const toast = dom.window.document.createElement('div');
     toast.className = 'toast info';
@@ -112,14 +112,11 @@ describe('Toast Notification System', () => {
     assert.strictEqual(container.children.length, 1);
 
     // Simulate removal
-    setTimeout(() => {
-      toast.classList.add('hiding');
-      setTimeout(() => {
-        toast.remove();
-        assert.strictEqual(container.children.length, 0);
-        done();
-      }, 300);
-    }, 100);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    toast.classList.add('hiding');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    toast.remove();
+    assert.strictEqual(container.children.length, 0);
   });
 });
 
