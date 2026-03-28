@@ -83,7 +83,12 @@ pub fn start_server(port : Int) -> Unit {
     // Convert body String to Bytes for C FFI
     let body_bytes = @utf8.encode(response_obj.body)
     let content_type_bytes = @utf8.encode(response_obj.content_type)
-    let _ = http_server_respond(server_fd, response_obj.status_code, body_bytes, content_type_bytes)
+    let _ = http_server_respond(
+      server_fd,
+      response_obj.status_code,
+      body_bytes,
+      content_type_bytes,
+    )
     println("Request \{request_count}: \{response_obj.status_code}")
   }
 

@@ -60,7 +60,7 @@ INDUSTRY_FIELDS = "code,codeName,industryName,industryType,industryCode1,industr
 class DownloadConfig:
     """Configuration for data download."""
 
-    output_dir: str = "../data"
+    output_dir: str = "../../data"
     frequency: Frequency = "d"
     adjustflag: AdjustFlag = "3"
     output_format: OutputFormat = "csv"

@@ -20,12 +20,20 @@ pub fn make_response(status_code : Int, body : String) -> HttpResponse {
 ///|
 /// Create HTTP response with custom content type
 pub fn make_html_response(body : String) -> HttpResponse {
-  HttpResponse::{ status_code: 200, body, content_type: "text/html; charset=utf-8" }
+  HttpResponse::{
+    status_code: 200,
+    body,
+    content_type: "text/html; charset=utf-8",
+  }
 }
 
 ///|
 /// Create HTTP response with custom content type
-pub fn make_response_with_type(status_code : Int, body : String, content_type : String) -> HttpResponse {
+pub fn make_response_with_type(
+  status_code : Int,
+  body : String,
+  content_type : String,
+) -> HttpResponse {
   HttpResponse::{ status_code, body, content_type }
 }
 

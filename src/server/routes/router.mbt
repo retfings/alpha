@@ -48,7 +48,10 @@ fn handle_static_file(file_path : String) -> HttpResponse {
   let content_type = get_content_type(file_path)
   match @ffi.read_file(full_path) {
     Some(content) => make_response_with_type(200, content, content_type)
-    None => make_response_with_type(404, "{\"error\":\"File not found\"}", "application/json")
+    None =>
+      make_response_with_type(
+        404, "{\"error\":\"File not found\"}", "application/json",
+      )
   }
 }
 
@@ -89,7 +92,14 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
   }
 
   // Serve other static files (images, etc.)
-  if clean_path.has_prefix("/") && (clean_path.has_suffix(".png") || clean_path.has_suffix(".jpg") || clean_path.has_suffix(".jpeg") || clean_path.has_suffix(".svg") || clean_path.has_suffix(".ico")) {
+  if clean_path.has_prefix("/") &&
+    (
+      clean_path.has_suffix(".png") ||
+      clean_path.has_suffix(".jpg") ||
+      clean_path.has_suffix(".jpeg") ||
+      clean_path.has_suffix(".svg") ||
+      clean_path.has_suffix(".ico")
+    ) {
     let file = clean_path[1:].to_string()
     return handle_static_file(file)
   }

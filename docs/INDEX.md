@@ -19,6 +19,23 @@
 | [测试计划](test-plan.md) | 测试流程和示例 | 开发者/QA |
 | [数据下载指南](data-download-guide.md) | Baostock 数据下载和管理 | 数据工程师 |
 
+## 用户指南系列 (docs/user-guide/)
+
+| 文档 | 描述 | 适用对象 |
+|------|------|----------|
+| [股票筛选器指南](user-guide/stock-screener-guide.md) | 股票筛选器完整使用教程 | 投资者 |
+| [技术指标参考](user-guide/indicator-reference.md) | 技术指标计算和使用参考 | 量化分析师 |
+| [交易模型指南](user-guide/trading-model-guide.md) | 策略定义和回测执行指南 | 策略开发者 |
+
+## 开发者指南系列 (docs/dev-guide/)
+
+| 文档 | 描述 | 适用对象 |
+|------|------|----------|
+| [系统架构设计](dev-guide/architecture.md) | 股票选择系统架构详解 | 开发者/架构师 |
+| [API 参考文档](dev-guide/api-reference.md) | 内部 API 接口参考 | 开发者 |
+| [添加新指标指南](dev-guide/adding-indicators.md) | 如何开发和注册新指标 | 开发者 |
+| [测试指南](dev-guide/testing.md) | 测试编写和执行指南 | 开发者/QA |
+
 ## 开发和设计文档
 
 | 文档 | 描述 | 状态 |
@@ -87,17 +104,18 @@
 docs/
 ├── INDEX.md                      # 文档索引（本文件）
 ├── QUICKSTART.md                 # 快速入门指南
-├── stock-strategy-quickstart.md  # 股票策略快速入门（新增）
+├── stock-strategy-quickstart.md  # 股票策略快速入门
 ├── MANUAL.md                     # API 参考手册（完整版）
 ├── api-reference.md              # API 参考文档
 ├── api-endpoints.md              # HTTP API 端点参考
 ├── architecture.md               # 架构设计
 ├── stock-strategy-architecture.md # 股票策略架构
 ├── developer-guide.md            # 开发者指南
-├── test-plan.md                  # 测试计划（新增）
+├── test-plan.md                  # 测试计划
 ├── data-download-guide.md        # 数据下载指南
 ├── baostock-api.md               # Baostock API 参考
 ├── baostock-integration-project.md # Baostock 集成项目
+├── baostock-data-guide.md        # Baostock 数据指南
 ├── data-format.md                # 数据格式说明
 ├── architecture-improvements.md  # 架构改进建议
 ├── architecture-optimization-proposals.md  # 架构优化提案
@@ -107,9 +125,29 @@ docs/
 ├── phase-progress-review.md      # 阶段进度审查
 ├── project-status-report.md      # 项目状态报告
 ├── strategy-examples.md          # 策略示例
+├── strategy-guide.md             # 策略指南
+├── stock-strategy-guide.md       # 股票策略指南
 ├── test-coverage-report.md       # 测试覆盖率报告
 ├── user-guide.md                 # 用户指南
-└── final-review-report.md        # 最终审查报告
+├── final-review-report.md        # 最终审查报告
+├── frontend-backend-integration.md # 前后端集成
+├── indicator-strategy-integration-test-plan.md # 指标策略集成测试
+├── strategy-config-proposal.md   # 策略配置提案
+├── strategy-design.md            # 策略设计
+├── RELEASE_SUMMARY.md            # 发布摘要
+├── PERFORMANCE_OPTIMIZATION_REVIEW.md # 性能优化审查
+├── code-quality-review.md        # 代码质量审查
+│
+├── user-guide/                   # 用户指南系列
+│   ├── stock-screener-guide.md   # 股票筛选器指南
+│   ├── indicator-reference.md    # 技术指标参考
+│   └── trading-model-guide.md    # 交易模型指南
+│
+└── dev-guide/                    # 开发者指南系列
+    ├── architecture.md           # 系统架构设计
+    ├── api-reference.md          # API 参考文档
+    ├── adding-indicators.md      # 添加新指标指南
+    └── testing.md                # 测试指南
 ```
 
 ---
@@ -118,6 +156,14 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
+| 2026-03-28 | INDEX.md | 添加股票选择系统文档系列索引 | doc-eng |
+| 2026-03-28 | dev-guide/architecture.md | 新建股票选择系统架构设计文档 | doc-eng |
+| 2026-03-28 | dev-guide/api-reference.md | 新建 API 参考文档 | doc-eng |
+| 2026-03-28 | dev-guide/adding-indicators.md | 新建添加新指标指南 | doc-eng |
+| 2026-03-28 | dev-guide/testing.md | 新建测试指南 | doc-eng |
+| 2026-03-28 | user-guide/stock-screener-guide.md | 新建股票筛选器用户指南 | doc-eng |
+| 2026-03-28 | user-guide/indicator-reference.md | 新建技术指标参考手册 | doc-eng |
+| 2026-03-28 | user-guide/trading-model-guide.md | 新建交易模型指南 | doc-eng |
 | 2026-03-27 | api-endpoints.md | 添加股票策略 API（筛选/行业/策略 CRUD） | doc-eng |
 | 2026-03-27 | stock-strategy-quickstart.md | 新建股票策略快速入门指南 | doc-eng |
 | 2026-03-27 | test-plan.md | 新建测试计划文档 | doc-eng |
@@ -135,5 +181,5 @@ docs/
 
 ---
 
-*最后更新：2026-03-27*
+*最后更新：2026-03-28*
 *文档维护者：doc-eng, data-eng*
