@@ -21,7 +21,7 @@
 ```bash
 moon check    # 类型检查（快速）
 moon build    # 构建项目
-moon run cmd/main  # 运行 CLI
+moon run alpha  # 运行 CLI
 ```
 
 ### 运行测试
@@ -45,29 +45,29 @@ moon info   # 生成公共接口文件
 
 ```bash
 # 基本格式
-MOONBIT_CMD=<command> MOONBIT_ARGS="<arguments>" moon run cmd/main
+MOONBIT_CMD=<command> MOONBIT_ARGS="<arguments>" moon run alpha
 
 # 显示帮助信息
-MOONBIT_CMD=help moon run cmd/main
+MOONBIT_CMD=help moon run alpha
 
 # 启动 HTTP 服务器
-MOONBIT_CMD=serve moon run cmd/main                    # 默认端口 8080
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 3000" moon run cmd/main
+MOONBIT_CMD=serve moon run alpha                    # 默认端口 8080
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 3000" moon run alpha
 
 # 分析个股回撤
-MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run alpha
 
 # 运行策略回测
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run alpha
 
 # 实时监控模式
-MOONBIT_CMD=monitor MOONBIT_ARGS="--stock sh.600000" moon run cmd/main
+MOONBIT_CMD=monitor MOONBIT_ARGS="--stock sh.600000" moon run alpha
 
 # 生成分析报告
-MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main
+MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run alpha
 
 # 列出可用策略
-MOONBIT_CMD=list-strategies moon run cmd/main
+MOONBIT_CMD=list-strategies moon run alpha
 ```
 
 ### serve 命令 API 访问
@@ -103,7 +103,7 @@ moon test --update
 
 ```
 alpha/
-├── cmd/main/           # CLI 入口点
+├── alpha/           # CLI 入口点
 ├── src/                # 核心业务逻辑
 │   ├── data/           # 数据层 (KLine 类型，CSV 加载器)
 │   ├── strategy/       # 策略引擎和内置策略

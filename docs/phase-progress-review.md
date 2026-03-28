@@ -38,7 +38,7 @@ src/data/loader.mbt       # CSV 解析器
 src/data/normalizer.mbt   # 数据标准化（额外实现）
 src/drawdown/calculator.mbt
 src/drawdown/types.mbt
-cmd/main/main.mbt         # CLI 入口
+alpha/main.mbt         # CLI 入口
 ```
 
 **评估**:

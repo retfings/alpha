@@ -4,7 +4,7 @@
 
 用户正在使用 MoonBit 语言构建一个量化回撤框架，需要支持 Web 和 CLI 两种交互方式。当前项目是一个基础的 MoonBit 模块结构，已有：
 - 基础项目框架（`moon.mod.json`）
-- 一个简单的 CLI 入口（`cmd/main/main.mbt`）
+- 一个简单的 CLI 入口（`alpha/main.mbt`）
 - 空的库文件（`alpha.mbt`）
 - 配套的 Python 数据下载脚本（基于 BaoStock API）
 - 已下载的 A 股股票数据（CSV 格式）
@@ -27,7 +27,7 @@
 │                        Presentation Layer                        │
 │  ┌─────────────────────────────┐ ┌───────────────────────────┐ │
 │  │         CLI Interface        │ │       Web Interface       │ │
-│  │    (cmd/main/main.mbt)      │ │   (www/ - static files)   │ │
+│  │    (alpha/main.mbt)               │ │   (www/ - static files)   │ │
 │  └─────────────────────────────┘ └───────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
                                 │
@@ -69,11 +69,9 @@ alpha/
 ├── moon.mod.json              # MoonBit 模块配置
 ├── moon.pkg                   # 根包配置
 ├── alpha.mbt                  # 根包入口（公共 API 导出）
-│
-├── cmd/
-│   └── main/
-│       ├── moon.pkg           # CLI 应用包配置
-│       └── main.mbt           # CLI 入口，命令解析
+├── alpha/                     # CLI 入口
+│   ├── moon.pkg               # CLI 应用包配置
+│   └── main.mbt               # CLI 入口，命令解析
 │
 ├── src/                       # 核心业务逻辑
 │   ├── data/                  # 数据层
@@ -474,7 +472,7 @@ pub fn expected_growth_rate(kelly_fraction : Float, win_rate : Float, win_loss_r
 pub fn is_strategy_suitable_for_kelly(win_rate : Float, win_loss_ratio : Float) -> Bool
 ```
 
-### CLI 设计 (`cmd/main/main.mbt`)
+### CLI 设计 (`alpha/main.mbt`)
 
 ```
 moonbit-drawdown - 量化回撤分析工具
@@ -649,7 +647,7 @@ HTTP 响应返回客户端
    - 数据类型定义 (`src/data/types.mbt`)
    - CSV 数据加载器 (`src/data/loader.mbt`)
    - 基础回撤计算器 (`src/drawdown/calculator.mbt`)
-   - 简单 CLI 命令 (`cmd/main/main.mbt`)
+   - 简单 CLI 命令 (`alpha/main.mbt`)
 
 2. **Phase 2 - 策略引擎** ✅
    - 策略接口定义 (`src/strategy/types.mbt`)

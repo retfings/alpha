@@ -20,7 +20,7 @@
 | 技术指标 (src/indicator) | 100% | ✅ 完成 | ~600 行 |
 | HTTP 服务器 (server/) | 0% | ❌ 未实现 | 0 行 |
 | Web 前端 (www/) | 80% | ⚠️ 待后端 | ~600 行 |
-| CLI (cmd/main) | 70% | ⚠️ 需修复 | ~350 行 |
+| CLI (alpha/main) | 70% | ⚠️ 需修复 | ~350 行 |
 
 **总代码量**: ~6,430 行 (src/ 目录)
 
@@ -144,7 +144,7 @@ let quantity : Float = 100.0 // Simplified - should calculate based on capital
 
 **建议**: 考虑添加更多指标（如 Stochastic, Williams %R）
 
-### 2.6 CLI (cmd/main/)
+### 2.6 CLI (alpha/)
 
 **文件清单**:
 - `main.mbt` - CLI 入口和命令解析
@@ -161,7 +161,7 @@ let quantity : Float = 100.0 // Simplified - should calculate based on capital
 **编译错误**:
 ```
 Error: Expected upper case identifier for type name, found lower case identifier.
-     ╭─[ cmd/main/main.mbt:300:14 ]
+     ╭─[ alpha/main.mbt:300:14 ]
      │ 300 │   let args = sys::get_args()
 ```
 
@@ -323,7 +323,7 @@ pub fn stop_loss_rule_detailed(
 
 ```
 alpha/
-├── cmd/main/
+├── alpha/
 │   └── main.mbt                 # CLI 入口
 ├── src/
 │   ├── data/

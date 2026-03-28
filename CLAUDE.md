@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 moon check              # Type check without building (fast, run regularly)
 moon build              # Build project
-moon run cmd/main       # Run main package
+moon run alpha          # Run main package
 moon test               # Run all tests
 moon test --update      # Update snapshot tests
 moon test [dirname]     # Test specific directory
@@ -22,26 +22,26 @@ moon info               # Generate public interface (.mbti) files
 
 ```bash
 # Basic format
-MOONBIT_CMD=<command> MOONBIT_ARGS="<arguments>" moon run cmd/main
+MOONBIT_CMD=<command> MOONBIT_ARGS="<arguments>" moon run alpha
 
 # Show help
-MOONBIT_CMD=help moon run cmd/main
+MOONBIT_CMD=help moon run alpha
 
 # Start HTTP server (default port 8080)
-MOONBIT_CMD=serve moon run cmd/main
-MOONBIT_CMD=serve MOONBIT_ARGS="--port 3000" moon run cmd/main
+MOONBIT_CMD=serve moon run alpha
+MOONBIT_CMD=serve MOONBIT_ARGS="--port 3000" moon run alpha
 
 # Analyze stock drawdown
-MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run cmd/main
+MOONBIT_CMD=analyze MOONBIT_ARGS="--stock sh.600000 --metric max_drawdown" moon run alpha
 
 # Run backtest
-MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run cmd/main
+MOONBIT_CMD=backtest MOONBIT_ARGS="--strategy ma_cross --stock sh.600000 --start 2023-01-01 --end 2023-12-31" moon run alpha
 
 # List available strategies
-MOONBIT_CMD=list-strategies moon run cmd/main
+MOONBIT_CMD=list-strategies moon run alpha
 
 # Generate report
-MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run cmd/main
+MOONBIT_CMD=report MOONBIT_ARGS="--format html" moon run alpha
 ```
 
 ### Server API Endpoints
@@ -66,7 +66,7 @@ This is a **quantitative drawdown framework** built with MoonBit, supporting bot
 
 ```
 alpha/
-├── cmd/main/           # CLI entry point
+├── alpha/main.mbt        # CLI entry point
 ├── src/                # Core business logic
 │   ├── data/           # Data layer (CSV/Parquet loaders, KLine types)
 │   ├── strategy/       # Strategy engine and built-in strategies
@@ -85,7 +85,7 @@ alpha/
 ### Key Components
 
 - **Root package** (`alpha.mbt`) - Public API exports
-- **cmd/main/** - CLI executable with command parsing
+- **alpha/main.mbt** - CLI executable with command parsing
 - **Test files**: `*_test.mbt` (blackbox) and `*_wbtest.mbt` (whitebox)
 
 ### Technical Stack

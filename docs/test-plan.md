@@ -571,7 +571,7 @@ API_BASE = 'http://localhost:8080/api'
 def server():
     """启动测试服务器"""
     proc = subprocess.Popen(
-        ['moon', 'run', 'cmd/main'],
+        ['moon', 'run', 'alpha'],
         env={'MOONBIT_CMD': 'serve'}
     )
     time.sleep(3)  # 等待服务器启动

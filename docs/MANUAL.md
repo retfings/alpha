@@ -142,7 +142,7 @@ MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run alpha
 ### 模块依赖图
 
 ```
-cmd/main (CLI 入口)
+alpha/main (CLI 入口)
     │
     ▼
 src/backtest (回测引擎)

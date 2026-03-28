@@ -37,7 +37,7 @@
 | `src/indicator/` | 2 | 技术指标 - SMA/EMA/RSI/MACD/Bollinger Bands 等 10+ 指标 |
 | `src/backtest/` | 5 | 回测引擎 - 执行引擎、报告生成、统计分析 |
 | `src/ffi/` | 2 | C FFI 接口 - 文件读写支持 |
-| `cmd/main/` | 2 | CLI 入口点 - 命令行界面 |
+| `alpha/` | 2 | CLI 入口点 - 命令行界面 |
 
 ### 2. 测试套件
 

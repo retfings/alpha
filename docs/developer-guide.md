@@ -102,7 +102,7 @@ moon build
 
 ```
 alpha/
-├── cmd/main/           # CLI 入口
+├── alpha/              # CLI 入口
 ├── src/                # 核心业务逻辑
 │   ├── data/           # 数据层
 │   ├── strategy/       # 策略引擎

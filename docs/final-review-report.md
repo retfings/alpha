@@ -33,7 +33,7 @@
 - `src/data/normalizer.mbt` - 数据标准化和复权处理
 - `src/drawdown/types.mbt` - DrawdownInfo, DrawdownSeries
 - `src/drawdown/calculator.mbt` - 完整回撤计算功能
-- `cmd/main/main.mbt` - CLI 入口
+- `alpha/main.mbt` - CLI 入口
 
 **评估**: 所有计划内容完成，额外实现了 normalizer 模块
 
