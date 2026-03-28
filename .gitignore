@@ -6,3 +6,4 @@ __pycache__/
 /data/
 run_server.py
 test_report.html
+node_modules/
