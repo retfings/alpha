@@ -1,9 +1,0 @@
-import {
-  "moonbitlang/core/bytes",
-  "moonbitlang/core/encoding/utf8",
-}
-
-options(
-  "native-stub": [ "file_io.c" ],
-  targets: { "file_io.mbt": [ "native" ] },
-)

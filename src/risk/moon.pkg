@@ -1,4 +1,0 @@
-import {
-  "retfings/alpha/src/data" @data,
-  "retfings/alpha/src/portfolio" @portfolio,
-}
