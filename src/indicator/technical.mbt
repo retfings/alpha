@@ -63,7 +63,7 @@ pub fn calculate_technical_signals(
   let closes = klines.map(fn(k) { k.close })
 
   // RSI signal
-  let rsi_values = @rsi(klines, rsi_period)
+  let rsi_values = rsi(closes, rsi_period)
   let last_rsi = rsi_values[rsi_values.length() - 1]
   let rsi_signal = if last_rsi > 70.0 {
     1  // Overbought - potential sell
@@ -74,7 +74,7 @@ pub fn calculate_technical_signals(
   }
 
   // MACD signal
-  let macd_result = @macd(closes, macd_fast, macd_slow, macd_signal_period)
+  let macd_result = macd(closes, macd_fast, macd_slow, macd_signal_period)
   let len = macd_result.macd_line.length()
   let macd_signal = if len >= 2 {
     let curr_macd = macd_result.macd_line[len - 1]
@@ -95,7 +95,7 @@ pub fn calculate_technical_signals(
   }
 
   // KDJ signal
-  let (k_line, d_line, j_line) = @kdj(klines, kdj_n, 3, 3)
+  let (k_line, d_line, _) = kdj(klines, kdj_n, 3, 3)
   let kdj_signal = if k_line.length() >= 2 && d_line.length() >= 2 {
     let curr_k = k_line[k_line.length() - 1]
     let curr_d = d_line[d_line.length() - 1]
@@ -113,8 +113,8 @@ pub fn calculate_technical_signals(
   }
 
   // MA trend
-  let ma_short_values = @ma.sma(closes, ma_short)
-  let ma_long_values = @ma.sma(closes, ma_long)
+  let ma_short_values = sma(closes, ma_short)
+  let ma_long_values = sma(closes, ma_long)
   let ma_trend = if ma_short_values.length() > 0 && ma_long_values.length() > 0 {
     let short_ma = ma_short_values[ma_short_values.length() - 1]
     let long_ma = ma_long_values[ma_long_values.length() - 1]
@@ -314,19 +314,19 @@ pub fn analyze_technicals(
   let closes = klines.map(fn(k) { k.close })
 
   // Calculate all indicators
-  let rsi_values = @rsi(klines, rsi_period)
+  let rsi_values = rsi(closes, rsi_period)
   let last_rsi = rsi_values[rsi_values.length() - 1]
 
-  let macd_result = @macd(closes, macd_fast, macd_slow, macd_signal_period)
+  let macd_result = macd(closes, macd_fast, macd_slow, macd_signal_period)
   let last_macd = macd_result.macd_line[macd_result.macd_line.length() - 1]
   let last_macd_signal = macd_result.signal_line[macd_result.signal_line.length() - 1]
 
-  let (k_line, d_line, _) = @kdj(klines, kdj_n, 3, 3)
+  let (k_line, d_line, _) = kdj(klines, kdj_n, 3, 3)
   let last_k = k_line[k_line.length() - 1]
   let last_d = d_line[d_line.length() - 1]
 
-  let ma_short_values = @ma.sma(closes, ma_short)
-  let ma_long_values = @ma.sma(closes, ma_long)
+  let ma_short_values = sma(closes, ma_short)
+  let ma_long_values = sma(closes, ma_long)
   let last_ma_short = ma_short_values[ma_short_values.length() - 1]
   let last_ma_long = ma_long_values[ma_long_values.length() - 1]
 

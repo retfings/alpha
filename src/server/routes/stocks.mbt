@@ -22,6 +22,30 @@ pub struct StockFilter {
 }
 
 ///|
+/// Create stock filter with default values
+pub fn StockFilter::create(
+  industry : String?,
+  market : String?,
+  status : String?,
+) -> StockFilter {
+  StockFilter::{
+    industry,
+    market,
+    status,
+  }
+}
+
+///|
+/// Create empty stock filter
+pub fn StockFilter::empty() -> StockFilter {
+  StockFilter::{
+    industry: None,
+    market: None,
+    status: None,
+  }
+}
+
+///|
 /// Scan data directory for available stock CSV files
 pub fn scan_stock_files() -> Array[String] {
   // Known stock codes from data files
@@ -36,7 +60,7 @@ pub fn scan_stock_files() -> Array[String] {
 
 ///|
 /// Get stock info by code (with industry mapping)
-fn get_stock_info(code : String) -> StockInfo {
+pub fn get_stock_info(code : String) -> StockInfo {
   // Industry mapping based on stock code ranges
   let industry = get_industry_for_code(code)
   let name = get_name_for_code(code)
@@ -53,7 +77,7 @@ fn get_stock_info(code : String) -> StockInfo {
 
 ///|
 /// Get industry based on stock code
-fn get_industry_for_code(code : String) -> String {
+pub fn get_industry_for_code(code : String) -> String {
   let code_num = code[3:]
   let prefix = code_num[0:2]
 
@@ -74,7 +98,7 @@ fn get_industry_for_code(code : String) -> String {
 
 ///|
 /// Get stock name based on code
-fn get_name_for_code(code : String) -> String {
+pub fn get_name_for_code(code : String) -> String {
   let code_num = code[3:]
   "Stock " + code_num.to_string()
 }

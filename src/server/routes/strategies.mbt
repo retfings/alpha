@@ -12,6 +12,22 @@ pub struct BuiltInStrategy {
 }
 
 ///|
+/// Create built-in strategy
+pub fn BuiltInStrategy::create(
+  name : String,
+  description : String,
+  default_parameters : String,
+  category : String,
+) -> BuiltInStrategy {
+  BuiltInStrategy::{
+    name,
+    description,
+    default_parameters,
+    category,
+  }
+}
+
+///|
 /// Get all built-in strategies
 pub fn get_builtin_strategies() -> Array[BuiltInStrategy] {
   [

@@ -4,7 +4,7 @@
 
 ///|
 test "handle_list_stocks returns all stocks" {
-  let response = @stocks.handle_list_stocks()
+  let response = handle_list_stocks()
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("stocks"))
   assert_true(response.body.contains("total"))
@@ -12,7 +12,7 @@ test "handle_list_stocks returns all stocks" {
 
 ///|
 test "handle_list_stocks response format" {
-  let response = @stocks.handle_list_stocks()
+  let response = handle_list_stocks()
   assert_true(response.status_code == 200)
   inspect(
     response.body,
@@ -24,13 +24,13 @@ test "handle_list_stocks response format" {
 
 ///|
 test "get_all_stocks returns non-empty array" {
-  let stocks = @stocks.get_all_stocks()
+  let stocks = get_all_stocks()
   assert_true(stocks.length() > 0)
 }
 
 ///|
 test "get_all_stocks each stock has required fields" {
-  let stocks = @stocks.get_all_stocks()
+  let stocks = get_all_stocks()
   let mut all_valid = true
   for stock in stocks {
     if stock.code == "" || stock.name == "" || stock.industry == "" {
@@ -42,7 +42,7 @@ test "get_all_stocks each stock has required fields" {
 
 ///|
 test "scan_stock_files returns expected stock codes" {
-  let codes = @stocks.scan_stock_files()
+  let codes = scan_stock_files()
   assert_true(codes.length() > 0)
   // Check first stock code format
   assert_true(codes[0].has_prefix("sh."))
@@ -50,7 +50,7 @@ test "scan_stock_files returns expected stock codes" {
 
 ///|
 test "get_stock_info returns correct info for valid code" {
-  let info = @stocks.get_stock_info("sh.600000")
+  let info = get_stock_info("sh.600000")
   assert_true(info.code == "sh.600000")
   assert_true(info.name == "Stock 600000")
   assert_true(info.market == "SH")
@@ -59,80 +59,80 @@ test "get_stock_info returns correct info for valid code" {
 
 ///|
 test "get_industry_for_code banking range" {
-  let industry = @stocks.get_industry_for_code("sh.600000")
+  let industry = get_industry_for_code("sh.600000")
   assert_true(industry == "Banking")
 }
 
 ///|
 test "get_industry_for_code securities range" {
-  let industry = @stocks.get_industry_for_code("sh.600100")
+  let industry = get_industry_for_code("sh.600100")
   assert_true(industry == "Securities")
 }
 
 ///|
 test "get_industry_for_code insurance range" {
-  let industry = @stocks.get_industry_for_code("sh.600200")
+  let industry = get_industry_for_code("sh.600200")
   assert_true(industry == "Insurance")
 }
 
 ///|
 test "get_industry_for_code real estate range" {
-  let industry = @stocks.get_industry_for_code("sh.600300")
+  let industry = get_industry_for_code("sh.600300")
   assert_true(industry == "Real Estate")
 }
 
 ///|
 test "get_industry_for_code transportation range" {
-  let industry = @stocks.get_industry_for_code("sh.600400")
+  let industry = get_industry_for_code("sh.600400")
   assert_true(industry == "Transportation")
 }
 
 ///|
 test "get_industry_for_code utilities range" {
-  let industry = @stocks.get_industry_for_code("sh.600500")
+  let industry = get_industry_for_code("sh.600500")
   assert_true(industry == "Utilities")
 }
 
 ///|
 test "get_industry_for_code automotive range" {
-  let industry = @stocks.get_industry_for_code("sh.600600")
+  let industry = get_industry_for_code("sh.600600")
   assert_true(industry == "Automotive")
 }
 
 ///|
 test "get_industry_for_code steel range" {
-  let industry = @stocks.get_industry_for_code("sh.600700")
+  let industry = get_industry_for_code("sh.600700")
   assert_true(industry == "Steel")
 }
 
 ///|
 test "get_industry_for_code technology range" {
-  let industry = @stocks.get_industry_for_code("sh.600800")
+  let industry = get_industry_for_code("sh.600800")
   assert_true(industry == "Technology")
 }
 
 ///|
 test "get_industry_for_code consumer goods range" {
-  let industry = @stocks.get_industry_for_code("sh.600900")
+  let industry = get_industry_for_code("sh.600900")
   assert_true(industry == "Consumer Goods")
 }
 
 ///|
 test "get_industry_for_code general fallback" {
-  let industry = @stocks.get_industry_for_code("sh.601000")
+  let industry = get_industry_for_code("sh.601000")
   assert_true(industry == "General")
 }
 
 ///|
 test "get_name_for_code returns formatted name" {
-  let name = @stocks.get_name_for_code("sh.600000")
+  let name = get_name_for_code("sh.600000")
   assert_true(name == "Stock 600000")
 }
 
 ///|
 test "get_name_for_code different codes" {
-  let name1 = @stocks.get_name_for_code("sh.600001")
-  let name2 = @stocks.get_name_for_code("sh.600002")
+  let name1 = get_name_for_code("sh.600001")
+  let name2 = get_name_for_code("sh.600002")
   assert_true(name1 == "Stock 600001")
   assert_true(name2 == "Stock 600002")
   assert_true(name1 != name2)
@@ -140,7 +140,7 @@ test "get_name_for_code different codes" {
 
 ///|
 test "get_all_industries returns unique industries" {
-  let industries = @stocks.get_all_industries()
+  let industries = get_all_industries()
   assert_true(industries.length() > 0)
   // Check no duplicates
   let mut has_duplicates = false
@@ -160,7 +160,7 @@ test "get_all_industries returns unique industries" {
 
 ///|
 test "get_stocks_by_industry returns filtered stocks" {
-  let banking_stocks = @stocks.get_stocks_by_industry("Banking")
+  let banking_stocks = get_stocks_by_industry("Banking")
   assert_true(banking_stocks.length() > 0)
   // All returned stocks should be in Banking industry
   let mut all_banking = true
@@ -174,30 +174,22 @@ test "get_stocks_by_industry returns filtered stocks" {
 
 ///|
 test "get_stocks_by_industry empty for non-existent industry" {
-  let stocks = @stocks.get_stocks_by_industry("NonExistent")
+  let stocks = get_stocks_by_industry("NonExistent")
   assert_true(stocks.length() == 0)
 }
 
 ///|
 test "filter_stocks with empty filter returns all" {
-  let filter = @stocks.StockFilter::{
-    industry: None,
-    market: None,
-    status: None,
-  }
-  let result = @stocks.filter_stocks(filter)
-  let all = @stocks.get_all_stocks()
+  let filter = StockFilter::empty()
+  let result = filter_stocks(filter)
+  let all = get_all_stocks()
   assert_true(result.length() == all.length())
 }
 
 ///|
 test "filter_stocks by industry" {
-  let filter = @stocks.StockFilter::{
-    industry: Some("Banking"),
-    market: None,
-    status: None,
-  }
-  let result = @stocks.filter_stocks(filter)
+  let filter = StockFilter::create(Some("Banking"), None, None)
+  let result = filter_stocks(filter)
   assert_true(result.length() > 0)
   for stock in result {
     assert_true(stock.industry == "Banking")
@@ -206,12 +198,8 @@ test "filter_stocks by industry" {
 
 ///|
 test "filter_stocks by market" {
-  let filter = @stocks.StockFilter::{
-    industry: None,
-    market: Some("SH"),
-    status: None,
-  }
-  let result = @stocks.filter_stocks(filter)
+  let filter = StockFilter::create(None, Some("SH"), None)
+  let result = filter_stocks(filter)
   assert_true(result.length() > 0)
   for stock in result {
     assert_true(stock.market == "SH")
@@ -220,12 +208,8 @@ test "filter_stocks by market" {
 
 ///|
 test "filter_stocks by status" {
-  let filter = @stocks.StockFilter::{
-    industry: None,
-    market: None,
-    status: Some("active"),
-  }
-  let result = @stocks.filter_stocks(filter)
+  let filter = StockFilter::create(None, None, Some("active"))
+  let result = filter_stocks(filter)
   assert_true(result.length() > 0)
   for stock in result {
     assert_true(stock.status == "active")
@@ -234,12 +218,8 @@ test "filter_stocks by status" {
 
 ///|
 test "filter_stocks by multiple criteria" {
-  let filter = @stocks.StockFilter::{
-    industry: Some("Banking"),
-    market: Some("SH"),
-    status: Some("active"),
-  }
-  let result = @stocks.filter_stocks(filter)
+  let filter = StockFilter::create(Some("Banking"), Some("SH"), Some("active"))
+  let result = filter_stocks(filter)
   assert_true(result.length() > 0)
   for stock in result {
     assert_true(stock.industry == "Banking")
@@ -250,7 +230,7 @@ test "filter_stocks by multiple criteria" {
 
 ///|
 test "handle_filter_stocks returns valid response" {
-  let response = @stocks.handle_filter_stocks(None)
+  let response = handle_filter_stocks(None)
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("stocks"))
   assert_true(response.body.contains("total"))
@@ -258,7 +238,7 @@ test "handle_filter_stocks returns valid response" {
 
 ///|
 test "handle_get_stock returns stock info" {
-  let response = @stocks.handle_get_stock("sh.600000")
+  let response = handle_get_stock("sh.600000")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("sh.600000"))
   assert_true(response.body.contains("Stock 600000"))
@@ -266,7 +246,7 @@ test "handle_get_stock returns stock info" {
 
 ///|
 test "handle_get_stock returns 404 for unknown stock" {
-  let response = @stocks.handle_get_stock("unknown.code")
+  let response = handle_get_stock("unknown.code")
   assert_true(response.status_code == 404)
   assert_true(response.body.contains("error"))
   assert_true(response.body.contains("not found"))
@@ -274,7 +254,7 @@ test "handle_get_stock returns 404 for unknown stock" {
 
 ///|
 test "handle_get_klines returns sample data when no file" {
-  let response = @stocks.handle_get_klines("sh.600000")
+  let response = handle_get_klines("sh.600000")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("klines"))
   assert_true(response.body.contains("stock"))
@@ -282,7 +262,7 @@ test "handle_get_klines returns sample data when no file" {
 
 ///|
 test "handle_list_industries returns industry list" {
-  let response = @stocks.handle_list_industries()
+  let response = handle_list_industries()
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("industries"))
   assert_true(response.body.contains("total"))
@@ -290,7 +270,7 @@ test "handle_list_industries returns industry list" {
 
 ///|
 test "handle_get_industry_stocks returns stocks for industry" {
-  let response = @stocks.handle_get_industry_stocks("Banking")
+  let response = handle_get_industry_stocks("Banking")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("industry"))
   assert_true(response.body.contains("Banking"))
@@ -299,7 +279,7 @@ test "handle_get_industry_stocks returns stocks for industry" {
 
 ///|
 test "handle_get_industry_stocks returns 404 for unknown industry" {
-  let response = @stocks.handle_get_industry_stocks("UnknownIndustry")
+  let response = handle_get_industry_stocks("UnknownIndustry")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("industry"))
   // Should still return 200 with empty stocks array

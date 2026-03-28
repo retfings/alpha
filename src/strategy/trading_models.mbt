@@ -239,21 +239,26 @@ pub struct StockSelectionResult {
 /// - true if condition is met
 pub fn check_trigger_condition(
   condition : TriggerCondition,
-  current_value : Float,
-  previous_value : Float,
+  current_value : Float?,
+  previous_value : Float?,
 ) -> Bool {
-  match condition.op {
-    ConditionOp::Gt: { current_value > condition.threshold }
-    ConditionOp::Gte: { current_value >= condition.threshold }
-    ConditionOp::Lt: { current_value < condition.threshold }
-    ConditionOp::Lte: { current_value <= condition.threshold }
-    ConditionOp::Eq: { current_value == condition.threshold }
-    ConditionOp::CrossAbove: {
-      previous_value <= condition.threshold && current_value > condition.threshold
+  match (current_value, previous_value) {
+    (Some(curr), Some(prev)) => {
+      match condition.op {
+        ConditionOp::Gt => { curr > condition.threshold }
+        ConditionOp::Gte => { curr >= condition.threshold }
+        ConditionOp::Lt => { curr < condition.threshold }
+        ConditionOp::Lte => { curr <= condition.threshold }
+        ConditionOp::Eq => { curr == condition.threshold }
+        ConditionOp::CrossAbove => {
+          prev <= condition.threshold && curr > condition.threshold
+        }
+        ConditionOp::CrossBelow => {
+          prev >= condition.threshold && curr < condition.threshold
+        }
+      }
     }
-    ConditionOp::CrossBelow: {
-      previous_value >= condition.threshold && current_value < condition.threshold
-    }
+    (_, _) => { false }
   }
 }
 
@@ -366,67 +371,98 @@ pub fn PeriodicRebalancer::is_rebalance_due(
   current_date : String,
 ) -> Bool {
   // If no previous rebalance, always due
-  let last_date = match rebalancer.last_rebalance_date {
-    Some(d): { d }
-    None: { return true }
-  }
+  match rebalancer.last_rebalance_date {
+    Some(d) => {
+      let last_date = d
+      // Parse dates (simplified - assumes YYYY-MM-DD format)
+      let curr = parse_date(current_date)
+      let last = parse_date(last_date)
 
-  // Parse dates (simplified - assumes YYYY-MM-DD format)
-  let (curr_year, curr_month, curr_day) = parse_date(current_date)
-  let (last_year, last_month, last_day) = parse_date(last_date)
-
-  match rebalancer.config.frequency {
-    RebalanceFrequency::Weekly: {
-      // Rebalance every 7 days
-      days_since(last_date, current_date) >= 7
+      match rebalancer.config.frequency {
+        RebalanceFrequency::Weekly => {
+          // Rebalance every 7 days
+          days_since(last_date, current_date) >= 7
+        }
+        RebalanceFrequency::BiWeekly => {
+          // Rebalance every 14 days
+          days_since(last_date, current_date) >= 14
+        }
+        RebalanceFrequency::Monthly => {
+          // Rebalance on specific day of month
+          curr.month != last.month && curr.day >= rebalancer.config.rebalance_day
+        }
+        RebalanceFrequency::Quarterly => {
+          // Rebalance every 3 months
+          months_since(last_date, current_date) >= 3
+        }
+        RebalanceFrequency::Custom(days) => {
+          days_since(last_date, current_date) >= days
+        }
+      }
     }
-    RebalanceFrequency::BiWeekly: {
-      // Rebalance every 14 days
-      days_since(last_date, current_date) >= 14
-    }
-    RebalanceFrequency::Monthly: {
-      // Rebalance on specific day of month
-      curr_month != last_month && curr_day >= rebalancer.config.rebalance_day
-    }
-    RebalanceFrequency::Quarterly: {
-      // Rebalance every 3 months
-      months_since(last_date, current_date) >= 3
-    }
-    RebalanceFrequency::Custom(days): {
-      days_since(last_date, current_date) >= days
-    }
+    None => { true }
   }
 }
 
 ///|
-/// Parse date string to (year, month, day)
-fn parse_date(date : String) -> (Int, Int, Int) {
+/// Date components helper struct
+pub struct DateComponents {
+  year : Int
+  month : Int
+  day : Int
+} derive(Show)
+
+///|
+/// Parse date string to DateComponents
+fn parse_date(date : String) -> DateComponents {
   // Simplified parsing for YYYY-MM-DD format
+  // Use split and manually parse each part
   let parts = date.split("-")
-  if parts.length() >= 3 {
-    (parts[0].to_int_or(2025), parts[1].to_int_or(1), parts[2].to_int_or(1))
+  let year_view = parts.next().unwrap_or("")
+  let month_view = parts.next().unwrap_or("")
+  let day_view = parts.next().unwrap_or("")
+
+  let year = parse_int_or_default(year_view.data(), 2025)
+  let month = parse_int_or_default(month_view.data(), 1)
+  let day = parse_int_or_default(day_view.data(), 1)
+
+  DateComponents::{ year, month, day }
+}
+
+///|
+/// Parse string to int with default value
+fn parse_int_or_default(s : String, default : Int) -> Int {
+  if s.length() == 0 {
+    default
   } else {
-    (2025, 1, 1)
+    s.fold(init=0, fn(acc, c) {
+      let digit = c.to_uint() - '0'.to_uint()
+      if digit <= 9 {
+        acc * 10 + digit.reinterpret_as_int()
+      } else {
+        acc
+      }
+    })
   }
 }
 
 ///|
 /// Calculate days between two dates (simplified)
 fn days_since(date1 : String, date2 : String) -> Int {
-  let (y1, m1, d1) = parse_date(date1)
-  let (y2, m2, d2) = parse_date(date2)
+  let d1 = parse_date(date1)
+  let d2 = parse_date(date2)
 
   // Simplified calculation
-  (y2 - y1) * 365 + (m2 - m1) * 30 + (d2 - d1)
+  (d2.year - d1.year) * 365 + (d2.month - d1.month) * 30 + (d2.day - d1.day)
 }
 
 ///|
 /// Calculate months between two dates (simplified)
 fn months_since(date1 : String, date2 : String) -> Int {
-  let (y1, m1, _) = parse_date(date1)
-  let (y2, m2, _) = parse_date(date2)
+  let d1 = parse_date(date1)
+  let d2 = parse_date(date2)
 
-  (y2 - y1) * 12 + (m2 - m1)
+  (d2.year - d1.year) * 12 + (d2.month - d1.month)
 }
 
 ///|
@@ -473,21 +509,24 @@ pub fn ConditionalTriggerEngine::check_stock(
 ) -> StockSelectionResult? {
   // Check cooldown
   let last_trigger = Map::get(engine.last_trigger_dates, stock_code)
-  if let Some(last) = last_trigger {
-    if days_since(last, current_date) < engine.config.cooldown_days {
-      return None
+  match last_trigger {
+    Some(last) => {
+      if days_since(last, current_date) < engine.config.cooldown_days {
+        return None
+      }
     }
+    None => { () }
   }
 
-  let mut triggered = []
+  let triggered : Array[String] = []
   let mut condition_count = 0
 
   // Check each condition
   for condition in engine.config.conditions {
     condition_count = condition_count + 1
     let ind_name = condition.indicator_name
-    let curr_val = Map::get(indicator_values, ind_name).get_or(0.0)
-    let prev_val = Map::get(previous_values, ind_name).get_or(0.0)
+    let curr_val = Map::get(indicator_values, ind_name)
+    let prev_val = Map::get(previous_values, ind_name)
 
     if check_trigger_condition(condition, curr_val, prev_val) {
       triggered.push(ind_name)
@@ -514,28 +553,26 @@ pub fn ConditionalTriggerEngine::check_stock(
   }
 }
 
-///|
-/// Mock indicator data generator for testing
 pub fn generate_mock_indicator_data() -> Map[String, Float] {
-  let mut data = Map::new()
-  Map::set(data, "RSI_14", 65.5)
-  Map::set(data, "MACD", 1.25)
-  Map::set(data, "MA_20", 15.50)
-  Map::set(data, "Volume_Ratio", 2.5)
-  Map::set(data, "ROE", 12.8)
-  Map::set(data, "NP_Margin", 18.5)
+  let data : Map[String, Float] = Map::new()
+  data.set("RSI_14", Float::from_double(65.5))
+  data.set("MACD", Float::from_double(1.25))
+  data.set("MA_20", Float::from_double(15.50))
+  data.set("Volume_Ratio", Float::from_double(2.5))
+  data.set("ROE", Float::from_double(12.8))
+  data.set("NP_Margin", Float::from_double(18.5))
   data
 }
 
 ///|
 /// Mock previous indicator data generator for testing
 pub fn generate_mock_previous_data() -> Map[String, Float] {
-  let mut data = Map::new()
-  Map::set(data, "RSI_14", 62.0)
-  Map::set(data, "MACD", 1.10)
-  Map::set(data, "MA_20", 15.30)
-  Map::set(data, "Volume_Ratio", 1.8)
-  Map::set(data, "ROE", 12.5)
-  Map::set(data, "NP_Margin", 18.0)
+  let data : Map[String, Float] = Map::new()
+  data.set("RSI_14", Float::from_double(62.0))
+  data.set("MACD", Float::from_double(1.10))
+  data.set("MA_20", Float::from_double(15.30))
+  data.set("Volume_Ratio", Float::from_double(1.8))
+  data.set("ROE", Float::from_double(12.5))
+  data.set("NP_Margin", Float::from_double(18.0))
   data
 }

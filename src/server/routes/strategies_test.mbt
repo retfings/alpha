@@ -4,7 +4,7 @@
 
 ///|
 test "handle_list_strategies returns all built-in strategies" {
-  let response = @strategies.handle_list_strategies()
+  let response = handle_list_strategies()
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("strategies"))
   assert_true(response.body.contains("total"))
@@ -12,7 +12,7 @@ test "handle_list_strategies returns all built-in strategies" {
 
 ///|
 test "handle_list_strategies response format" {
-  let response = @strategies.handle_list_strategies()
+  let response = handle_list_strategies()
   assert_true(response.status_code == 200)
   // Should contain at least 3 built-in strategies
   assert_true(response.body.contains("ma_cross"))
@@ -22,7 +22,7 @@ test "handle_list_strategies response format" {
 
 ///|
 test "handle_list_strategies includes strategy fields" {
-  let response = @strategies.handle_list_strategies()
+  let response = handle_list_strategies()
   assert_true(response.status_code == 200)
   // Each strategy should have name, description, default_parameters, category
   assert_true(response.body.contains("name"))
@@ -33,13 +33,13 @@ test "handle_list_strategies includes strategy fields" {
 
 ///|
 test "get_builtin_strategies returns non-empty array" {
-  let strategies = @strategies.get_builtin_strategies()
+  let strategies = get_builtin_strategies()
   assert_true(strategies.length() >= 3)
 }
 
 ///|
 test "get_builtin_strategies each has required fields" {
-  let strategies = @strategies.get_builtin_strategies()
+  let strategies = get_builtin_strategies()
   let mut all_valid = true
   for s in strategies {
     if s.name == "" || s.description == "" || s.category == "" {
@@ -51,7 +51,7 @@ test "get_builtin_strategies each has required fields" {
 
 ///|
 test "ma_cross strategy details" {
-  let strategies = @strategies.get_builtin_strategies()
+  let strategies = get_builtin_strategies()
   let mut found = false
   for s in strategies {
     if s.name == "ma_cross" {
@@ -66,7 +66,7 @@ test "ma_cross strategy details" {
 
 ///|
 test "momentum strategy details" {
-  let strategies = @strategies.get_builtin_strategies()
+  let strategies = get_builtin_strategies()
   let mut found = false
   for s in strategies {
     if s.name == "momentum" {
@@ -80,7 +80,7 @@ test "momentum strategy details" {
 
 ///|
 test "rsi_mean_reversion strategy details" {
-  let strategies = @strategies.get_builtin_strategies()
+  let strategies = get_builtin_strategies()
   let mut found = false
   for s in strategies {
     if s.name == "rsi_mean_reversion" {
@@ -96,7 +96,7 @@ test "rsi_mean_reversion strategy details" {
 
 ///|
 test "handle_get_strategy returns ma_cross details" {
-  let response = @strategies.handle_get_strategy("ma_cross")
+  let response = handle_get_strategy("ma_cross")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("ma_cross"))
   assert_true(response.body.contains("is_builtin"))
@@ -105,7 +105,7 @@ test "handle_get_strategy returns ma_cross details" {
 
 ///|
 test "handle_get_strategy returns momentum details" {
-  let response = @strategies.handle_get_strategy("momentum")
+  let response = handle_get_strategy("momentum")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("momentum"))
   assert_true(response.body.contains("Momentum Strategy"))
@@ -113,7 +113,7 @@ test "handle_get_strategy returns momentum details" {
 
 ///|
 test "handle_get_strategy returns rsi_mean_reversion details" {
-  let response = @strategies.handle_get_strategy("rsi_mean_reversion")
+  let response = handle_get_strategy("rsi_mean_reversion")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("rsi_mean_reversion"))
   assert_true(response.body.contains("RSI Mean Reversion"))
@@ -121,7 +121,7 @@ test "handle_get_strategy returns rsi_mean_reversion details" {
 
 ///|
 test "handle_get_strategy returns 404 for unknown strategy" {
-  let response = @strategies.handle_get_strategy("unknown_strategy")
+  let response = handle_get_strategy("unknown_strategy")
   assert_true(response.status_code == 404)
   assert_true(response.body.contains("error"))
   assert_true(response.body.contains("not found"))
@@ -130,7 +130,7 @@ test "handle_get_strategy returns 404 for unknown strategy" {
 ///|
 test "handle_create_strategy returns placeholder response" {
   let body = "{\"name\":\"test_strategy\",\"description\":\"Test\"}"
-  let response = @strategies.handle_create_strategy(body)
+  let response = handle_create_strategy(body)
   assert_true(response.status_code == 201)
   assert_true(response.body.contains("message"))
   assert_true(response.body.contains("not yet implemented"))
@@ -139,7 +139,7 @@ test "handle_create_strategy returns placeholder response" {
 ///|
 test "handle_update_strategy returns placeholder response" {
   let body = "{\"name\":\"updated_name\"}"
-  let response = @strategies.handle_update_strategy("ma_cross", body)
+  let response = handle_update_strategy("ma_cross", body)
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("message"))
   assert_true(response.body.contains("not yet implemented"))
@@ -147,7 +147,7 @@ test "handle_update_strategy returns placeholder response" {
 
 ///|
 test "handle_delete_strategy returns placeholder response" {
-  let response = @strategies.handle_delete_strategy("ma_cross")
+  let response = handle_delete_strategy("ma_cross")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("message"))
   assert_true(response.body.contains("not yet implemented"))
@@ -155,12 +155,7 @@ test "handle_delete_strategy returns placeholder response" {
 
 ///|
 test "BuiltInStrategy struct construction" {
-  let s = @strategies.BuiltInStrategy::{
-    name: "test",
-    description: "Test strategy",
-    default_parameters: "{}",
-    category: "test_category",
-  }
+  let s = BuiltInStrategy::create("test", "Test strategy", "{}", "test_category")
   assert_true(s.name == "test")
   assert_true(s.description == "Test strategy")
   assert_true(s.default_parameters == "{}")
@@ -169,7 +164,7 @@ test "BuiltInStrategy struct construction" {
 
 ///|
 test "strategy categories are unique" {
-  let strategies = @strategies.get_builtin_strategies()
+  let strategies = get_builtin_strategies()
   // Collect categories
   let categories : Array[String] = []
   for s in strategies {
@@ -189,7 +184,7 @@ test "strategy categories are unique" {
 
 ///|
 test "strategy names are unique" {
-  let strategies = @strategies.get_builtin_strategies()
+  let strategies = get_builtin_strategies()
   let mut has_duplicates = false
   let mut i = 0
   while i < strategies.length() {

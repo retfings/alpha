@@ -20,6 +20,28 @@ pub struct DrawdownInfo {
 } derive(ToJson, Show, Eq)
 
 ///|
+/// Create drawdown info
+pub fn DrawdownInfo::create(
+  peak : Float,
+  trough : Float,
+  peak_date : String,
+  trough_date : String,
+  drawdown : Float,
+  duration : Int,
+  recovered : Bool,
+) -> DrawdownInfo {
+  DrawdownInfo::{
+    peak,
+    trough,
+    peak_date,
+    trough_date,
+    drawdown,
+    duration,
+    recovered,
+  }
+}
+
+///|
 /// Drawdown series (drawdown at each point in time)
 pub type DrawdownSeries = Array[Float]
 

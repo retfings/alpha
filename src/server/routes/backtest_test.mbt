@@ -5,7 +5,7 @@
 ///|
 test "handle_run_backtest returns completed response" {
   let body = "{\"strategy\":\"ma_cross\",\"stock\":\"sh.600000\"}"
-  let response = @backtest.handle_run_backtest(body)
+  let response = handle_run_backtest(body)
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("completed"))
   assert_true(response.body.contains("backtest_id"))
@@ -14,7 +14,7 @@ test "handle_run_backtest returns completed response" {
 ///|
 test "handle_run_backtest with empty body" {
   let body = "{}"
-  let response = @backtest.handle_run_backtest(body)
+  let response = handle_run_backtest(body)
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("completed"))
 }
@@ -22,14 +22,14 @@ test "handle_run_backtest with empty body" {
 ///|
 test "handle_run_backtest generates backtest_id" {
   let body = "{}"
-  let response = @backtest.handle_run_backtest(body)
+  let response = handle_run_backtest(body)
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("bt_001"))
 }
 
 ///|
 test "handle_list_backtests returns empty list" {
-  let response = @backtest.handle_list_backtests()
+  let response = handle_list_backtests()
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("backtests"))
   assert_true(response.body.contains("total"))
@@ -37,7 +37,7 @@ test "handle_list_backtests returns empty list" {
 
 ///|
 test "handle_get_backtest_result returns result for any id" {
-  let response = @backtest.handle_get_backtest_result("bt_001")
+  let response = handle_get_backtest_result("bt_001")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("bt_001"))
   assert_true(response.body.contains("status"))
@@ -45,7 +45,7 @@ test "handle_get_backtest_result returns result for any id" {
 
 ///|
 test "handle_get_backtest_result includes all result fields" {
-  let response = @backtest.handle_get_backtest_result("bt_test")
+  let response = handle_get_backtest_result("bt_test")
   assert_true(response.status_code == 200)
   // Should contain backtest result fields
   assert_true(response.body.contains("initial_capital"))
@@ -57,8 +57,8 @@ test "handle_get_backtest_result includes all result fields" {
 
 ///|
 test "handle_get_backtest_result for different ids" {
-  let resp1 = @backtest.handle_get_backtest_result("bt_123")
-  let resp2 = @backtest.handle_get_backtest_result("bt_456")
+  let resp1 = handle_get_backtest_result("bt_123")
+  let resp2 = handle_get_backtest_result("bt_456")
   assert_true(resp1.status_code == 200)
   assert_true(resp2.status_code == 200)
   assert_true(resp1.body.contains("bt_123"))
@@ -67,7 +67,7 @@ test "handle_get_backtest_result for different ids" {
 
 ///|
 test "handle_delete_backtest returns success message" {
-  let response = @backtest.handle_delete_backtest("bt_001")
+  let response = handle_delete_backtest("bt_001")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("message"))
   assert_true(response.body.contains("deleted"))
@@ -75,7 +75,7 @@ test "handle_delete_backtest returns success message" {
 
 ///|
 test "backtest response includes all required metrics" {
-  let response = @backtest.handle_get_backtest_result("bt_metrics_test")
+  let response = handle_get_backtest_result("bt_metrics_test")
   assert_true(response.status_code == 200)
   let body = response.body
   // Check all required metrics are present
@@ -93,7 +93,7 @@ test "backtest response includes all required metrics" {
 
 ///|
 test "backtest run returns bt_001 id" {
-  let response = @backtest.handle_run_backtest("{}")
+  let response = handle_run_backtest("{}")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("bt_001"))
 }
