@@ -47,6 +47,10 @@
 | [测试用例文档](tests/frontend-test-cases.md) | 详细前端测试用例 | 测试人员 |
 | [测试检查清单](tests/frontend-checklist.md) | 手动测试检查清单 | 测试人员 |
 | [UI/UX 问题报告](tests/frontend-ux-issues.md) | UI/UX 问题跟踪 | 前端开发者 |
+| [前端测试报告](tests/frontend-test-report.md) | 前端测试结果汇总 | 测试人员/开发者 |
+| [选股器前端测试报告](tests/screener-frontend-test-report.md) | 选股器前端专项测试 | 测试人员/开发者 |
+| [前端测试总结](tests/frontend-test-summary.md) | 前端测试完成总结 | 测试人员/开发者 |
+| [测试文档索引](tests/README.md) | 前端测试文档导航 | 测试人员/开发者 |
 
 ## 开发和设计文档
 
@@ -183,7 +187,11 @@ docs/
 ├── frontend-components.md        # 前端组件文档
 ├── test-report-summary.md        # 测试报告汇总
 ├── api/                          # API 文档目录
-│   └── stock-screener-api.md     # 股票筛选 API 参考（新版）
+│   ├── stock-screener-api.md     # 股票筛选 API 参考（新版）
+│   ├── stock-screening.md        # 股票筛选 API 参考
+│   ├── stock-selection-api.md    # 股票选择 API 参考
+│   ├── data-models.md            # 数据模型文档
+│   └── stock-selection-openapi.yaml  # OpenAPI 规范
 ├── architecture.md               # 架构设计
 ├── stock-strategy-architecture.md # 股票策略架构
 ├── developer-guide.md            # 开发者指南
@@ -230,7 +238,10 @@ docs/
     ├── README.md                 # 测试文档索引
     ├── frontend-test-cases.md    # 前端测试用例
     ├── frontend-checklist.md     # 前端检查清单
-    └── frontend-ux-issues.md     # UI/UX 问题报告
+    ├── frontend-ux-issues.md     # UI/UX 问题报告
+    ├── frontend-test-report.md   # 前端测试报告
+    ├── screener-frontend-test-report.md  # 选股器前端测试报告
+    └── frontend-test-summary.md  # 前端测试完成总结
 ```
 
 ---
@@ -307,8 +318,13 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
+| 2026-03-28 | INDEX.md | 更新前端文档索引（添加测试报告/总结/索引文档） | doc-eng |
+| 2026-03-28 | INDEX.md | 更新 API 文档结构（添加 data-models.md 等） | doc-eng |
 | 2026-03-28 | INDEX.md | 更新功能完成状态为 🟢 已完成（后端 API/前端 UI/测试/文档） | api-designer |
 | 2026-03-28 | INDEX.md | 更新前端功能完成状态为已完成 | frontend-dev |
+| 2026-03-28 | INDEX.md | 添加前端测试报告文档索引 | frontend-tester |
+| 2026-03-28 | tests/screener-frontend-test-report.md | 新建选股器前端测试报告 (55 用例) | frontend-tester |
+| 2026-03-28 | tests/frontend-test-summary.md | 新建前端测试完成总结 (151 用例) | frontend-tester |
 | 2026-03-28 | INDEX.md | 添加前端文档系列（组件文档/测试报告） | doc-eng |
 | 2026-03-28 | frontend-components.md | 新建前端组件使用文档 | doc-eng |
 | 2026-03-28 | test-report-summary.md | 新建测试报告汇总文档 | doc-eng |
