@@ -155,7 +155,9 @@ test "handle_delete_strategy returns placeholder response" {
 
 ///|
 test "BuiltInStrategy struct construction" {
-  let s = BuiltInStrategy::create("test", "Test strategy", "{}", "test_category")
+  let s = BuiltInStrategy::create(
+    "test", "Test strategy", "{}", "test_category",
+  )
   assert_true(s.name == "test")
   assert_true(s.description == "Test strategy")
   assert_true(s.default_parameters == "{}")

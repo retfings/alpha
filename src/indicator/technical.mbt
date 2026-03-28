@@ -66,11 +66,11 @@ pub fn calculate_technical_signals(
   let rsi_values = rsi(closes, rsi_period)
   let last_rsi = rsi_values[rsi_values.length() - 1]
   let rsi_signal = if last_rsi > 70.0 {
-    1  // Overbought - potential sell
+    1 // Overbought - potential sell
   } else if last_rsi < 30.0 {
-    -1  // Oversold - potential buy
+    -1 // Oversold - potential buy
   } else {
-    0  // Neutral
+    0 // Neutral
   }
 
   // MACD signal
@@ -82,13 +82,13 @@ pub fn calculate_technical_signals(
     let prev_macd = macd_result.macd_line[len - 2]
     let prev_signal = macd_result.signal_line[len - 2]
     if curr_macd > curr_signal && prev_macd <= prev_signal {
-      1  // Bullish crossover
+      1 // Bullish crossover
     } else if curr_macd < curr_signal && prev_macd >= prev_signal {
-      -1  // Bearish crossover
+      -1 // Bearish crossover
     } else if curr_macd > curr_signal {
-      0  // Above signal (neutral bullish)
+      0 // Above signal (neutral bullish)
     } else {
-      0  // Below signal (neutral bearish)
+      0 // Below signal (neutral bearish)
     }
   } else {
     0
@@ -102,9 +102,9 @@ pub fn calculate_technical_signals(
     let prev_k = k_line[k_line.length() - 2]
     let prev_d = d_line[d_line.length() - 2]
     if curr_k > curr_d && prev_k <= prev_d {
-      1  // Bullish crossover
+      1 // Bullish crossover
     } else if curr_k < curr_d && prev_k >= prev_d {
-      -1  // Bearish crossover
+      -1 // Bearish crossover
     } else {
       0
     }
@@ -119,9 +119,9 @@ pub fn calculate_technical_signals(
     let short_ma = ma_short_values[ma_short_values.length() - 1]
     let long_ma = ma_long_values[ma_long_values.length() - 1]
     if short_ma > long_ma {
-      1  // Uptrend (golden cross)
+      1 // Uptrend (golden cross)
     } else if short_ma < long_ma {
-      -1  // Downtrend (death cross)
+      -1 // Downtrend (death cross)
     } else {
       0
     }
@@ -319,7 +319,8 @@ pub fn analyze_technicals(
 
   let macd_result = macd(closes, macd_fast, macd_slow, macd_signal_period)
   let last_macd = macd_result.macd_line[macd_result.macd_line.length() - 1]
-  let last_macd_signal = macd_result.signal_line[macd_result.signal_line.length() - 1]
+  let last_macd_signal = macd_result.signal_line[macd_result.signal_line.length() -
+    1]
 
   let (k_line, d_line, _) = kdj(klines, kdj_n, 3, 3)
   let last_k = k_line[k_line.length() - 1]
@@ -331,8 +332,8 @@ pub fn analyze_technicals(
   let last_ma_long = ma_long_values[ma_long_values.length() - 1]
 
   let signals = calculate_technical_signals(
-    klines, rsi_period, macd_fast, macd_slow, macd_signal_period,
-    kdj_n, ma_short, ma_long,
+    klines, rsi_period, macd_fast, macd_slow, macd_signal_period, kdj_n, ma_short,
+    ma_long,
   )
 
   TechnicalAnalysisResult::{

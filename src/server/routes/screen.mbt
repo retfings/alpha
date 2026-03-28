@@ -124,7 +124,7 @@ pub fn calculate_market_price_indicators(
   let price_change_pct = if len >= 2 {
     let prev_close = klines[len - 2].close
     if prev_close > 0.0 {
-      (price_change / prev_close) * 100.0
+      price_change / prev_close * 100.0
     } else {
       0.0
     }
@@ -177,11 +177,23 @@ pub fn calculate_volume_indicators(
     count = count + 1
     i = i + 1
   }
-  let avg_volume_n = if count > 0 { sum_vol / Float::from_int(count) } else { 0.0 }
-  let avg_amount_n = if count > 0 { sum_amt / Float::from_int(count) } else { 0.0 }
+  let avg_volume_n = if count > 0 {
+    sum_vol / Float::from_int(count)
+  } else {
+    0.0
+  }
+  let avg_amount_n = if count > 0 {
+    sum_amt / Float::from_int(count)
+  } else {
+    0.0
+  }
 
   // Calculate volume ratio
-  let volume_ratio = if avg_volume_n > 0.0 { last.volume / avg_volume_n } else { 0.0 }
+  let volume_ratio = if avg_volume_n > 0.0 {
+    last.volume / avg_volume_n
+  } else {
+    0.0
+  }
 
   VolumeIndicators::{
     code: last.code,
@@ -207,7 +219,7 @@ pub fn calculate_turnover_indicators(
       date: "",
       turnover_rate: 0.0,
       avg_turnover_rate_n: 0.0,
-      free_shares: free_shares,
+      free_shares,
     }
   }
 
@@ -215,19 +227,23 @@ pub fn calculate_turnover_indicators(
   let len = klines.length()
 
   // Calculate turnover rate = volume / free_shares * 100
-  let turnover_rate = (last.volume / free_shares) * 100.0
+  let turnover_rate = last.volume / free_shares * 100.0
 
   // Calculate N-day average turnover rate
   let mut sum_turnover : Float = 0.0
   let mut count = 0
   let mut i = if len > n_period { len - n_period } else { 0 }
   while i < len {
-    let daily_turnover : Float = (klines[i].volume / free_shares) * 100.0
+    let daily_turnover : Float = klines[i].volume / free_shares * 100.0
     sum_turnover = sum_turnover + daily_turnover
     count = count + 1
     i = i + 1
   }
-  let avg_turnover_rate_n : Float = if count > 0 { sum_turnover / Float::from_int(count) } else { 0.0 }
+  let avg_turnover_rate_n : Float = if count > 0 {
+    sum_turnover / Float::from_int(count)
+  } else {
+    0.0
+  }
 
   TurnoverIndicators::{
     code: last.code,
@@ -262,7 +278,7 @@ pub fn calculate_price_change_indicators(
   // Daily change
   let daily_change = if len >= 2 {
     let prev_close = klines[len - 2].close
-    ((last.close - prev_close) / prev_close) * 100.0
+    (last.close - prev_close) / prev_close * 100.0
   } else {
     0.0
   }
@@ -273,7 +289,7 @@ pub fn calculate_price_change_indicators(
 
   // Cumulative change
   let cumulative_change_n = if start_price > 0.0 {
-    ((last.close - start_price) / start_price) * 100.0
+    (last.close - start_price) / start_price * 100.0
   } else {
     0.0
   }
@@ -283,20 +299,30 @@ pub fn calculate_price_change_indicators(
   let mut count = 0
   let mut j = start_idx + 1
   while j < len {
-    let day_change : Float = ((klines[j].close - klines[j - 1].close) / klines[j - 1].close) * 100.0
+    let day_change : Float = (klines[j].close - klines[j - 1].close) /
+      klines[j - 1].close *
+      100.0
     sum_change = sum_change + day_change
     count = count + 1
     j = j + 1
   }
-  let avg_change_n : Float = if count > 0 { sum_change / Float::from_int(count) } else { 0.0 }
+  let avg_change_n : Float = if count > 0 {
+    sum_change / Float::from_int(count)
+  } else {
+    0.0
+  }
 
   // N-day high and low
   let mut high_n = klines[start_idx].high
   let mut low_n = klines[start_idx].low
   let mut k = start_idx
   while k < len {
-    if klines[k].high > high_n { high_n = klines[k].high }
-    if klines[k].low < low_n { low_n = klines[k].low }
+    if klines[k].high > high_n {
+      high_n = klines[k].high
+    }
+    if klines[k].low < low_n {
+      low_n = klines[k].low
+    }
     k = k + 1
   }
 
@@ -468,17 +494,70 @@ pub fn ScreenRequest::default() -> ScreenRequest {
 /// Mock financial data for screening (in production, would load from data files)
 pub fn get_mock_financials() -> Array[ScreenResult] {
   [
-    ScreenResult::{ code: "sh.600000", name: "Stock 600000", roe: 15.5, np_margin: 12.3, eps: 2.5, price: 10.5, volume: 1000000.0, health: "Good", score: 75.0 },
-    ScreenResult::{ code: "sh.600001", name: "Stock 600001", roe: 25.0, np_margin: 18.0, eps: 3.5, price: 15.8, volume: 1500000.0, health: "Excellent", score: 90.0 },
-    ScreenResult::{ code: "sh.600002", name: "Stock 600002", roe: 8.0, np_margin: 5.5, eps: 1.0, price: 8.2, volume: 800000.0, health: "Fair", score: 55.0 },
-    ScreenResult::{ code: "sh.600003", name: "Stock 600003", roe: 18.5, np_margin: 15.0, eps: 2.8, price: 12.3, volume: 1200000.0, health: "Good", score: 80.0 },
-    ScreenResult::{ code: "sh.600004", name: "Stock 600004", roe: 5.0, np_margin: 3.0, eps: 0.5, price: 6.5, volume: 500000.0, health: "Poor", score: 35.0 },
+    ScreenResult::{
+      code: "sh.600000",
+      name: "Stock 600000",
+      roe: 15.5,
+      np_margin: 12.3,
+      eps: 2.5,
+      price: 10.5,
+      volume: 1000000.0,
+      health: "Good",
+      score: 75.0,
+    },
+    ScreenResult::{
+      code: "sh.600001",
+      name: "Stock 600001",
+      roe: 25.0,
+      np_margin: 18.0,
+      eps: 3.5,
+      price: 15.8,
+      volume: 1500000.0,
+      health: "Excellent",
+      score: 90.0,
+    },
+    ScreenResult::{
+      code: "sh.600002",
+      name: "Stock 600002",
+      roe: 8.0,
+      np_margin: 5.5,
+      eps: 1.0,
+      price: 8.2,
+      volume: 800000.0,
+      health: "Fair",
+      score: 55.0,
+    },
+    ScreenResult::{
+      code: "sh.600003",
+      name: "Stock 600003",
+      roe: 18.5,
+      np_margin: 15.0,
+      eps: 2.8,
+      price: 12.3,
+      volume: 1200000.0,
+      health: "Good",
+      score: 80.0,
+    },
+    ScreenResult::{
+      code: "sh.600004",
+      name: "Stock 600004",
+      roe: 5.0,
+      np_margin: 3.0,
+      eps: 0.5,
+      price: 6.5,
+      volume: 500000.0,
+      health: "Poor",
+      score: 35.0,
+    },
   ]
 }
 
 ///|
 /// Apply filters to screen results
-pub fn apply_filters(results : Array[ScreenResult], request : ScreenRequest) -> Array[ScreenResult] {
+pub fn apply_filters(
+  results : Array[ScreenResult],
+  request : ScreenRequest,
+) -> Array[ScreenResult] {
   let filtered : Array[ScreenResult] = []
 
   for r in results {
@@ -529,7 +608,11 @@ pub fn apply_filters(results : Array[ScreenResult], request : ScreenRequest) -> 
 
 ///|
 /// Sort results by field
-pub fn sort_results(results : Array[ScreenResult], sort_by : String, desc : Bool) -> Array[ScreenResult] {
+pub fn sort_results(
+  results : Array[ScreenResult],
+  sort_by : String,
+  desc : Bool,
+) -> Array[ScreenResult] {
   let sorted = copy_results(results)
   let len = sorted.length()
   let mut i = 0
@@ -593,15 +676,116 @@ fn parse_screen_request(json : String) -> ScreenRequest {
 pub fn handle_screen(request_body : String?) -> HttpResponse {
   let request = parse_screen_request(request_body.unwrap_or("{}"))
 
-  // Get mock data
-  let results = get_mock_financials()
+  // Get all available stocks from data files
+  let stock_codes = scan_stock_files()
+
+  // Calculate indicators for each stock
+  let results : Array[ScreenResult] = []
+
+  for code in stock_codes {
+    // Load K-line data for the stock
+    let klines = load_klines_for_stock(code)
+
+    if klines.length() == 0 {
+      continue
+    }
+
+    // Get latest kline
+    let latest = klines[klines.length() - 1]
+
+    // Calculate price indicators
+    let price = latest.close
+    let open = latest.open
+    let high = latest.high
+    let low = latest.low
+    let volume = latest.volume
+
+    // Calculate price change (vs previous day)
+    let price_change = if klines.length() >= 2 {
+      let prev = klines[klines.length() - 2]
+      price - prev.close
+    } else {
+      0.0
+    }
+
+    let price_change_pct = if klines.length() >= 2 {
+      let prev = klines[klines.length() - 2]
+      if prev.close > 0.0 {
+        (price - prev.close) / prev.close * 100.0
+      } else {
+        0.0
+      }
+    } else {
+      0.0
+    }
+
+    // Calculate N-day average price (use available data)
+    let n = Int::min(20, klines.length())
+    let mut sum_price : Float = 0.0
+    let mut sum_volume : Float = 0.0
+    let mut i = klines.length() - n
+    while i < klines.length() {
+      sum_price = sum_price + klines[i].close
+      sum_volume = sum_volume + klines[i].volume
+      i = i + 1
+    }
+    let avg_price_n = sum_price / Float::from_int(n)
+    let avg_volume_n = sum_volume / Float::from_int(n)
+
+    // Calculate score based on price momentum and volume
+    let momentum_score = if price > avg_price_n {
+      (price - avg_price_n) / avg_price_n * 100.0
+    } else {
+      0.0
+    }
+
+    let volume_score = if volume > avg_volume_n {
+      (volume - avg_volume_n) / avg_volume_n * 50.0
+    } else {
+      0.0
+    }
+
+    let score = Float::min(momentum_score + volume_score, 100.0)
+
+    // Determine health based on score
+    let health = if score >= 75.0 {
+      "Excellent"
+    } else if score >= 50.0 {
+      "Good"
+    } else if score >= 25.0 {
+      "Fair"
+    } else {
+      "Poor"
+    }
+
+    // Get stock info
+    let stock_info = get_stock_info(code)
+
+    // Use mock financial data (in production, would load from actual financial reports)
+    let roe : Float = 10.0 + score / 10.0
+    let np_margin : Float = 8.0 + score / 15.0
+    let eps : Float = price / 10.0
+
+    results.push(ScreenResult::{
+      code,
+      name: stock_info.name,
+      roe,
+      np_margin,
+      eps,
+      price,
+      volume,
+      health,
+      score,
+    })
+  }
 
   // Apply filters
   let filtered = apply_filters(results, request)
 
   // Sort
   let sorted = match request.sort_by {
-    Some(field) => sort_results(filtered, field, request.sort_order != Some("asc"))
+    Some(field) =>
+      sort_results(filtered, field, request.sort_order != Some("asc"))
     None => filtered
   }
 
@@ -625,7 +809,9 @@ pub fn handle_screen(request_body : String?) -> HttpResponse {
   })
 
   let total = Int::to_string(limited.length())
-  let response = "{\"results\":[" + results_json.join(",") + "],\"total\":\{total}}"
+  let response = "{\"results\":[" +
+    results_json.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -643,7 +829,9 @@ pub fn handle_list_indicators() -> HttpResponse {
   ]
 
   let total = Int::to_string(indicators.length())
-  let response = "{\"indicators\":[" + indicators.join(",") + "],\"total\":\{total}}"
+  let response = "{\"indicators\":[" +
+    indicators.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -708,7 +896,8 @@ pub fn handle_get_indicator(indicator_id : String) -> HttpResponse {
       let response = "{\"id\":\"volume_ratio\",\"name\":\"Volume Ratio\",\"description\":\"Current volume relative to average volume\",\"formula\":\"VR = Current Volume / Avg Volume\",\"category\":\"market\",\"unit\":\"ratio\",\"range\":\"0-unbounded\"}"
       make_response(200, response)
     }
-    _ => make_response(404, "{\"error\":\"Indicator not found: \{indicator_id}\"}")
+    _ =>
+      make_response(404, "{\"error\":\"Indicator not found: \{indicator_id}\"}")
   }
 }
 
@@ -721,14 +910,14 @@ pub fn handle_get_indicators_by_category(category : String) -> HttpResponse {
     "{\"id\":\"np_margin\",\"name\":\"Net Profit Margin\",\"category\":\"financial\",\"unit\":\"%\",\"description\":\"Net income as % of revenue\"}",
     "{\"id\":\"eps\",\"name\":\"EPS\",\"category\":\"financial\",\"unit\":\"CNY\",\"description\":\"Earnings Per Share\"}",
     // Technical indicators
-    "{\"id\":\"macd\",\"name\":\"MACD\",\"category\":\"technical\",\"unit\":\"price\",\"description\":\"Moving Average Convergence Divergence\"}",
+     "{\"id\":\"macd\",\"name\":\"MACD\",\"category\":\"technical\",\"unit\":\"price\",\"description\":\"Moving Average Convergence Divergence\"}",
     "{\"id\":\"rsi\",\"name\":\"RSI\",\"category\":\"technical\",\"unit\":\"index\",\"description\":\"Relative Strength Index\"}",
     "{\"id\":\"kdj\",\"name\":\"KDJ\",\"category\":\"technical\",\"unit\":\"index\",\"description\":\"Stochastic Oscillator\"}",
     "{\"id\":\"ma\",\"name\":\"Moving Average\",\"category\":\"technical\",\"unit\":\"price\",\"description\":\"Simple/Exponential Moving Average\"}",
     "{\"id\":\"bollinger\",\"name\":\"Bollinger Bands\",\"category\":\"technical\",\"unit\":\"price\",\"description\":\"Volatility bands\"}",
     "{\"id\":\"atr\",\"name\":\"ATR\",\"category\":\"technical\",\"unit\":\"price\",\"description\":\"Average True Range\"}",
     // Market indicators
-    "{\"id\":\"market_cap\",\"name\":\"Market Cap\",\"category\":\"market\",\"unit\":\"CNY\",\"description\":\"Total market value\"}",
+     "{\"id\":\"market_cap\",\"name\":\"Market Cap\",\"category\":\"market\",\"unit\":\"CNY\",\"description\":\"Total market value\"}",
     "{\"id\":\"pe_ratio\",\"name\":\"P/E Ratio\",\"category\":\"market\",\"unit\":\"ratio\",\"description\":\"Price-to-Earnings\"}",
     "{\"id\":\"pb_ratio\",\"name\":\"P/B Ratio\",\"category\":\"market\",\"unit\":\"ratio\",\"description\":\"Price-to-Book\"}",
     "{\"id\":\"dividend_yield\",\"name\":\"Dividend Yield\",\"category\":\"market\",\"unit\":\"%\",\"description\":\"Annual dividend yield\"}",
@@ -742,10 +931,15 @@ pub fn handle_get_indicators_by_category(category : String) -> HttpResponse {
   }
 
   if filtered.length() == 0 {
-    make_response(404, "{\"error\":\"Unknown category: \{category}\",\"valid_categories\":[\"financial\",\"technical\",\"market\"]}")
+    make_response(
+      404,
+      "{\"error\":\"Unknown category: \{category}\",\"valid_categories\":[\"financial\",\"technical\",\"market\"]}",
+    )
   } else {
     let total = Int::to_string(filtered.length())
-    let response = "{\"category\":\"\{category}\",\"indicators\":[" + filtered.join(",") + "],\"total\":\{total}}"
+    let response = "{\"category\":\"\{category}\",\"indicators\":[" +
+      filtered.join(",") +
+      "],\"total\":\{total}}"
     make_response(200, response)
   }
 }
@@ -813,12 +1007,16 @@ pub fn get_trading_models() -> Array[TradingModel] {
 pub fn handle_list_trading_models() -> HttpResponse {
   let models = get_trading_models()
   let models_json = models.map(fn(m) {
-    let params_json = "[" + m.parameters.map(fn(p) { "\"\{p}\"" }).join(",") + "]"
+    let params_json = "[" +
+      m.parameters.map(fn(p) { "\"\{p}\"" }).join(",") +
+      "]"
     "{\"id\":\"\{m.id}\",\"name\":\"\{m.name}\",\"description\":\"\{m.description}\",\"model_type\":\"\{m.model_type}\",\"parameters\":\{params_json},\"output\":\"\{m.output}\"}"
   })
 
   let total = Int::to_string(models.length())
-  let response = "{\"models\":[" + models_json.join(",") + "],\"total\":\{total}}"
+  let response = "{\"models\":[" +
+    models_json.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -845,10 +1043,8 @@ pub fn handle_set_weights(body : String) -> HttpResponse {
 pub fn handle_get_weights() -> HttpResponse {
   // Default weights
   let weights = [
-    "{\"indicator\":\"roe\",\"weight\":0.3,\"direction\":\"asc\"}",
-    "{\"indicator\":\"np_margin\",\"weight\":0.2,\"direction\":\"asc\"}",
-    "{\"indicator\":\"eps\",\"weight\":0.2,\"direction\":\"asc\"}",
-    "{\"indicator\":\"pe_ratio\",\"weight\":0.15,\"direction\":\"desc\"}",
+    "{\"indicator\":\"roe\",\"weight\":0.3,\"direction\":\"asc\"}", "{\"indicator\":\"np_margin\",\"weight\":0.2,\"direction\":\"asc\"}",
+    "{\"indicator\":\"eps\",\"weight\":0.2,\"direction\":\"asc\"}", "{\"indicator\":\"pe_ratio\",\"weight\":0.15,\"direction\":\"desc\"}",
     "{\"indicator\":\"rsi\",\"weight\":0.15,\"direction\":\"neutral\"}",
   ]
   let response = "{\"weights\":[" + weights.join(",") + "]}"
@@ -913,16 +1109,136 @@ fn parse_screener_request(_json : String) -> ScreenerRequest {
 /// Mock stock data for screener with technical indicators
 fn get_screener_mock_data() -> Array[ScreenerStockResult] {
   [
-    ScreenerStockResult::{ code: "sh.600000", name: "浦发银行", price: 8.52, rsi: 45.2, macd: 0.0234, kdj: 52.3, roe: 12.5, np_margin: 28.3, eps: 1.25, volume: 25000000.0, score: 65.0 },
-    ScreenerStockResult::{ code: "sh.600001", name: "邯郸钢铁", price: 3.45, rsi: 62.8, macd: -0.0123, kdj: 71.2, roe: 8.2, np_margin: 5.1, eps: 0.32, volume: 18000000.0, score: 48.0 },
-    ScreenerStockResult::{ code: "sh.600002", name: "齐鲁石化", price: 5.67, rsi: 38.5, macd: 0.0456, kdj: 35.8, roe: 15.8, np_margin: 12.4, eps: 0.89, volume: 12000000.0, score: 72.0 },
-    ScreenerStockResult::{ code: "sh.600003", name: "东北高速", price: 4.23, rsi: 55.1, macd: 0.0089, kdj: 48.6, roe: 6.5, np_margin: 18.2, eps: 0.45, volume: 9500000.0, score: 55.0 },
-    ScreenerStockResult::{ code: "sh.600004", name: "白云机场", price: 12.89, rsi: 72.4, macd: 0.1234, kdj: 82.1, roe: 18.3, np_margin: 32.5, eps: 1.85, volume: 32000000.0, score: 85.0 },
-    ScreenerStockResult::{ code: "sh.600005", name: "武钢股份", price: 4.56, rsi: 48.9, macd: -0.0056, kdj: 42.3, roe: 10.2, np_margin: 8.7, eps: 0.52, volume: 21000000.0, score: 52.0 },
-    ScreenerStockResult::{ code: "sh.600006", name: "东风汽车", price: 7.34, rsi: 58.2, macd: 0.0312, kdj: 61.5, roe: 14.6, np_margin: 6.8, eps: 0.78, volume: 15000000.0, score: 68.0 },
-    ScreenerStockResult::{ code: "sh.600007", name: "上港集团", price: 6.12, rsi: 41.6, macd: -0.0178, kdj: 38.9, roe: 22.1, np_margin: 42.3, eps: 1.12, volume: 28000000.0, score: 78.0 },
-    ScreenerStockResult::{ code: "sh.600008", name: "首创股份", price: 3.89, rsi: 67.3, macd: 0.0201, kdj: 69.8, roe: 9.8, np_margin: 15.6, eps: 0.41, volume: 11000000.0, score: 58.0 },
-    ScreenerStockResult::{ code: "sh.600009", name: "上海机场", price: 45.67, rsi: 52.8, macd: 0.5678, kdj: 55.2, roe: 25.4, np_margin: 38.9, eps: 2.35, volume: 8500000.0, score: 88.0 },
+    ScreenerStockResult::{
+      code: "sh.600000",
+      name: "浦发银行",
+      price: 8.52,
+      rsi: 45.2,
+      macd: 0.0234,
+      kdj: 52.3,
+      roe: 12.5,
+      np_margin: 28.3,
+      eps: 1.25,
+      volume: 25000000.0,
+      score: 65.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600001",
+      name: "邯郸钢铁",
+      price: 3.45,
+      rsi: 62.8,
+      macd: -0.0123,
+      kdj: 71.2,
+      roe: 8.2,
+      np_margin: 5.1,
+      eps: 0.32,
+      volume: 18000000.0,
+      score: 48.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600002",
+      name: "齐鲁石化",
+      price: 5.67,
+      rsi: 38.5,
+      macd: 0.0456,
+      kdj: 35.8,
+      roe: 15.8,
+      np_margin: 12.4,
+      eps: 0.89,
+      volume: 12000000.0,
+      score: 72.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600003",
+      name: "东北高速",
+      price: 4.23,
+      rsi: 55.1,
+      macd: 0.0089,
+      kdj: 48.6,
+      roe: 6.5,
+      np_margin: 18.2,
+      eps: 0.45,
+      volume: 9500000.0,
+      score: 55.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600004",
+      name: "白云机场",
+      price: 12.89,
+      rsi: 72.4,
+      macd: 0.1234,
+      kdj: 82.1,
+      roe: 18.3,
+      np_margin: 32.5,
+      eps: 1.85,
+      volume: 32000000.0,
+      score: 85.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600005",
+      name: "武钢股份",
+      price: 4.56,
+      rsi: 48.9,
+      macd: -0.0056,
+      kdj: 42.3,
+      roe: 10.2,
+      np_margin: 8.7,
+      eps: 0.52,
+      volume: 21000000.0,
+      score: 52.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600006",
+      name: "东风汽车",
+      price: 7.34,
+      rsi: 58.2,
+      macd: 0.0312,
+      kdj: 61.5,
+      roe: 14.6,
+      np_margin: 6.8,
+      eps: 0.78,
+      volume: 15000000.0,
+      score: 68.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600007",
+      name: "上港集团",
+      price: 6.12,
+      rsi: 41.6,
+      macd: -0.0178,
+      kdj: 38.9,
+      roe: 22.1,
+      np_margin: 42.3,
+      eps: 1.12,
+      volume: 28000000.0,
+      score: 78.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600008",
+      name: "首创股份",
+      price: 3.89,
+      rsi: 67.3,
+      macd: 0.0201,
+      kdj: 69.8,
+      roe: 9.8,
+      np_margin: 15.6,
+      eps: 0.41,
+      volume: 11000000.0,
+      score: 58.0,
+    },
+    ScreenerStockResult::{
+      code: "sh.600009",
+      name: "上海机场",
+      price: 45.67,
+      rsi: 52.8,
+      macd: 0.5678,
+      kdj: 55.2,
+      roe: 25.4,
+      np_margin: 38.9,
+      eps: 2.35,
+      volume: 8500000.0,
+      score: 88.0,
+    },
   ]
 }
 
@@ -940,7 +1256,9 @@ pub fn handle_screener(request_body : String?) -> HttpResponse {
   })
 
   let total = Int::to_string(results.length())
-  let response = "{\"results\":[" + results_json.join(",") + "],\"total\":\{total}}"
+  let response = "{\"results\":[" +
+    results_json.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -962,7 +1280,9 @@ pub fn handle_get_all_indicators() -> HttpResponse {
   ]
 
   let total = Int::to_string(indicators.length())
-  let response = "{\"indicators\":[" + indicators.join(",") + "],\"total\":\{total}}"
+  let response = "{\"indicators\":[" +
+    indicators.join(",") +
+    "],\"total\":\{total}}"
 
   make_response(200, response)
 }
@@ -1011,7 +1331,11 @@ pub fn handle_get_indicator_detail(indicator_id : String) -> HttpResponse {
       let response = "{\"id\":\"turnover_rate\",\"name\":\"换手率\",\"description\":\"一定时间内市场中股票转手买卖的频率，反映股票流通性强弱\",\"formula\":\"换手率 = 成交量 / 流通股本 × 100%\",\"category\":\"market\",\"unit\":\"%\",\"range\":\"0-100%\",\"interpretation\":\">10% 活跃，<1% 冷清\",\"default_period\":\"daily\"}"
       make_response(200, response)
     }
-    _ => make_response(404, "{\"error\":\"Indicator not found\",\"id\":\"\{indicator_id}\"}")
+    _ =>
+      make_response(
+        404,
+        "{\"error\":\"Indicator not found\",\"id\":\"\{indicator_id}\"}",
+      )
   }
 }
 
@@ -1175,13 +1499,7 @@ pub fn TriggerCondition::create(
   threshold : Float,
   period : Int?,
 ) -> TriggerCondition {
-  TriggerCondition::{
-    condition_type,
-    field,
-    operator,
-    threshold,
-    period,
-  }
+  TriggerCondition::{ condition_type, field, operator, threshold, period }
 }
 
 ///|
@@ -1229,18 +1547,16 @@ pub fn TriggerCondition::evaluate(
     ">=" => current_value >= self.threshold
     "<=" => current_value <= self.threshold
     "=" => Float::to_double(current_value) == Float::to_double(self.threshold)
-    "cross_above" => {
+    "cross_above" =>
       match prev_value {
         Some(prev) => prev <= self.threshold && current_value > self.threshold
         None => false
       }
-    }
-    "cross_below" => {
+    "cross_below" =>
       match prev_value {
         Some(prev) => prev >= self.threshold && current_value < self.threshold
         None => false
       }
-    }
     _ => false
   }
 }
@@ -1274,14 +1590,18 @@ pub fn evaluate_trigger_conditions(
   if logic_operator == "AND" {
     let mut all_true = true
     for r in results {
-      if !r { all_true = false }
+      if !r {
+        all_true = false
+      }
     }
     all_true
   } else {
     // OR
     let mut any_true = false
     for r in results {
-      if r { any_true = true }
+      if r {
+        any_true = true
+      }
     }
     any_true
   }
@@ -1305,9 +1625,13 @@ pub fn handle_create_periodic_model(config_body : String?) -> HttpResponse {
 pub fn handle_create_trigger_model(config_body : String?) -> HttpResponse {
   let config = ConditionTriggerConfig::default()
 
-  let conditions_json = "[" + config.conditions.map(fn(c) {
-    "{\"type\":\"technical\",\"field\":\"\{c.field}\",\"operator\":\"\{c.operator}\",\"threshold\":\{c.threshold}}"
-  }).join(",") + "]"
+  let conditions_json = "[" +
+    config.conditions
+    .map(fn(c) {
+      "{\"type\":\"technical\",\"field\":\"\{c.field}\",\"operator\":\"\{c.operator}\",\"threshold\":\{c.threshold}}"
+    })
+    .join(",") +
+    "]"
 
   let response = "{\"status\":\"created\",\"model_type\":\"condition_trigger\",\"config\":{\"logic_operator\":\"\{config.logic_operator}\",\"action\":\"\{config.action}\",\"cooldown_days\":\{Int::to_string(config.cooldown_days)},\"conditions\":\{conditions_json}},\"message\":\"Condition trigger model configured\"}"
   make_response(200, response)
@@ -1324,7 +1648,9 @@ pub fn handle_get_model_examples() -> HttpResponse {
   ]
 
   let total = Int::to_string(examples.length())
-  let response = "{\"examples\":[" + examples.join(",") + "],\"total\":\{total}}"
+  let response = "{\"examples\":[" +
+    examples.join(",") +
+    "],\"total\":\{total}}"
   make_response(200, response)
 }
 
@@ -1339,7 +1665,9 @@ pub fn handle_get_trigger_types() -> HttpResponse {
   ]
 
   let total = Int::to_string(trigger_types.length())
-  let response = "{\"trigger_types\":[" + trigger_types.join(",") + "],\"total\":\{total}}"
+  let response = "{\"trigger_types\":[" +
+    trigger_types.join(",") +
+    "],\"total\":\{total}}"
   make_response(200, response)
 }
 
@@ -1354,7 +1682,9 @@ pub fn handle_get_rebalance_frequencies() -> HttpResponse {
   ]
 
   let total = Int::to_string(frequencies.length())
-  let response = "{\"frequencies\":[" + frequencies.join(",") + "],\"total\":\{total}}"
+  let response = "{\"frequencies\":[" +
+    frequencies.join(",") +
+    "],\"total\":\{total}}"
   make_response(200, response)
 }
 
@@ -1364,11 +1694,15 @@ pub fn handle_list_all_trading_models() -> HttpResponse {
   // Combine built-in models and trigger types
   let models = get_trading_models()
   let models_json = models.map(fn(m) {
-    let params_json = "[" + m.parameters.map(fn(p) { "\"\{p}\"" }).join(",") + "]"
+    let params_json = "[" +
+      m.parameters.map(fn(p) { "\"\{p}\"" }).join(",") +
+      "]"
     "{\"id\":\"\{m.id}\",\"name\":\"\{m.name}\",\"description\":\"\{m.description}\",\"model_type\":\"\{m.model_type}\",\"parameters\":\{params_json},\"output\":\"\{m.output}\"}"
   })
 
   let total = Int::to_string(models.length())
-  let response = "{\"models\":[" + models_json.join(",") + "],\"total\":\{total}}"
+  let response = "{\"models\":[" +
+    models_json.join(",") +
+    "],\"total\":\{total}}"
   make_response(200, response)
 }

@@ -3,14 +3,27 @@ package "retfings/alpha/src/strategy"
 
 import {
   "retfings/alpha/src/data",
+  "retfings/alpha/src/drawdown",
 }
 
 // Values
+pub fn calculate_weighted_score(WeightConfig, Float, Float, Float) -> Float
+
+pub fn check_trigger_condition(TriggerCondition, Float?, Float?) -> Bool
+
 pub fn create_strategy_engine(Float) -> StrategyEngine
 
 pub fn default_backtest_config() -> BacktestConfig
 
+pub fn generate_mock_indicator_data() -> Map[String, Float]
+
+pub fn generate_mock_previous_data() -> Map[String, Float]
+
 pub fn get_engine_stats(StrategyEngine) -> (Float, Float, Int)
+
+pub fn is_in_range(Float, Float, Float) -> Bool
+
+pub fn normalize_score(Float, Float, Float, Bool) -> Float
 
 pub fn process_bar(StrategyEngine, Strategy, @data.KLine, Array[Float]) -> StrategyResult
 
@@ -35,6 +48,162 @@ pub(all) struct BacktestConfig {
   benchmark : String?
 }
 
+pub enum ConditionOp {
+  Gt
+  Gte
+  Lt
+  Lte
+  Eq
+  CrossAbove
+  CrossBelow
+}
+pub impl Eq for ConditionOp
+pub impl Show for ConditionOp
+pub impl ToJson for ConditionOp
+
+pub struct ConditionalTriggerConfig {
+  conditions : Array[TriggerCondition]
+  require_all : Bool
+  min_strength : Float
+  cooldown_days : Int
+  max_positions : Int
+}
+pub fn ConditionalTriggerConfig::default() -> Self
+pub impl Show for ConditionalTriggerConfig
+pub impl ToJson for ConditionalTriggerConfig
+
+pub struct ConditionalTriggerEngine {
+  config : ConditionalTriggerConfig
+  last_trigger_dates : Map[String, String]
+  active_signals : Array[StockSelectionResult]
+}
+pub fn ConditionalTriggerEngine::check_stock(Self, String, Map[String, Float], Map[String, Float], String) -> StockSelectionResult?
+pub fn ConditionalTriggerEngine::create(ConditionalTriggerConfig) -> Self
+pub impl Show for ConditionalTriggerEngine
+
+pub struct DateComponents {
+  year : Int
+  month : Int
+  day : Int
+}
+pub impl Show for DateComponents
+
+pub struct DrawdownAwareSignal {
+  signal : Signal
+  drawdown : Float
+  drawdown_level : @drawdown.DrawdownLevel
+  position_factor : Float
+  should_execute : Bool
+  rejection_reason : String?
+}
+pub impl Show for DrawdownAwareSignal
+pub impl ToJson for DrawdownAwareSignal
+
+pub struct DrawdownAwareStrategyExecutor {
+  risk_manager : DrawdownRiskManager
+  portfolio_monitor : PortfolioDrawdownMonitor
+  signals : Array[Signal]
+  executed_signals : Array[Signal]
+  rejected_signals : Array[(String, String)]
+}
+pub fn DrawdownAwareStrategyExecutor::create(DrawdownRiskManagerConfig, Float) -> Self
+pub fn DrawdownAwareStrategyExecutor::get_stats(Self) -> ExecutionStats
+pub fn DrawdownAwareStrategyExecutor::get_status(Self) -> String
+pub fn DrawdownAwareStrategyExecutor::process_signal(Self, Signal, Float) -> Self
+pub impl Show for DrawdownAwareStrategyExecutor
+
+pub struct DrawdownRiskManager {
+  config : DrawdownRiskManagerConfig
+  is_trading_allowed : Bool
+  position_factor : Float
+  peak_value : Float
+  current_value : Float
+  current_drawdown : Float
+  drawdown_level : @drawdown.DrawdownLevel
+}
+pub fn DrawdownRiskManager::create(DrawdownRiskManagerConfig, Float) -> Self
+pub fn DrawdownRiskManager::get_adjusted_position_size(Self, Float) -> Float
+pub fn DrawdownRiskManager::get_status(Self) -> String
+pub fn DrawdownRiskManager::is_trading_allowed(Self) -> Bool
+pub fn DrawdownRiskManager::update_value(Self, Float) -> Self
+pub fn DrawdownRiskManager::wrap_signal(Self, Signal) -> DrawdownAwareSignal
+pub impl Show for DrawdownRiskManager
+
+pub struct DrawdownRiskManagerConfig {
+  reduce_position_threshold : Float
+  reduce_position_by : Float
+  stop_trading_threshold : Float
+  resume_threshold : Float
+}
+pub fn DrawdownRiskManagerConfig::default() -> Self
+pub impl Show for DrawdownRiskManagerConfig
+pub impl ToJson for DrawdownRiskManagerConfig
+
+pub struct ExecutionStats {
+  total_signals : Int
+  executed : Int
+  rejected : Int
+  execution_rate : Float
+  current_drawdown : Float
+  max_drawdown : Float
+}
+pub impl Show for ExecutionStats
+
+pub enum IndicatorType {
+  Market(String)
+  Technical(String)
+  Financial(String)
+}
+pub impl Eq for IndicatorType
+pub impl Show for IndicatorType
+pub impl ToJson for IndicatorType
+
+pub struct PeriodicRebalancer {
+  config : PeriodicRebalancingConfig
+  last_rebalance_date : String?
+  positions : Array[String]
+  pending_trades : Array[(Action, String, Float)]
+}
+pub fn PeriodicRebalancer::create(PeriodicRebalancingConfig) -> Self
+pub fn PeriodicRebalancer::is_rebalance_due(Self, String) -> Bool
+pub impl Show for PeriodicRebalancer
+
+pub struct PeriodicRebalancingConfig {
+  frequency : RebalanceFrequency
+  rebalance_day : Int
+  max_positions : Int
+  skip_holidays : Bool
+}
+pub fn PeriodicRebalancingConfig::default() -> Self
+pub impl Show for PeriodicRebalancingConfig
+pub impl ToJson for PeriodicRebalancingConfig
+
+pub struct PortfolioDrawdownMonitor {
+  initial_value : Float
+  peak_value : Float
+  current_value : Float
+  current_drawdown : Float
+  max_drawdown : Float
+  drawdown_level : @drawdown.DrawdownLevel
+  positions : Map[String, Float]
+}
+pub fn PortfolioDrawdownMonitor::create(Float) -> Self
+pub fn PortfolioDrawdownMonitor::get_drawdown_info(Self) -> @drawdown.DrawdownInfo
+pub fn PortfolioDrawdownMonitor::get_summary(Self) -> @drawdown.PortfolioDrawdown
+pub fn PortfolioDrawdownMonitor::update_from_positions(Self, Map[String, Float]) -> Self
+pub impl Show for PortfolioDrawdownMonitor
+
+pub enum RebalanceFrequency {
+  Weekly
+  BiWeekly
+  Monthly
+  Quarterly
+  Custom(Int)
+}
+pub impl Eq for RebalanceFrequency
+pub impl Show for RebalanceFrequency
+pub impl ToJson for RebalanceFrequency
+
 pub(all) struct Signal {
   stock : String
   action : Action
@@ -48,6 +217,16 @@ pub fn Signal::sell(String, Float, String, Float) -> Self
 pub fn Signal::with_action(String, Action, Float, String, Float) -> Self
 pub impl Show for Signal
 pub impl ToJson for Signal
+
+pub struct StockSelectionResult {
+  code : String
+  score : Float
+  triggered_conditions : Array[String]
+  selection_date : String
+  model_type : TradingModelType
+}
+pub impl Show for StockSelectionResult
+pub impl ToJson for StockSelectionResult
 
 pub(all) struct Strategy {
   name : String
@@ -77,6 +256,47 @@ pub(all) struct StrategyResult {
 }
 pub impl Show for StrategyResult
 pub impl ToJson for StrategyResult
+
+pub struct TradingModelConfig {
+  model_type : TradingModelType
+  periodic_config : PeriodicRebalancingConfig?
+  trigger_config : ConditionalTriggerConfig?
+  stock_filters : Array[String]
+  weights : WeightConfig?
+}
+pub impl Show for TradingModelConfig
+pub impl ToJson for TradingModelConfig
+
+pub enum TradingModelType {
+  PeriodicRebalancing
+  ConditionalTrigger
+}
+pub impl Eq for TradingModelType
+pub impl Show for TradingModelType
+pub impl ToJson for TradingModelType
+
+pub struct TriggerCondition {
+  indicator : IndicatorType
+  indicator_name : String
+  op : ConditionOp
+  threshold : Float
+  min_threshold : Float?
+  max_threshold : Float?
+}
+pub fn TriggerCondition::create(IndicatorType, String, ConditionOp, Float) -> Self
+pub fn TriggerCondition::create_range(IndicatorType, String, Float, Float) -> Self
+pub impl Show for TriggerCondition
+pub impl ToJson for TriggerCondition
+
+pub struct WeightConfig {
+  market_weight : Float
+  technical_weight : Float
+  financial_weight : Float
+}
+pub fn WeightConfig::create(Float, Float, Float) -> Self
+pub fn WeightConfig::equal() -> Self
+pub impl Show for WeightConfig
+pub impl ToJson for WeightConfig
 
 // Type aliases
 

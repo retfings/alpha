@@ -123,147 +123,147 @@ test "extract_backtest_id returns None for unrelated path" {
 
 ///|
 test "route_request health endpoint GET" {
-  let response = route_request("/api/health", "GET")
+  let response = route_request("/api/health", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("moonbit-drawdown"))
 }
 
 ///|
 test "route_request static files root" {
-  let response = route_request("/", "GET")
+  let response = route_request("/", "GET", "")
   // Should try to serve index.html or return 404 if file not found
   assert_true(response.status_code == 200 || response.status_code == 404)
 }
 
 ///|
 test "route_request static HTML file" {
-  let response = route_request("/index.html", "GET")
+  let response = route_request("/index.html", "GET", "")
   // Should try to serve file or return 404
   assert_true(response.status_code == 200 || response.status_code == 404)
 }
 
 ///|
 test "route_request static CSS file" {
-  let response = route_request("/styles.css", "GET")
+  let response = route_request("/styles.css", "GET", "")
   // Should try to serve file or return 404
   assert_true(response.status_code == 200 || response.status_code == 404)
 }
 
 ///|
 test "route_request static JS file" {
-  let response = route_request("/app.js", "GET")
+  let response = route_request("/app.js", "GET", "")
   // Should try to serve file or return 404
   assert_true(response.status_code == 200 || response.status_code == 404)
 }
 
 ///|
 test "route_request strategies list GET" {
-  let response = route_request("/api/strategies", "GET")
+  let response = route_request("/api/strategies", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("strategies"))
 }
 
 ///|
 test "route_request get strategy by id GET" {
-  let response = route_request("/api/strategies/ma_cross", "GET")
+  let response = route_request("/api/strategies/ma_cross", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("ma_cross"))
 }
 
 ///|
 test "route_request stocks list GET" {
-  let response = route_request("/api/stocks", "GET")
+  let response = route_request("/api/stocks", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("stocks"))
 }
 
 ///|
 test "route_request stocks filter GET" {
-  let response = route_request("/api/stocks/filter", "GET")
+  let response = route_request("/api/stocks/filter", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("stocks"))
 }
 
 ///|
 test "route_request get stock info GET" {
-  let response = route_request("/api/stocks/sh.600000", "GET")
+  let response = route_request("/api/stocks/sh.600000", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("sh.600000"))
 }
 
 ///|
 test "route_request get klines GET" {
-  let response = route_request("/api/stocks/sh.600000/klines", "GET")
+  let response = route_request("/api/stocks/sh.600000/klines", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("klines"))
 }
 
 ///|
 test "route_request industries list GET" {
-  let response = route_request("/api/industries", "GET")
+  let response = route_request("/api/industries", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("industries"))
 }
 
 ///|
 test "route_request get industry stocks GET" {
-  let response = route_request("/api/industries/Banking/stocks", "GET")
+  let response = route_request("/api/industries/Banking/stocks", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("Banking"))
 }
 
 ///|
 test "route_request backtest run POST" {
-  let response = route_request("/api/backtest/run", "POST")
+  let response = route_request("/api/backtest/run", "POST", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("backtest"))
 }
 
 ///|
 test "route_request backtest list GET" {
-  let response = route_request("/api/backtest", "GET")
+  let response = route_request("/api/backtest", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("backtests"))
 }
 
 ///|
 test "route_request get backtest result GET" {
-  let response = route_request("/api/backtest/bt_001/result", "GET")
+  let response = route_request("/api/backtest/bt_001/result", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("bt_001"))
 }
 
 ///|
 test "route_request get drawdown GET" {
-  let response = route_request("/api/drawdown/sh.600000", "GET")
+  let response = route_request("/api/drawdown/sh.600000", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("drawdown"))
 }
 
 ///|
 test "route_request portfolio drawdown GET" {
-  let response = route_request("/api/portfolio/drawdown", "GET")
+  let response = route_request("/api/portfolio/drawdown", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("portfolio"))
 }
 
 ///|
 test "route_request unknown path returns 404" {
-  let response = route_request("/api/unknown/path", "GET")
+  let response = route_request("/api/unknown/path", "GET", "")
   assert_true(response.status_code == 404)
   assert_true(response.body.contains("Not found"))
 }
 
 ///|
 test "route_request invalid stock code returns 400" {
-  let response = route_request("/api/stocks//klines", "GET")
+  let response = route_request("/api/stocks//klines", "GET", "")
   assert_true(response.status_code == 400)
   assert_true(response.body.contains("Invalid stock code"))
 }
 
 ///|
 test "route_request invalid backtest id returns 400" {
-  let response = route_request("/api/backtest//result", "GET")
+  let response = route_request("/api/backtest//result", "GET", "")
   assert_true(response.status_code == 400)
   assert_true(response.body.contains("Invalid backtest ID"))
 }

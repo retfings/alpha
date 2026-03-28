@@ -19,12 +19,7 @@ pub fn BuiltInStrategy::create(
   default_parameters : String,
   category : String,
 ) -> BuiltInStrategy {
-  BuiltInStrategy::{
-    name,
-    description,
-    default_parameters,
-    category,
-  }
+  BuiltInStrategy::{ name, description, default_parameters, category }
 }
 
 ///|

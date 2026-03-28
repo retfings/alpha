@@ -86,70 +86,72 @@ test "@routes.extract_backtest_id returns None for unrelated path" {
 
 ///|
 test "@routes.route_request health endpoint" {
-  let response = @routes.route_request("/api/health", "GET")
+  let response = @routes.route_request("/api/health", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("moonbit-drawdown"))
 }
 
 ///|
 test "@routes.route_request list stocks endpoint" {
-  let response = @routes.route_request("/api/stocks", "GET")
+  let response = @routes.route_request("/api/stocks", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("stocks"))
 }
 
 ///|
 test "@routes.route_request get stock info endpoint" {
-  let response = @routes.route_request("/api/stocks/sh.600000", "GET")
+  let response = @routes.route_request("/api/stocks/sh.600000", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("sh.600000"))
 }
 
 ///|
 test "@routes.route_request get klines endpoint" {
-  let response = @routes.route_request("/api/stocks/sh.600000/klines", "GET")
+  let response = @routes.route_request(
+    "/api/stocks/sh.600000/klines", "GET", "",
+  )
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("klines"))
 }
 
 ///|
 test "@routes.route_request start backtest endpoint" {
-  let response = @routes.route_request("/api/backtest", "POST")
+  let response = @routes.route_request("/api/backtest", "POST", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("started"))
 }
 
 ///|
 test "@routes.route_request get backtest result endpoint" {
-  let response = @routes.route_request("/api/backtest/bt_001/result", "GET")
+  let response = @routes.route_request("/api/backtest/bt_001/result", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("bt_001"))
 }
 
 ///|
 test "@routes.route_request get drawdown endpoint" {
-  let response = @routes.route_request("/api/drawdown/sh.600000", "GET")
+  let response = @routes.route_request("/api/drawdown/sh.600000", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("drawdown"))
 }
 
 ///|
 test "@routes.route_request portfolio drawdown endpoint" {
-  let response = @routes.route_request("/api/portfolio/drawdown", "GET")
+  let response = @routes.route_request("/api/portfolio/drawdown", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("portfolio"))
 }
 
 ///|
 test "@routes.route_request returns 404 for unknown path" {
-  let response = @routes.route_request("/api/unknown", "GET")
+  let response = @routes.route_request("/api/unknown", "GET", "")
   assert_true(response.status_code == 404)
   assert_true(response.body.contains("Not found"))
 }
 
 ///|
 test "@routes.route_request handles stock code with numbers" {
-  let response = @routes.route_request("/api/stocks/12345/klines", "GET")
+  let response = @routes.route_request("/api/stocks/12345/klines", "GET", "")
   assert_true(response.status_code == 400)
   assert_true(response.body.contains("Invalid stock code"))
 }

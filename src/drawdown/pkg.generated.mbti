@@ -76,6 +76,7 @@ pub struct DrawdownInfo {
   duration : Int
   recovered : Bool
 }
+pub fn DrawdownInfo::create(Float, Float, String, String, Float, Int, Bool) -> Self
 pub impl Eq for DrawdownInfo
 pub impl Show for DrawdownInfo
 pub impl ToJson for DrawdownInfo

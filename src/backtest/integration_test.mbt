@@ -2283,7 +2283,7 @@ test "integration: Server endpoint with backtest execution flow" {
   assert_true(request_path == "/api/backtest")
 
   // Step 2: Verify routing to backtest endpoint
-  let route_response = @routes.route_request("/api/backtest", "POST")
+  let route_response = @routes.route_request("/api/backtest", "POST", "")
   assert_true(route_response.status_code == 200)
   assert_true(route_response.body.contains("started"))
 
@@ -2339,12 +2339,12 @@ test "integration: Server endpoint with backtest execution flow" {
 
   // Step 8: Simulate API response for backtest result (placeholder for future server tests)
   // Note: route_request is not implemented in this version
-  // let result_response = route_request("/api/backtest/bt_001/result", "GET")
+  // let result_response = route_request("/api/backtest/bt_001/result", "GET", "")
   // assert_true(result_response.status_code == 200)
   // assert_true(result_response.body.contains("bt_001"))
 
   // Step 9: Verify health endpoint (placeholder for future server tests)
-  // let health_response = route_request("/api/health", "GET")
+  // let health_response = route_request("/api/health", "GET", "")
   // assert_true(health_response.status_code == 200)
   // assert_true(health_response.body.contains("moonbit-drawdown"))
 }

@@ -243,22 +243,19 @@ pub fn check_trigger_condition(
   previous_value : Float?,
 ) -> Bool {
   match (current_value, previous_value) {
-    (Some(curr), Some(prev)) => {
+    (Some(curr), Some(prev)) =>
       match condition.op {
-        ConditionOp::Gt => { curr > condition.threshold }
-        ConditionOp::Gte => { curr >= condition.threshold }
-        ConditionOp::Lt => { curr < condition.threshold }
-        ConditionOp::Lte => { curr <= condition.threshold }
-        ConditionOp::Eq => { curr == condition.threshold }
-        ConditionOp::CrossAbove => {
+        ConditionOp::Gt => curr > condition.threshold
+        ConditionOp::Gte => curr >= condition.threshold
+        ConditionOp::Lt => curr < condition.threshold
+        ConditionOp::Lte => curr <= condition.threshold
+        ConditionOp::Eq => curr == condition.threshold
+        ConditionOp::CrossAbove =>
           prev <= condition.threshold && curr > condition.threshold
-        }
-        ConditionOp::CrossBelow => {
+        ConditionOp::CrossBelow =>
           prev >= condition.threshold && curr < condition.threshold
-        }
       }
-    }
-    (_, _) => { false }
+    (_, _) => false
   }
 }
 
@@ -379,28 +376,24 @@ pub fn PeriodicRebalancer::is_rebalance_due(
       let last = parse_date(last_date)
 
       match rebalancer.config.frequency {
-        RebalanceFrequency::Weekly => {
+        RebalanceFrequency::Weekly =>
           // Rebalance every 7 days
           days_since(last_date, current_date) >= 7
-        }
-        RebalanceFrequency::BiWeekly => {
+        RebalanceFrequency::BiWeekly =>
           // Rebalance every 14 days
           days_since(last_date, current_date) >= 14
-        }
-        RebalanceFrequency::Monthly => {
+        RebalanceFrequency::Monthly =>
           // Rebalance on specific day of month
-          curr.month != last.month && curr.day >= rebalancer.config.rebalance_day
-        }
-        RebalanceFrequency::Quarterly => {
+          curr.month != last.month &&
+          curr.day >= rebalancer.config.rebalance_day
+        RebalanceFrequency::Quarterly =>
           // Rebalance every 3 months
           months_since(last_date, current_date) >= 3
-        }
-        RebalanceFrequency::Custom(days) => {
+        RebalanceFrequency::Custom(days) =>
           days_since(last_date, current_date) >= days
-        }
       }
     }
-    None => { true }
+    None => true
   }
 }
 
@@ -510,12 +503,11 @@ pub fn ConditionalTriggerEngine::check_stock(
   // Check cooldown
   let last_trigger = Map::get(engine.last_trigger_dates, stock_code)
   match last_trigger {
-    Some(last) => {
+    Some(last) =>
       if days_since(last, current_date) < engine.config.cooldown_days {
         return None
       }
-    }
-    None => { () }
+    None => ()
   }
 
   let triggered : Array[String] = []
@@ -553,6 +545,7 @@ pub fn ConditionalTriggerEngine::check_stock(
   }
 }
 
+///|
 pub fn generate_mock_indicator_data() -> Map[String, Float] {
   let data : Map[String, Float] = Map::new()
   data.set("RSI_14", Float::from_double(65.5))

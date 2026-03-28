@@ -39,10 +39,10 @@ pub struct DrawdownRiskManagerConfig {
 /// Create default drawdown risk manager config
 pub fn DrawdownRiskManagerConfig::default() -> DrawdownRiskManagerConfig {
   DrawdownRiskManagerConfig::{
-    reduce_position_threshold: -0.10,      // Reduce at 10% drawdown
-    reduce_position_by: 0.50,              // Reduce by 50%
-    stop_trading_threshold: -0.20,         // Stop at 20% drawdown
-    resume_threshold: -0.05,               // Resume at 5% drawdown
+    reduce_position_threshold: -0.10, // Reduce at 10% drawdown
+    reduce_position_by: 0.50, // Reduce by 50%
+    stop_trading_threshold: -0.20, // Stop at 20% drawdown
+    resume_threshold: -0.05, // Resume at 5% drawdown
   }
 }
 
@@ -145,9 +145,9 @@ fn update_trading_state(
   if dd <= config.stop_trading_threshold && !is_trading_allowed {
     // Already stopped, wait for recovery
     if dd >= config.resume_threshold {
-      (true, 1.0)  // Resume trading
+      (true, 1.0) // Resume trading
     } else {
-      (false, 0.0)  // Keep stopped
+      (false, 0.0) // Keep stopped
     }
   } else if dd <= config.stop_trading_threshold {
     // Just crossed stop threshold
@@ -174,7 +174,8 @@ pub fn DrawdownRiskManager::wrap_signal(
   manager : DrawdownRiskManager,
   signal : Signal,
 ) -> DrawdownAwareSignal {
-  let should_execute = manager.is_trading_allowed && signal.action != Action::Hold
+  let should_execute = manager.is_trading_allowed &&
+    signal.action != Action::Hold
   let rejection_reason = if !manager.is_trading_allowed {
     Some("Trading stopped due to drawdown")
   } else if signal.action == Action::Hold {
@@ -239,8 +240,12 @@ pub fn DrawdownRiskManager::get_status(manager : DrawdownRiskManager) -> String 
     "Stopped"
   }
 
-  "Drawdown: " + dd_pct.to_string() + "% | Level: " + level_str +
-  " | Status: " + trading_status
+  "Drawdown: " +
+  dd_pct.to_string() +
+  "% | Level: " +
+  level_str +
+  " | Status: " +
+  trading_status
 }
 
 ///|
@@ -371,7 +376,7 @@ pub struct DrawdownAwareStrategyExecutor {
   /// Executed signals
   executed_signals : Array[Signal]
   /// Rejected signals
-  rejected_signals : Array[(String, String)]  // (signal_desc, reason)
+  rejected_signals : Array[(String, String)] // (signal_desc, reason)
 } derive(Show)
 
 ///|
@@ -435,10 +440,7 @@ pub fn DrawdownAwareStrategyExecutor::process_signal(
       Some(r) => r
       None => "Unknown"
     }
-    new_rejected.push((
-      signal.stock + " " + show_action(signal.action),
-      reason,
-    ))
+    new_rejected.push((signal.stock + " " + show_action(signal.action), reason))
   }
 
   DrawdownAwareStrategyExecutor::{
@@ -456,8 +458,12 @@ pub fn DrawdownAwareStrategyExecutor::get_status(
   executor : DrawdownAwareStrategyExecutor,
 ) -> String {
   let rm_status = DrawdownRiskManager::get_status(executor.risk_manager)
-  rm_status + " | Signals: " + executor.executed_signals.length().to_string() +
-  " executed, " + executor.rejected_signals.length().to_string() + " rejected"
+  rm_status +
+  " | Signals: " +
+  executor.executed_signals.length().to_string() +
+  " executed, " +
+  executor.rejected_signals.length().to_string() +
+  " rejected"
 }
 
 ///|
@@ -492,7 +498,9 @@ pub fn DrawdownAwareStrategyExecutor::get_stats(
     rejected: rej,
     execution_rate: rate,
     current_drawdown: executor.risk_manager.current_drawdown,
-    max_drawdown: executor.risk_manager.current_drawdown.min(executor.risk_manager.current_drawdown),
+    max_drawdown: executor.risk_manager.current_drawdown.min(
+      executor.risk_manager.current_drawdown,
+    ),
   }
 }
 

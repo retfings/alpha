@@ -8,6 +8,8 @@ import {
 // Values
 pub fn adx(Array[@data.KLine], Int) -> Array[Float]
 
+pub fn analyze_technicals(Array[@data.KLine], Int, Int, Int, Int, Int, Int, Int) -> TechnicalAnalysisResult
+
 pub fn aroon(Array[@data.KLine], Int) -> (Array[Float], Array[Float])
 
 pub fn aroon_oscillator(Array[@data.KLine], Int) -> Array[Float]
@@ -29,6 +31,8 @@ pub fn bollinger_percent_b(Float, Float, Float) -> Float
 pub fn bollinger_position(Float, Float, Float, Float) -> BollingerPosition
 
 pub fn bullish_crossover(MACDResult, Int) -> Bool
+
+pub fn calculate_technical_signals(Array[@data.KLine], Int, Int, Int, Int, Int, Int, Int) -> TechnicalSignals
 
 pub fn cci(Array[@data.KLine], Int) -> Array[Float]
 
@@ -64,6 +68,10 @@ pub fn is_oversold(Float, Float) -> Bool
 
 pub fn is_strong_trend(Float, Float) -> Bool
 
+pub fn is_technical_buy(TechnicalSignals) -> Bool
+
+pub fn is_technical_sell(TechnicalSignals) -> Bool
+
 pub fn kdj(Array[@data.KLine], Int, Int, Int) -> (Array[Float], Array[Float], Array[Float])
 
 pub fn macd(Array[Float], Int, Int, Int) -> MACDResult
@@ -77,6 +85,12 @@ pub fn obv(Array[@data.KLine]) -> Array[Float]
 pub fn percent_b(Array[Float], Array[Float], Array[Float]) -> Array[Float]
 
 pub fn plus_di(Array[@data.KLine], Int) -> Array[Float]
+
+pub fn quick_full_analysis(Array[@data.KLine]) -> TechnicalAnalysisResult
+
+pub fn quick_technical_analysis(Array[@data.KLine]) -> TechnicalSignals
+
+pub fn rate_technicals(TechnicalSignals) -> TechnicalRating
 
 pub fn rsi(Array[Float], Int) -> Array[Float]
 
@@ -127,6 +141,44 @@ pub struct MACDResult {
   histogram : Array[Float]
 }
 pub impl Show for MACDResult
+
+pub struct TechnicalAnalysisResult {
+  code : String
+  date : String
+  close : Float
+  rsi : Float
+  macd_line : Float
+  macd_signal_line : Float
+  k_value : Float
+  d_value : Float
+  ma_short : Float
+  ma_long : Float
+  signals : TechnicalSignals
+  rating : TechnicalRating
+}
+pub impl Show for TechnicalAnalysisResult
+pub impl ToJson for TechnicalAnalysisResult
+
+pub enum TechnicalRating {
+  StrongBuy
+  Buy
+  Neutral
+  Sell
+  StrongSell
+}
+pub impl Eq for TechnicalRating
+pub impl Show for TechnicalRating
+pub impl ToJson for TechnicalRating
+
+pub struct TechnicalSignals {
+  macd_signal : Int
+  rsi_signal : Int
+  kdj_signal : Int
+  ma_trend : Int
+  total_score : Int
+}
+pub impl Show for TechnicalSignals
+pub impl ToJson for TechnicalSignals
 
 pub enum VwapPosition {
   Above

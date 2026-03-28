@@ -43,9 +43,7 @@ pub fn print_help() -> Unit {
     "    MOONBIT_CMD=report MOONBIT_ARGS=\"--format html\" moon run alpha",
   )
   println("    MOONBIT_CMD=list-strategies moon run alpha")
-  println(
-    "    MOONBIT_CMD=serve MOONBIT_ARGS=\"--port 8080\" moon run alpha",
-  )
+  println("    MOONBIT_CMD=serve MOONBIT_ARGS=\"--port 8080\" moon run alpha")
   println("")
   println("ENVIRONMENT VARIABLES:")
   println(

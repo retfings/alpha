@@ -412,6 +412,7 @@ test "indicators have unit field" {
 
 ///|
 /// Additional edge cases and boundary tests
+
 ///|
 test "handle_list_indicators total count is 6" {
   let response = handle_list_indicators()
@@ -663,7 +664,9 @@ test "handle_get_weights response format" {
 test "handle_set_weights with empty body" {
   let response = handle_set_weights("")
   assert_true(response.status_code == 200)
-  assert_true(response.body.contains("status") || response.body.contains("message"))
+  assert_true(
+    response.body.contains("status") || response.body.contains("message"),
+  )
 }
 
 ///|
@@ -671,8 +674,11 @@ test "health values are valid" {
   let results = get_mock_financials()
   for r in results {
     assert_true(
-      r.health == "Excellent" || r.health == "Good" ||
-      r.health == "Fair" || r.health == "Poor" || r.health == "Critical"
+      r.health == "Excellent" ||
+      r.health == "Good" ||
+      r.health == "Fair" ||
+      r.health == "Poor" ||
+      r.health == "Critical",
     )
   }
 }
@@ -745,6 +751,7 @@ test "handle_list_trading_models JSON structure" {
 
 ///|
 /// Performance benchmark tests
+
 ///|
 test "performance handle_list_indicators 100 iterations" {
   let iterations = 100
@@ -814,15 +821,17 @@ test "performance handle_get_indicators_by_category 100 iterations" {
 ///|
 /// Integration tests with route_request
 /// Additional indicator tests with Chinese descriptions follow
+
 ///|
 test "route_request /api/indicators GET" {
-  let response = route_request("/api/indicators", "GET")
+  let response = route_request("/api/indicators", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("indicators"))
 }
 
 ///|
 /// Additional indicator tests with Chinese descriptions
+
 ///|
 test "handle_get_all_indicators returns Chinese descriptions" {
   let response = handle_get_all_indicators()
@@ -943,6 +952,7 @@ test "handle_screener each result has all fields" {
 
 ///|
 /// Handler-level tests for screener API
+
 ///|
 test "handle_screener returns results with technical indicators" {
   let response = handle_screener(None)
@@ -961,6 +971,7 @@ test "handle_screener returns multiple stocks" {
 }
 
 ///|
+
 ///|
 test "handle_get_weights each weight has required fields" {
   let response = handle_get_weights()
@@ -1074,6 +1085,7 @@ test "handle_get_indicator pe_ratio unit" {
 
 ///|
 /// Filter and sort tests moved to integration tests via handle_screen
+
 ///|
 test "sort_results with unknown field uses score" {
   let results = get_mock_financials()
@@ -1323,28 +1335,28 @@ test "handle_list_trading_models JSON is valid" {
 
 ///|
 test "route_request /api/screen POST" {
-  let response = route_request("/api/screen", "POST")
+  let response = route_request("/api/screen", "POST", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("results"))
 }
 
 ///|
 test "route_request /api/weights GET" {
-  let response = route_request("/api/weights", "GET")
+  let response = route_request("/api/weights", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("weights"))
 }
 
 ///|
 test "route_request /api/trading-models GET" {
-  let response = route_request("/api/trading-models", "GET")
+  let response = route_request("/api/trading-models", "GET", "")
   assert_true(response.status_code == 200)
   assert_true(response.body.contains("models"))
 }
 
 ///|
 test "route_request /api/indicators/unknowncat returns 404" {
-  let response = route_request("/api/indicators/unknowncat", "GET")
+  let response = route_request("/api/indicators/unknowncat", "GET", "")
   assert_true(response.status_code == 404)
   assert_true(response.body.contains("error"))
 }

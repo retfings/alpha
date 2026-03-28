@@ -57,7 +57,11 @@ fn handle_static_file(file_path : String) -> HttpResponse {
 
 ///|
 /// Route request to appropriate handler
-pub fn route_request(path : String, http_method : String) -> HttpResponse {
+pub fn route_request(
+  path : String,
+  http_method : String,
+  body : String,
+) -> HttpResponse {
   let clean_path = get_path_without_query(path)
   let query = extract_query_string(path)
 
@@ -158,7 +162,7 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
 
   // ===== Screening Endpoints =====
   if clean_path == "/api/screen" && http_method == "POST" {
-    return handle_screen(None)
+    return handle_screen(Some(body))
   }
 
   if clean_path == "/api/indicators" && http_method == "GET" {
@@ -208,13 +212,14 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
     return handle_get_trigger_types()
   }
 
-  if clean_path == "/api/trading-models/rebalance-frequencies" && http_method == "GET" {
+  if clean_path == "/api/trading-models/rebalance-frequencies" &&
+    http_method == "GET" {
     return handle_get_rebalance_frequencies()
   }
 
   // ===== Extended Screener Endpoints =====
   if clean_path == "/api/screener" && http_method == "POST" {
-    return handle_screener(None)
+    return handle_screener(Some(body))
   }
 
   if clean_path == "/api/screener/indicators" && http_method == "GET" {
@@ -228,7 +233,7 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
 
   // ===== Backtest Endpoints =====
   if clean_path == "/api/backtest/run" && http_method == "POST" {
-    return handle_run_backtest("{}")
+    return handle_run_backtest(body)
   }
 
   if clean_path == "/api/backtest" && http_method == "GET" {
@@ -278,5 +283,26 @@ pub fn handle_request(request : String) -> HttpResponse {
     "GET"
   }
 
-  route_request(path, http_method)
+  // Parse request body for POST/PUT requests
+  let body = extract_request_body(request)
+
+  route_request(path, http_method, body)
+}
+
+///|
+/// Extract request body from HTTP request string
+fn extract_request_body(request : String) -> String {
+  let lines = request.split("\n").to_array()
+  let body_lines : Array[String] = []
+  let mut in_body = false
+
+  for line in lines {
+    if in_body {
+      body_lines.push(line.to_string())
+    } else if line.trim() == "" {
+      in_body = true
+    }
+  }
+
+  body_lines.join("\n").trim().to_string()
 }

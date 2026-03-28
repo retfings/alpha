@@ -28,21 +28,13 @@ pub fn StockFilter::create(
   market : String?,
   status : String?,
 ) -> StockFilter {
-  StockFilter::{
-    industry,
-    market,
-    status,
-  }
+  StockFilter::{ industry, market, status }
 }
 
 ///|
 /// Create empty stock filter
 pub fn StockFilter::empty() -> StockFilter {
-  StockFilter::{
-    industry: None,
-    market: None,
-    status: None,
-  }
+  StockFilter::{ industry: None, market: None, status: None }
 }
 
 ///|
@@ -187,13 +179,79 @@ pub fn filter_stocks(filter : StockFilter) -> Array[StockInfo] {
 }
 
 ///|
-/// Load K-line data from CSV file
-pub fn load_klines_for_stock(code : String) -> Array[@data.KLine] {
-  let filename = "data/" + code.replace(old=".", new="_") + "_*.csv"
+/// Build CSV filename from stock code
+/// Converts "sh.600000" to "data/sh_600000_*.csv" pattern
+fn build_kline_filename(code : String) -> String {
+  // Extract exchange and code number
+  if code.has_prefix("sh.") {
+    let code_num = code[3:]
+    "data/sh_" + code_num.to_string() + "_2026-01-01_2026-03-26.csv"
+  } else if code.has_prefix("sz.") {
+    let code_num = code[3:]
+    "data/sz_" + code_num.to_string() + "_2026-01-01_2026-03-26.csv"
+  } else {
+    // Fallback: assume format is already correct
+    "data/" + code.replace(old=".", new="_") + "_2026-01-01_2026-03-26.csv"
+  }
+}
 
-  // In production, would scan for matching file and load
-  // For now, return empty array (placeholder)
-  @data.load_klines_from_csv(filename).unwrap_or([])
+///|
+/// Load K-line data from CSV file
+///
+/// Parameters:
+/// - code: Stock code in format "sh.600000" or "sz.000001"
+/// - start: Start date in format "YYYY-MM-DD" (optional filter)
+/// - end: End date in format "YYYY-MM-DD" (optional filter)
+///
+/// Returns:
+/// - Array of KLine with stock code populated
+pub fn load_klines_for_stock_with_date_range(
+  code : String,
+  start : String?,
+  end : String?,
+) -> Array[@data.KLine] {
+  let filename = build_kline_filename(code)
+
+  match @data.load_klines_from_csv(filename) {
+    Ok(klines) => {
+      // Populate stock code and apply date filters
+      let result : Array[@data.KLine] = []
+      for kline in klines {
+        // Apply start date filter
+        match start {
+          Some(s) => if kline.date < s { continue }
+          None => ignore(())
+        }
+        // Apply end date filter
+        match end {
+          Some(e) => if kline.date > e { continue }
+          None => ignore(())
+        }
+        // Set the stock code (use KLine::daily for cleaner API)
+        result.push(
+          @data.KLine::daily(
+            code,
+            kline.date,
+            kline.open,
+            kline.high,
+            kline.low,
+            kline.close,
+            kline.volume,
+            kline.amount,
+            kline.turn,
+          ),
+        )
+      }
+      result
+    }
+    Err(_) => []
+  }
+}
+
+///|
+/// Load K-line data from CSV file (simple version without date filtering)
+pub fn load_klines_for_stock(code : String) -> Array[@data.KLine] {
+  load_klines_for_stock_with_date_range(code, None, None)
 }
 
 ///|
