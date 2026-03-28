@@ -13,11 +13,12 @@
 | [API 参考手册](MANUAL.md) | 完整 API 参考手册 | 开发者 |
 | [API 参考](api-reference.md) | 核心模块 API 文档 | 开发者 |
 | [HTTP API 端点](api-endpoints.md) | HTTP API 端点参考（含策略 API） | 开发者 |
-| [股票筛选 API](api/stock-screening.md) | 股票筛选和指标 API 参考 | 开发者 |
+| [股票筛选 API](api/stock-screener-api.md) | 股票筛选和指标 API 完整参考 | 开发者 |
 | [架构设计](architecture.md) | 系统架构说明 | 开发者/架构师 |
 | [股票策略架构](stock-strategy-architecture.md) | 股票策略系统架构 | 开发者/架构师 |
 | [开发者指南](developer-guide.md) | 开发环境和规范 | 开发者 |
 | [测试计划](test-plan.md) | 测试流程和示例 | 开发者/QA |
+| [测试报告汇总](test-report-summary.md) | 测试结果和问题汇总 | 开发者/QA |
 | [数据下载指南](data-download-guide.md) | Baostock 数据下载和管理 | 数据工程师 |
 
 ## 用户指南系列 (docs/user-guide/)
@@ -37,6 +38,15 @@
 | [添加新指标指南](dev-guide/adding-indicators.md) | 如何开发和注册新指标 | 开发者 |
 | [测试指南](dev-guide/testing.md) | 测试编写和执行指南 | 开发者/QA |
 | [指标测试指南](../indicator-testing.md) | 选股指标专项测试指南 | 开发者/QA |
+
+## 前端文档
+
+| 文档 | 描述 | 适用对象 |
+|------|------|----------|
+| [前端组件文档](frontend-components.md) | 前端组件使用和 API 参考 | 前端开发者 |
+| [测试用例文档](tests/frontend-test-cases.md) | 详细前端测试用例 | 测试人员 |
+| [测试检查清单](tests/frontend-checklist.md) | 手动测试检查清单 | 测试人员 |
+| [UI/UX 问题报告](tests/frontend-ux-issues.md) | UI/UX 问题跟踪 | 前端开发者 |
 
 ## 开发和设计文档
 
@@ -61,10 +71,67 @@
 
 | 文档 | 描述 | 日期 |
 |------|------|------|
+| [测试报告汇总](test-report-summary.md) | 测试结果和问题汇总 | 2026-03-28 |
 | [测试覆盖率报告](test-coverage-report.md) | 测试覆盖分析 | 2026-03-27 |
 | [阶段进度审查](phase-progress-review.md) | 开发进度跟踪 | 2026-03-27 |
 | [最终审查报告](final-review-report.md) | 项目最终审查 | 2026-03-27 |
 | [项目状态报告](project-status-report.md) | 项目整体状态 | 2026-03-27 |
+
+---
+
+## 功能完成状态跟踪
+
+**更新日期**: 2026-03-28
+
+### 后端功能
+
+| 功能模块 | 状态 | 负责人 | 完成日期 |
+|----------|------|--------|----------|
+| 股票筛选 API | 🟡 进行中 | backend-dev | - |
+| 交易模型 API | 🟡 进行中 | backend-dev | - |
+| 指标计算模块 | 🟢 已完成 | backend-dev | 2026-03-27 |
+| HTTP 服务器 | 🟢 已完成 | backend-dev | 2026-03-27 |
+| 数据加载模块 | 🟢 已完成 | backend-dev | 2026-03-27 |
+
+### 前端功能
+
+| 功能模块 | 状态 | 负责人 | 完成日期 |
+|----------|------|--------|----------|
+| 股票筛选器 UI | 🟡 进行中 | frontend-dev | - |
+| 指标选择组件 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+| 筛选条件配置 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+| 权重排序功能 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+| 交易模型选择器 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+| 结果展示组件 | 🟢 已完成 | frontend-dev | 2026-03-28 |
+
+### 测试功能
+
+| 功能模块 | 状态 | 负责人 | 完成日期 |
+|----------|------|--------|----------|
+| API 单元测试 | 🟢 已完成 | api-tester | 2026-03-28 |
+| 前端功能测试 | 🟢 已完成 | frontend-tester | 2026-03-28 |
+| 集成测试 | 🟢 已完成 | api-tester | 2026-03-28 |
+| E2E 测试 | 🟢 已完成 | frontend-tester | 2026-03-28 |
+
+### 文档功能
+
+| 功能模块 | 状态 | 负责人 | 完成日期 |
+|----------|------|--------|----------|
+| API 文档 | 🟢 已完成 | doc-eng | 2026-03-28 |
+| 用户指南 | 🟢 已完成 | doc-eng | 2026-03-28 |
+| 前端组件文档 | 🟢 已完成 | doc-eng | 2026-03-28 |
+| 测试报告 | 🟢 已完成 | doc-eng | 2026-03-28 |
+
+### 状态说明
+
+| 状态 | 说明 |
+|------|------|
+| 🟢 已完成 | 功能开发完成，测试通过 |
+| 🟡 进行中 | 功能开发中 |
+| 🔴 未开始 | 功能尚未开始 |
+| ⚠️ 已阻塞 | 功能被阻塞，需要协助 |
+
+---
 
 ## 示例和教程
 
@@ -110,8 +177,10 @@ docs/
 ├── MANUAL.md                     # API 参考手册（完整版）
 ├── api-reference.md              # API 参考文档
 ├── api-endpoints.md              # HTTP API 端点参考
+├── frontend-components.md        # 前端组件文档
+├── test-report-summary.md        # 测试报告汇总
 ├── api/                          # API 文档目录
-│   └── stock-screening.md        # 股票筛选 API 参考
+│   └── stock-screener-api.md     # 股票筛选 API 参考（新版）
 ├── architecture.md               # 架构设计
 ├── stock-strategy-architecture.md # 股票策略架构
 ├── developer-guide.md            # 开发者指南
@@ -148,12 +217,84 @@ docs/
 │   ├── indicator-reference.md    # 技术指标参考
 │   └── trading-model-guide.md    # 交易模型指南
 │
-└── dev-guide/                    # 开发者指南系列
-    ├── architecture.md           # 系统架构设计
-    ├── api-reference.md          # API 参考文档
-    ├── adding-indicators.md      # 添加新指标指南
-    └── testing.md                # 测试指南
+├── dev-guide/                    # 开发者指南系列
+│   ├── architecture.md           # 系统架构设计
+│   ├── api-reference.md          # API 参考文档
+│   ├── adding-indicators.md      # 添加新指标指南
+│   └── testing.md                # 测试指南
+│
+└── tests/                        # 测试文档系列
+    ├── README.md                 # 测试文档索引
+    ├── frontend-test-cases.md    # 前端测试用例
+    ├── frontend-checklist.md     # 前端检查清单
+    └── frontend-ux-issues.md     # UI/UX 问题报告
 ```
+
+---
+
+## 功能完成状态
+
+股票筛选系统功能开发进度跟踪（更新日期：2026-03-28）：
+
+### 后端 API
+
+| 功能模块 | 端点 | 状态 | 负责人 |
+|----------|------|------|--------|
+| 股票筛选 | `GET /api/screen/stocks` | 🟡 进行中 | backend-dev |
+| 股票筛选 | `POST /api/screen/stocks` | 🟡 进行中 | backend-dev |
+| 配置保存 | `POST /api/screen/config` | 🟡 进行中 | backend-dev |
+| 配置获取 | `GET /api/screen/config` | 🟡 进行中 | backend-dev |
+| 权重配置 | `PUT /api/screen/weights` | 🟡 进行中 | backend-dev |
+| 指标元数据 | `GET /api/indicators/market` | 🟡 进行中 | backend-dev |
+| 指标元数据 | `GET /api/indicators/technical` | 🟡 进行中 | backend-dev |
+| 指标元数据 | `GET /api/indicators/financial` | 🟡 进行中 | backend-dev |
+| 指标元数据 | `GET /api/indicators/descriptions` | 🟡 进行中 | backend-dev |
+| 交易模型 | `POST /api/trading-model/config` | 🟡 进行中 | backend-dev |
+| 交易模型 | `GET /api/trading-model/config` | 🟡 进行中 | backend-dev |
+| 交易模型 | `POST /api/trading-model/simulate` | 🟡 进行中 | backend-dev |
+
+### 前端 UI
+
+| 功能模块 | 页面/组件 | 状态 | 负责人 |
+|----------|-----------|------|--------|
+| 筛选器 | 指标选择器 | 🟡 进行中 | frontend-dev |
+| 筛选器 | 条件配置面板 | ✅ 已完成 | frontend-dev |
+| 筛选器 | 权重配置滑块 | ✅ 已完成 | frontend-dev |
+| 筛选器 | 结果展示表格 | ✅ 已完成 | frontend-dev |
+| 指标说明 | 分类展示 | 🟡 进行中 | frontend-dev |
+| 指标说明 | 详情卡片 | 🟡 进行中 | frontend-dev |
+| 交易模型 | 模型选择器 | ✅ 已完成 | frontend-dev |
+| 交易模型 | 参数配置表单 | 🟡 进行中 | frontend-dev |
+| 交易模型 | 模拟结果展示 | 🟡 进行中 | frontend-dev |
+
+### 测试
+
+| 测试类型 | 测试范围 | 状态 | 负责人 |
+|----------|----------|------|--------|
+| API 测试 | 筛选条件组合 | ✅ 已完成 | api-tester |
+| API 测试 | 指标列表和详情 | ✅ 已完成 | api-tester |
+| API 测试 | 调仓和触发配置 | ✅ 已完成 | api-tester |
+| API 测试 | 参数验证和异常 | ✅ 已完成 | api-tester |
+| 前端测试 | 功能测试 | 🟡 进行中 | frontend-tester |
+| 前端测试 | UI/UX 测试 | 🟡 进行中 | frontend-tester |
+
+### 文档
+
+| 文档类型 | 文档名称 | 状态 | 负责人 |
+|----------|----------|------|--------|
+| API 规范 | `docs/api/stock-screener-api.md` | ✅ 已完成 | api-designer |
+| API 端点 | `docs/api-endpoints.md` | ✅ 已完成 | api-designer |
+| 前端组件 | `docs/frontend-components.md` | ✅ 已完成 | doc-engineer |
+| 测试报告 | `docs/test-report-summary.md` | ✅ 已完成 | doc-engineer |
+| 用户指南 | `docs/user-guide/stock-screener-guide.md` | ✅ 已完成 | doc-engineer |
+| 指标参考 | `docs/user-guide/indicator-reference.md` | ✅ 已完成 | doc-engineer |
+| 交易模型 | `docs/user-guide/trading-model-guide.md` | ✅ 已完成 | doc-engineer |
+
+**状态说明**:
+- 🟢 已完成 - 功能已实现并通过测试
+- 🟡 进行中 - 功能开发中
+- 🔴 未开始 - 功能尚未开始
+- ⚪ 已计划 - 功能已规划但未开始
 
 ---
 
@@ -161,6 +302,11 @@ docs/
 
 | 日期 | 文档 | 变更内容 | 作者 |
 |------|------|----------|------|
+| 2026-03-28 | INDEX.md | 添加前端文档系列（组件文档/测试报告） | doc-eng |
+| 2026-03-28 | frontend-components.md | 新建前端组件使用文档 | doc-eng |
+| 2026-03-28 | test-report-summary.md | 新建测试报告汇总文档 | doc-eng |
+| 2026-03-28 | api-endpoints.md | 更新股票筛选系统 API 规范 | doc-eng |
+| 2026-03-28 | api/stock-screener-api.md | 新建股票筛选 API 完整参考 | doc-eng |
 | 2026-03-28 | INDEX.md | 添加选股指标文档系列（API/测试指南） | doc-eng |
 | 2026-03-28 | api/stock-screening.md | 新建股票筛选 API 参考文档 | doc-eng |
 | 2026-03-28 | indicator-testing.md | 新建选股指标测试指南 | doc-eng |
@@ -191,3 +337,9 @@ docs/
 
 *最后更新：2026-03-28*
 *文档维护者：doc-eng, data-eng*
+
+---
+
+## 团队协作信息
+
+各团队成员请根据上述功能完成状态表更新各自负责的模块进度。完成后请及时更新任务状态并通知相关人员。

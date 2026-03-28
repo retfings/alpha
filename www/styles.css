@@ -779,3 +779,134 @@ footer {
     max-height: none;
   }
 }
+
+/* ============================================================================
+   Trading Model Panel Styles
+   ============================================================================ */
+
+.trading-model-panel {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  height: fit-content;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  margin-top: 20px;
+}
+
+.trading-model-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.trading-model-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 10px;
+}
+
+.trading-model-section h4 {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.model-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.model-select {
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--card-bg);
+  cursor: pointer;
+  min-width: 200px;
+}
+
+.model-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.model-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg-color);
+  padding: 10px 12px;
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.form-group-small {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row-small {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.small-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 120px;
+}
+
+.small-input {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  min-width: 80px;
+}
+
+.small-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.small-input:disabled {
+  background: var(--bg-color);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}

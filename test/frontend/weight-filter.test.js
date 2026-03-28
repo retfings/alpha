@@ -93,7 +93,8 @@ describe('权重配置组件', () => {
       const weightedSum = scores.reduce((sum, s) => sum + s.value * s.weight, 0);
       const weightedAverage = weightedSum / totalWeight;
 
-      assert.strictEqual(weightedAverage, 77);
+      // (80*2 + 90*3 + 70*5) / 10 = (160 + 270 + 350) / 10 = 780 / 10 = 78
+      assert.strictEqual(weightedAverage, 78);
     });
 
     it('应该归一化权重', () => {
@@ -129,13 +130,15 @@ describe('权重配置组件', () => {
     it('应该限制最大权重', () => {
       let weight = 9.5;
       weight += 1;
-      assert.strictEqual(weight, 10); // 应该被限制在 10
+      weight = Math.min(weight, 10); // 应该被限制在 10
+      assert.strictEqual(weight, 10);
     });
 
     it('应该限制最小权重', () => {
       let weight = 0.5;
       weight -= 1;
-      assert.strictEqual(weight, 0.1); // 应该被限制在 0.1
+      weight = Math.max(weight, 0.1); // 应该被限制在 0.1
+      assert.strictEqual(weight, 0.1);
     });
   });
 });

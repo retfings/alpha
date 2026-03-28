@@ -821,6 +821,777 @@ test "route_request /api/indicators GET" {
 }
 
 ///|
+/// Additional indicator tests with Chinese descriptions
+///|
+test "handle_get_all_indicators returns Chinese descriptions" {
+  let response = handle_get_all_indicators()
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("相对强弱指数"))
+  assert_true(response.body.contains("平滑异同移动平均线"))
+  assert_true(response.body.contains("随机指标"))
+}
+
+///|
+test "handle_get_all_indicators includes interpretation field" {
+  let response = handle_get_all_indicators()
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("interpretation"))
+  assert_true(response.body.contains(">70 超买"))
+}
+
+///|
+test "handle_get_indicator_detail rsi Chinese" {
+  let response = handle_get_indicator_detail("rsi")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("相对强弱指数"))
+  assert_true(response.body.contains(">70 超买，<30 超卖"))
+}
+
+///|
+test "handle_get_indicator_detail macd Chinese" {
+  let response = handle_get_indicator_detail("macd")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("金叉买入，死叉卖出"))
+}
+
+///|
+test "handle_get_indicator_detail kdj Chinese" {
+  let response = handle_get_indicator_detail("kdj")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("K>D 金叉买入"))
+}
+
+///|
+test "handle_get_indicator_detail ma_trend" {
+  let response = handle_get_indicator_detail("ma_trend")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("MA 趋势"))
+  assert_true(response.body.contains("1=上升趋势"))
+}
+
+///|
+test "handle_get_indicator_detail roe Chinese" {
+  let response = handle_get_indicator_detail("roe")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains(">15% 为优秀"))
+}
+
+///|
+test "handle_get_indicator_detail np_margin Chinese" {
+  let response = handle_get_indicator_detail("np_margin")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("越高代表盈利效率越好"))
+}
+
+///|
+test "handle_get_indicator_detail eps Chinese" {
+  let response = handle_get_indicator_detail("eps")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("越高越好"))
+}
+
+///|
+test "handle_get_indicator_detail turnover_rate" {
+  let response = handle_get_indicator_detail("turnover_rate")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains(">10% 活跃"))
+}
+
+///|
+test "handle_get_indicator_detail not found" {
+  let response = handle_get_indicator_detail("nonexistent")
+  assert_true(response.status_code == 404)
+  assert_true(response.body.contains("error"))
+}
+
+///|
+test "handle_get_indicator_detail empty string returns 404" {
+  let response = handle_get_indicator_detail("")
+  assert_true(response.status_code == 404)
+  assert_true(response.body.contains("error"))
+}
+
+///|
+test "handle_screener returns results with technical indicators" {
+  let response = handle_screener(None)
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("results"))
+  assert_true(response.body.contains("rsi"))
+  assert_true(response.body.contains("macd"))
+  assert_true(response.body.contains("kdj"))
+}
+
+///|
+test "handle_screener returns 10 stocks" {
+  let response = handle_screener(None)
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("sh.600000"))
+  assert_true(response.body.contains("sh.600009"))
+}
+
+///|
+test "handle_screener each result has all fields" {
+  let response = handle_screener(None)
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("code"))
+  assert_true(response.body.contains("name"))
+  assert_true(response.body.contains("price"))
+  assert_true(response.body.contains("score"))
+}
+
+///|
+test "ScreenerStockResult struct construction" {
+  let r = ScreenerStockResult::{
+    code: "sh.600000",
+    name: "Test Stock",
+    price: 10.5,
+    rsi: 50.0,
+    macd: 0.01,
+    kdj: 45.0,
+    roe: 15.0,
+    np_margin: 10.0,
+    eps: 1.5,
+    volume: 1000000.0,
+    score: 70.0,
+  }
+  assert_true(r.code == "sh.600000")
+  assert_true(r.rsi == 50.0)
+  assert_true(r.score == 70.0)
+}
+
+///|
+test "ScreenerRequest default construction" {
+  let req = ScreenerRequest::{
+    filters: [],
+    weights: {},
+    sort_by: "score",
+    sort_order: "desc",
+    limit: 100,
+  }
+  assert_true(req.sort_by == "score")
+  assert_true(req.limit == 100)
+}
+
+///|
+test "parse_screener_request returns default" {
+  let req = parse_screener_request("{}")
+  assert_true(req.filters.length() == 0)
+  assert_true(req.weights.length() == 0)
+  assert_true(req.sort_by == "score")
+}
+
+///|
+test "get_screener_data returns 10 stocks" {
+  let data = get_screener_mock_data()
+  assert_true(data.length() == 10)
+}
+
+///|
+test "get_screener_data first stock is sh.600000" {
+  let data = get_screener_mock_data()
+  assert_true(data[0].code == "sh.600000")
+  assert_true(data[0].name == "浦发银行")
+}
+
+///|
+test "get_screener_data rsi values in valid range" {
+  let data = get_screener_mock_data()
+  for d in data {
+    assert_true(d.rsi >= 0.0 && d.rsi <= 100.0)
+  }
+}
+
+///|
+test "get_screener_data kdj values in valid range" {
+  let data = get_screener_mock_data()
+  for d in data {
+    assert_true(d.kdj >= 0.0 && d.kdj <= 100.0)
+  }
+}
+
+///|
+test "get_screener_data all scores positive" {
+  let data = get_screener_mock_data()
+  for d in data {
+    assert_true(d.score > 0.0)
+  }
+}
+
+///|
+test "get_screener_data all prices positive" {
+  let data = get_screener_mock_data()
+  for d in data {
+    assert_true(d.price > 0.0)
+  }
+}
+
+///|
+test "get_screener_data stock codes are unique" {
+  let data = get_screener_mock_data()
+  let mut has_duplicates = false
+  let mut i = 0
+  while i < data.length() {
+    let mut j = i + 1
+    while j < data.length() {
+      if data[i].code == data[j].code {
+        has_duplicates = true
+      }
+      j = j + 1
+    }
+    i = i + 1
+  }
+  assert_true(!has_duplicates)
+}
+
+///|
+test "ScreenerStockResult to_json works" {
+  let data = get_screener_mock_data()
+  let r = data[0]
+  let json = r.to_json()
+  let json_str = json.to_string()
+  assert_true(json_str.length() > 0)
+  assert_true(json_str.contains(r.code))
+  assert_true(json_str.contains("rsi"))
+}
+
+///|
+test "ScreenerFilter struct construction" {
+  let filter = ScreenerFilter::{
+    indicator: "roe",
+    operator: ">=",
+    value: Some(15.0),
+    min: None,
+    max: None,
+  }
+  assert_true(filter.indicator == "roe")
+  assert_true(filter.operator == ">=")
+  assert_true(filter.value == Some(15.0))
+}
+
+///|
+test "ScreenerFilter with min/max range" {
+  let filter = ScreenerFilter::{
+    indicator: "price",
+    operator: "between",
+    value: None,
+    min: Some(5.0),
+    max: Some(20.0),
+  }
+  assert_true(filter.min == Some(5.0))
+  assert_true(filter.max == Some(20.0))
+}
+
+///|
+test "ScreenerRequest with filters" {
+  let filters : Array[ScreenerFilter] = [
+    ScreenerFilter::{ indicator: "roe", operator: ">=", value: Some(15.0), min: None, max: None },
+    ScreenerFilter::{ indicator: "price", operator: "between", value: None, min: Some(5.0), max: Some(50.0) },
+  ]
+  let req = ScreenerRequest::{
+    filters: filters,
+    weights: { "roe": 30, "macd": 20 },
+    sort_by: "score",
+    sort_order: "desc",
+    limit: 50,
+  }
+  assert_true(req.filters.length() == 2)
+  assert_true(req.weights.length() == 2)
+}
+
+///|
+test "WeightConfig struct is valid" {
+  let w = WeightConfig::{
+    indicator: "roe",
+    weight: 0.3,
+    direction: "asc",
+  }
+  assert_true(w.indicator == "roe")
+  assert_true(w.weight == 0.3)
+  assert_true(w.direction == "asc")
+}
+
+///|
+test "handle_set_weights with valid JSON" {
+  let body = "{\"weights\":[{\"indicator\":\"roe\",\"weight\":0.3}]}"
+  let response = handle_set_weights(body)
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("configured"))
+}
+
+///|
+test "handle_set_weights with empty body" {
+  let response = handle_set_weights("")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("configured") || response.body.contains("message"))
+}
+
+///|
+test "handle_set_weights with malformed JSON" {
+  let body = "{invalid json}"
+  let response = handle_set_weights(body)
+  assert_true(response.status_code == 200)
+  // Should not crash even with invalid input
+  assert_true(response.body.contains("configured") || response.body.contains("message"))
+}
+
+///|
+test "handle_get_weights response format" {
+  let response = handle_get_weights()
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("\"weights\":["))
+  assert_true(response.body.contains("\"roe\""))
+  assert_true(response.body.contains("\"pe_ratio\""))
+}
+
+///|
+test "handle_get_weights each weight has required fields" {
+  let response = handle_get_weights()
+  assert_true(response.body.contains("\"indicator\":"))
+  assert_true(response.body.contains("\"weight\":"))
+  assert_true(response.body.contains("\"direction\":"))
+}
+
+///|
+test "WeightConfig directions are valid" {
+  let response = handle_get_weights()
+  // Parse response manually to check directions
+  assert_true(response.body.contains("\"asc\""))
+  assert_true(response.body.contains("\"desc\""))
+  assert_true(response.body.contains("\"neutral\""))
+}
+
+///|
+test "handle_list_indicators includes 6 market indicators" {
+  let response = handle_list_indicators()
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("\"total\":6"))
+}
+
+///|
+test "handle_get_indicators_by_category financial includes 3 indicators" {
+  let response = handle_get_indicators_by_category("financial")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("\"total\":3"))
+  assert_true(response.body.contains("roe"))
+  assert_true(response.body.contains("np_margin"))
+  assert_true(response.body.contains("eps"))
+}
+
+///|
+test "handle_get_indicators_by_category technical includes 6 indicators" {
+  let response = handle_get_indicators_by_category("technical")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("\"total\":6"))
+  assert_true(response.body.contains("macd"))
+  assert_true(response.body.contains("rsi"))
+  assert_true(response.body.contains("kdj"))
+  assert_true(response.body.contains("ma"))
+  assert_true(response.body.contains("bollinger"))
+  assert_true(response.body.contains("atr"))
+}
+
+///|
+test "handle_get_indicators_by_category market includes 5 indicators" {
+  let response = handle_get_indicators_by_category("market")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("\"total\":5"))
+  assert_true(response.body.contains("market_cap"))
+  assert_true(response.body.contains("pe_ratio"))
+  assert_true(response.body.contains("pb_ratio"))
+  assert_true(response.body.contains("dividend_yield"))
+  assert_true(response.body.contains("volume_ratio"))
+}
+
+///|
+test "handle_get_indicator macd formula" {
+  let response = handle_get_indicator("macd")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("12-period EMA"))
+  assert_true(response.body.contains("26-period EMA"))
+}
+
+///|
+test "handle_get_indicator rsi formula" {
+  let response = handle_get_indicator("rsi")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("RS ="))
+}
+
+///|
+test "handle_get_indicator kdj formula" {
+  let response = handle_get_indicator("kdj")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("3K - 2D"))
+}
+
+///|
+test "handle_get_indicator bollinger description" {
+  let response = handle_get_indicator("bollinger")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("Volatility bands"))
+}
+
+///|
+test "handle_get_indicator atr description" {
+  let response = handle_get_indicator("atr")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("Average True Range"))
+}
+
+///|
+test "handle_get_indicator dividend_yield range" {
+  let response = handle_get_indicator("dividend_yield")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("range"))
+  assert_true(response.body.contains("0-20%"))
+}
+
+///|
+test "handle_get_indicator pe_ratio unit" {
+  let response = handle_get_indicator("pe_ratio")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("\"unit\":\"ratio\""))
+}
+
+///|
+test "apply_filters with min_roe filter" {
+  let results = get_mock_financials()
+  let request = ScreenRequest::{
+    min_roe: Some(15.0),
+    min_np_margin: None,
+    min_eps: None,
+    min_price: None,
+    max_price: None,
+    min_volume: None,
+    min_health: None,
+    sort_by: None,
+    sort_order: None,
+    limit: None,
+  }
+  let filtered = apply_filters(results, request)
+  for r in filtered {
+    assert_true(r.roe >= 15.0)
+  }
+}
+
+///|
+test "apply_filters with max_price filter" {
+  let results = get_mock_financials()
+  let request = ScreenRequest::{
+    min_roe: None,
+    min_np_margin: None,
+    min_eps: None,
+    min_price: None,
+    max_price: Some(10.0),
+    min_volume: None,
+    min_health: None,
+    sort_by: None,
+    sort_order: None,
+    limit: None,
+  }
+  let filtered = apply_filters(results, request)
+  for r in filtered {
+    assert_true(r.price <= 10.0)
+  }
+}
+
+///|
+test "apply_filters with multiple filters" {
+  let results = get_mock_financials()
+  let request = ScreenRequest::{
+    min_roe: Some(15.0),
+    min_np_margin: Some(10.0),
+    min_eps: None,
+    min_price: Some(8.0),
+    max_price: Some(20.0),
+    min_volume: None,
+    min_health: None,
+    sort_by: None,
+    sort_order: None,
+    limit: None,
+  }
+  let filtered = apply_filters(results, request)
+  for r in filtered {
+    assert_true(r.roe >= 15.0)
+    assert_true(r.np_margin >= 10.0)
+    assert_true(r.price >= 8.0 && r.price <= 20.0)
+  }
+}
+
+///|
+test "apply_filters min_health excludes Critical" {
+  let results = get_mock_financials()
+  let request = ScreenRequest::{
+    min_roe: None,
+    min_np_margin: None,
+    min_eps: None,
+    min_price: None,
+    max_price: None,
+    min_volume: None,
+    min_health: Some("Good"),
+    sort_by: None,
+    sort_order: None,
+    limit: None,
+  }
+  let filtered = apply_filters(results, request)
+  for r in filtered {
+    assert_true(r.health != "Critical")
+  }
+}
+
+///|
+test "sort_results with unknown field uses score" {
+  let results = get_mock_financials()
+  let sorted = sort_results(results, "unknown_field", true)
+  // Should fall back to score sorting
+  assert_true(sorted.length() == results.length())
+}
+
+///|
+test "sort_results by eps descending" {
+  let results = get_mock_financials()
+  let sorted = sort_results(results, "eps", true)
+  let len = sorted.length()
+  let mut i = 0
+  while i < len - 1 {
+    assert_true(sorted[i].eps >= sorted[i + 1].eps)
+    i = i + 1
+  }
+}
+
+///|
+test "sort_results by volume ascending" {
+  let results = get_mock_financials()
+  let sorted = sort_results(results, "volume", false)
+  let len = sorted.length()
+  let mut i = 0
+  while i < len - 1 {
+    assert_true(sorted[i].volume <= sorted[i + 1].volume)
+    i = i + 1
+  }
+}
+
+///|
+test "sort_results empty array" {
+  let empty : Array[ScreenResult] = []
+  let sorted = sort_results(empty, "roe", true)
+  assert_true(sorted.length() == 0)
+}
+
+///|
+test "copy_results preserves order" {
+  let original = get_mock_financials()
+  let copied = copy_results(original)
+  assert_true(copied.length() == original.length())
+  let mut i = 0
+  while i < original.length() {
+    assert_true(copied[i].code == original[i].code)
+    i = i + 1
+  }
+}
+
+///|
+test "get_field roe" {
+  let results = get_mock_financials()
+  let r = results[0]
+  assert_true(get_field(r, "roe") == r.roe)
+}
+
+///|
+test "get_field np_margin" {
+  let results = get_mock_financials()
+  let r = results[0]
+  assert_true(get_field(r, "np_margin") == r.np_margin)
+}
+
+///|
+test "get_field volume" {
+  let results = get_mock_financials()
+  let r = results[0]
+  assert_true(get_field(r, "volume") == r.volume)
+}
+
+///|
+test "get_field score for unknown" {
+  let results = get_mock_financials()
+  let r = results[0]
+  assert_true(get_field(r, "unknown") == r.score)
+}
+
+///|
+test "ScreenRequest::default limit is 100" {
+  let req = ScreenRequest::default()
+  assert_true(req.limit == Some(100))
+}
+
+///|
+test "ScreenRequest::default all optional fields are None" {
+  let req = ScreenRequest::default()
+  assert_true(req.min_roe == None)
+  assert_true(req.min_np_margin == None)
+  assert_true(req.sort_by == None)
+  assert_true(req.sort_order == None)
+}
+
+///|
+test "handle_screen limit applied" {
+  let body = "{\"limit\":2}"
+  let response = handle_screen(Some(body))
+  assert_true(response.status_code == 200)
+  // Should return limited results
+  assert_true(response.body.contains("total"))
+}
+
+///|
+test "parse_screen_request empty json" {
+  let req = parse_screen_request("{}")
+  assert_true(req.limit == Some(100))
+}
+
+///|
+test "TradingModel::score_rank parameters" {
+  let models = get_trading_models()
+  let m = models[0]
+  assert_true(m.id == "score_rank")
+  assert_true(m.parameters.contains("weights"))
+  assert_true(m.parameters.contains("normalize_method"))
+}
+
+///|
+test "TradingModel::cluster_select parameters" {
+  let models = get_trading_models()
+  for m in models {
+    if m.id == "cluster_select" {
+      assert_true(m.parameters.contains("n_clusters"))
+      assert_true(m.parameters.contains("features"))
+    }
+  }
+}
+
+///|
+test "TradingModel::ml_classifier parameters" {
+  let models = get_trading_models()
+  for m in models {
+    if m.id == "ml_classifier" {
+      assert_true(m.parameters.contains("model_type"))
+      assert_true(m.parameters.contains("thresholds"))
+    }
+  }
+}
+
+///|
+test "TradingModel::factor_weighted parameters" {
+  let models = get_trading_models()
+  for m in models {
+    if m.id == "factor_weighted" {
+      assert_true(m.parameters.contains("factor_weights"))
+      assert_true(m.parameters.contains("normalization"))
+    }
+  }
+}
+
+///|
+test "TradingModel::rule_based parameters" {
+  let models = get_trading_models()
+  for m in models {
+    if m.id == "rule_based" {
+      assert_true(m.parameters.contains("rules"))
+      assert_true(m.parameters.contains("logic_operator"))
+    }
+  }
+}
+
+///|
+test "handle_get_indicators_by_category case sensitivity" {
+  let response_lower = handle_get_indicators_by_category("financial")
+  let response_upper = handle_get_indicators_by_category("Financial")
+  assert_true(response_lower.status_code == 200)
+  assert_true(response_upper.status_code == 404)
+}
+
+///|
+test "handle_get_indicator_case sensitivity" {
+  let response_lower = handle_get_indicator("roe")
+  let response_upper = handle_get_indicator("ROE")
+  assert_true(response_lower.status_code == 200)
+  assert_true(response_upper.status_code == 404)
+}
+
+///|
+test "handle_get_indicators_by_category response includes descriptions" {
+  let response = handle_get_indicators_by_category("financial")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("description"))
+}
+
+///|
+test "handle_get_indicator range field present" {
+  let response = handle_get_indicator("roe")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("range"))
+}
+
+///|
+test "handle_get_indicator formula field present" {
+  let response = handle_get_indicator("roe")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("formula"))
+}
+
+///|
+test "handle_screener response structure" {
+  let response = handle_screener(None)
+  assert_true(response.status_code == 200)
+  assert_true(response.body.has_prefix("{\"results\":["))
+  assert_true(response.body.contains("\"total\":"))
+}
+
+///|
+test "handle_get_all_indicators response structure" {
+  let response = handle_get_all_indicators()
+  assert_true(response.status_code == 200)
+  assert_true(response.body.has_prefix("{\"indicators\":["))
+}
+
+///|
+test "handle_get_indicator_detail response structure" {
+  let response = handle_get_indicator_detail("rsi")
+  assert_true(response.status_code == 200)
+  assert_true(response.body.contains("\"id\":\"rsi\""))
+  assert_true(response.body.contains("\"name\":\""))
+}
+
+///|
+test "handle_list_indicators JSON is valid" {
+  let response = handle_list_indicators()
+  assert_true(response.status_code == 200)
+  // Basic JSON structure check
+  assert_true(response.body.has_prefix("{\"indicators\":["))
+  assert_true(response.body.has_suffix("]}"))
+}
+
+///|
+test "handle_screen JSON is valid" {
+  let response = handle_screen(None)
+  assert_true(response.status_code == 200)
+  assert_true(response.body.has_prefix("{\"results\":["))
+}
+
+///|
+test "handle_get_weights JSON is valid" {
+  let response = handle_get_weights()
+  assert_true(response.status_code == 200)
+  assert_true(response.body.has_prefix("{\"weights\":["))
+}
+
+///|
+test "handle_list_trading_models JSON is valid" {
+  let response = handle_list_trading_models()
+  assert_true(response.status_code == 200)
+  assert_true(response.body.has_prefix("{\"models\":["))
+}
+
+///|
 test "route_request /api/screen POST" {
   let response = route_request("/api/screen", "POST")
   assert_true(response.status_code == 200)

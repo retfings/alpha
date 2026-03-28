@@ -653,6 +653,75 @@ function setupScreenerHandlers() {
       sortScreenerResults(e.target.value);
     });
   }
+
+  // Trading model select change
+  const modelSelect = document.getElementById('trading-model-select');
+  if (modelSelect) {
+    modelSelect.addEventListener('change', (e) => {
+      updateModelDescription(e.target.value);
+    });
+  }
+
+  // Rebalance frequency change - show/hide day selector
+  const rebalanceFreq = document.getElementById('rebalance-frequency');
+  const rebalanceDayLabel = document.getElementById('rebalance-day-label');
+  if (rebalanceFreq && rebalanceDayLabel) {
+    rebalanceFreq.addEventListener('change', (e) => {
+      if (e.target.value === 'daily') {
+        rebalanceDayLabel.style.display = 'none';
+      } else if (e.target.value === 'monthly') {
+        rebalanceDayLabel.style.display = 'flex';
+        // Update day options for monthly
+        const daySelect = document.getElementById('rebalance-day');
+        daySelect.innerHTML = '';
+        for (let i = 1; i <= 28; i++) {
+          const option = document.createElement('option');
+          option.value = i;
+          option.textContent = '每月' + i + '日';
+          daySelect.appendChild(option);
+        }
+      } else {
+        rebalanceDayLabel.style.display = 'flex';
+        // Update day options for weekly/biweekly
+        const daySelect = document.getElementById('rebalance-day');
+        daySelect.innerHTML = '';
+        const days = [
+          { value: '1', text: '周一' },
+          { value: '2', text: '周二' },
+          { value: '3', text: '周三' },
+          { value: '4', text: '周四' },
+          { value: '5', text: '周五' }
+        ];
+        days.forEach(d => {
+          const option = document.createElement('option');
+          option.value = d.value;
+          option.textContent = d.text;
+          daySelect.appendChild(option);
+        });
+      }
+    });
+  }
+
+  // Trigger condition change - enable/disable cooldown
+  const triggerCondition = document.getElementById('trigger-condition');
+  const cooldownDays = document.getElementById('cooldown-days');
+  if (triggerCondition && cooldownDays) {
+    triggerCondition.addEventListener('change', (e) => {
+      cooldownDays.disabled = e.target.value === 'none';
+    });
+  }
+
+  // Reset trading model button
+  const resetTradingModelBtn = document.getElementById('reset-trading-model');
+  if (resetTradingModelBtn) {
+    resetTradingModelBtn.addEventListener('click', resetTradingModel);
+  }
+
+  // Save trading model button
+  const saveTradingModelBtn = document.getElementById('save-trading-model');
+  if (saveTradingModelBtn) {
+    saveTradingModelBtn.addEventListener('click', saveTradingModel);
+  }
 }
 
 /**
@@ -775,16 +844,16 @@ async function runScreener() {
 function generateMockScreenerResults(config) {
   // Mock stock data
   const mockStocks = [
-    { code: 'sh.600000', name: '浦发银行', price: 8.52, roe: 12.5, np_margin: 28.3, eps: 1.25, rsi: 45.2, macd: 0.0234, kdj: 52.3, volume: 25000000 },
-    { code: 'sh.600001', name: '邯郸钢铁', price: 3.45, roe: 8.2, np_margin: 5.1, eps: 0.32, rsi: 62.8, macd: -0.0123, kdj: 71.2, volume: 18000000 },
-    { code: 'sh.600002', name: '齐鲁石化', price: 5.67, roe: 15.8, np_margin: 12.4, eps: 0.89, rsi: 38.5, macd: 0.0456, kdj: 35.8, volume: 12000000 },
-    { code: 'sh.600003', name: '东北高速', price: 4.23, roe: 6.5, np_margin: 18.2, eps: 0.45, rsi: 55.1, macd: 0.0089, kdj: 48.6, volume: 9500000 },
-    { code: 'sh.600004', name: '白云机场', price: 12.89, roe: 18.3, np_margin: 32.5, eps: 1.85, rsi: 72.4, macd: 0.1234, kdj: 82.1, volume: 32000000 },
-    { code: 'sh.600005', name: '武钢股份', price: 4.56, roe: 10.2, np_margin: 8.7, eps: 0.52, rsi: 48.9, macd: -0.0056, kdj: 42.3, volume: 21000000 },
-    { code: 'sh.600006', name: '东风汽车', price: 7.34, roe: 14.6, np_margin: 6.8, eps: 0.78, rsi: 58.2, macd: 0.0312, kdj: 61.5, volume: 15000000 },
-    { code: 'sh.600007', name: '上港集团', price: 6.12, roe: 22.1, np_margin: 42.3, eps: 1.12, rsi: 41.6, macd: -0.0178, kdj: 38.9, volume: 28000000 },
-    { code: 'sh.600008', name: '首创股份', price: 3.89, roe: 9.8, np_margin: 15.6, eps: 0.41, rsi: 67.3, macd: 0.0201, kdj: 69.8, volume: 11000000 },
-    { code: 'sh.600009', name: '上海机场', price: 45.67, roe: 25.4, np_margin: 38.9, eps: 2.35, rsi: 52.8, macd: 0.5678, kdj: 55.2, volume: 8500000 },
+    { code: 'sh.600000', name: '浦发银行', price: 8.52, market_cap: 2500, pe_ratio: 5.2, roe: 12.5, np_margin: 28.3, eps: 1.25, rsi: 45.2, macd: 0.0234, kdj: 52.3, volume: 25000000 },
+    { code: 'sh.600001', name: '邯郸钢铁', price: 3.45, market_cap: 450, pe_ratio: 8.5, roe: 8.2, np_margin: 5.1, eps: 0.32, rsi: 62.8, macd: -0.0123, kdj: 71.2, volume: 18000000 },
+    { code: 'sh.600002', name: '齐鲁石化', price: 5.67, market_cap: 680, pe_ratio: 6.8, roe: 15.8, np_margin: 12.4, eps: 0.89, rsi: 38.5, macd: 0.0456, kdj: 35.8, volume: 12000000 },
+    { code: 'sh.600003', name: '东北高速', price: 4.23, market_cap: 520, pe_ratio: 12.3, roe: 6.5, np_margin: 18.2, eps: 0.45, rsi: 55.1, macd: 0.0089, kdj: 48.6, volume: 9500000 },
+    { code: 'sh.600004', name: '白云机场', price: 12.89, market_cap: 1800, pe_ratio: 18.5, roe: 18.3, np_margin: 32.5, eps: 1.85, rsi: 72.4, macd: 0.1234, kdj: 82.1, volume: 32000000 },
+    { code: 'sh.600005', name: '武钢股份', price: 4.56, market_cap: 580, pe_ratio: 7.2, roe: 10.2, np_margin: 8.7, eps: 0.52, rsi: 48.9, macd: -0.0056, kdj: 42.3, volume: 21000000 },
+    { code: 'sh.600006', name: '东风汽车', price: 7.34, market_cap: 920, pe_ratio: 9.8, roe: 14.6, np_margin: 6.8, eps: 0.78, rsi: 58.2, macd: 0.0312, kdj: 61.5, volume: 15000000 },
+    { code: 'sh.600007', name: '上港集团', price: 6.12, market_cap: 1350, pe_ratio: 11.2, roe: 22.1, np_margin: 42.3, eps: 1.12, rsi: 41.6, macd: -0.0178, kdj: 38.9, volume: 28000000 },
+    { code: 'sh.600008', name: '首创股份', price: 3.89, market_cap: 380, pe_ratio: 15.6, roe: 9.8, np_margin: 15.6, eps: 0.41, rsi: 67.3, macd: 0.0201, kdj: 69.8, volume: 11000000 },
+    { code: 'sh.600009', name: '上海机场', price: 45.67, market_cap: 3200, pe_ratio: 22.5, roe: 25.4, np_margin: 38.9, eps: 2.35, rsi: 52.8, macd: 0.5678, kdj: 55.2, volume: 8500000 },
   ];
 
   // Apply filters
@@ -877,10 +946,12 @@ function updateScreenerResults(results) {
       <td>${stock.code}</td>
       <td>${stock.name}</td>
       <td>${formatNumber(stock.price, 2)}</td>
+      <td>${formatNumber(stock.market_cap || 0, 0)}</td>
+      <td class="${stock.pe_ratio < 15 ? 'positive' : stock.pe_ratio > 30 ? 'negative' : ''}">${formatNumber(stock.pe_ratio || 0, 1)}</td>
+      <td class="${stock.roe > 15 ? 'positive' : stock.roe < 5 ? 'negative' : ''}">${formatNumber(stock.roe, 1)}</td>
       <td class="${stock.rsi > 70 ? 'negative' : stock.rsi < 30 ? 'positive' : ''}">${formatNumber(stock.rsi, 1)}</td>
       <td class="${stock.macd > 0 ? 'positive' : 'negative'}">${formatNumber(stock.macd, 4)}</td>
       <td>${formatNumber(stock.kdj, 1)}</td>
-      <td class="${stock.roe > 15 ? 'positive' : stock.roe < 5 ? 'negative' : ''}">${formatNumber(stock.roe, 1)}</td>
       <td class="${stock.np_margin > 20 ? 'positive' : stock.np_margin < 5 ? 'negative' : ''}">${formatNumber(stock.np_margin, 1)}</td>
       <td>${formatNumber(stock.eps, 2)}</td>
       <td class="score-cell" style="color: ${getScoreColor(stock.score)}">${formatNumber(stock.score, 1)}</td>
@@ -935,15 +1006,17 @@ function exportScreenerResults() {
     return;
   }
 
-  const headers = ['代码', '名称', '价格', 'RSI', 'MACD', 'KDJ', 'ROE(%)', '净利率 (%)', 'EPS', '综合评分'];
+  const headers = ['代码', '名称', '价格', '市值 (亿)', '市盈率', 'ROE(%)', 'RSI', 'MACD', 'KDJ', '净利率 (%)', 'EPS', '综合评分'];
   const rows = screenerState.results.map(stock => [
     stock.code,
     stock.name,
     stock.price,
+    stock.market_cap || 0,
+    stock.pe_ratio || 0,
+    stock.roe,
     stock.rsi,
     stock.macd,
     stock.kdj,
-    stock.roe,
     stock.np_margin,
     stock.eps,
     stock.score
@@ -1060,6 +1133,252 @@ window.analyzeStock = analyzeStock;
 window.addToWatchlist = addToWatchlist;
 
 // ============================================================================
+// Trading Model Functions
+// ============================================================================
+
+/**
+ * Model descriptions for each trading model
+ */
+const MODEL_DESCRIPTIONS = {
+  score_rank: '根据综合评分对股票进行排序，选择排名靠前的股票。适合大多数量化策略。',
+  cluster_select: '使用聚类算法将股票分组，从不同簇中选择代表性股票。适合分散化投资。',
+  ml_classifier: '利用机器学习模型预测股票涨跌概率，选择高概率股票。需要历史数据训练。',
+  factor_weighted: '基于多因子模型加权计算，考虑估值、成长、动量等因子。适合因子投资。',
+  rule_based: '根据预设规则筛选股票，如"ROE>15% 且 MACD 金叉"。适合规则明确的策略。'
+};
+
+/**
+ * Update model description based on selected model
+ */
+function updateModelDescription(modelId) {
+  const descEl = document.getElementById('model-description');
+  if (descEl) {
+    descEl.textContent = MODEL_DESCRIPTIONS[modelId] || '未知模型';
+  }
+}
+
+/**
+ * Reset trading model configuration to defaults
+ */
+function resetTradingModel() {
+  // Reset model select
+  const modelSelect = document.getElementById('trading-model-select');
+  if (modelSelect) modelSelect.value = 'score_rank';
+  updateModelDescription('score_rank');
+
+  // Reset rebalancing config
+  const rebalanceFreq = document.getElementById('rebalance-frequency');
+  const rebalanceDay = document.getElementById('rebalance-day');
+  const positionCount = document.getElementById('position-count');
+  const weightMethod = document.getElementById('weight-method');
+
+  if (rebalanceFreq) rebalanceFreq.value = 'weekly';
+  if (rebalanceDay) {
+    rebalanceDay.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = ['周一', '周二', '周三', '周四', '周五'][i - 1];
+      if (i === 5) option.selected = true;
+      rebalanceDay.appendChild(option);
+    }
+  }
+  if (positionCount) positionCount.value = 10;
+  if (weightMethod) weightMethod.value = 'equal';
+
+  // Reset trigger config
+  const triggerCondition = document.getElementById('trigger-condition');
+  const cooldownDays = document.getElementById('cooldown-days');
+  const stopLoss = document.getElementById('stop-loss');
+  const takeProfit = document.getElementById('take-profit');
+  const enableDynamicStop = document.getElementById('enable-dynamic-stop');
+  const enableTrailingStop = document.getElementById('enable-trailing-stop');
+
+  if (triggerCondition) triggerCondition.value = 'none';
+  if (cooldownDays) {
+    cooldownDays.value = 5;
+    cooldownDays.disabled = true;
+  }
+  if (stopLoss) stopLoss.value = 10;
+  if (takeProfit) takeProfit.value = 20;
+  if (enableDynamicStop) enableDynamicStop.checked = true;
+  if (enableTrailingStop) enableTrailingStop.checked = false;
+
+  // Reset risk management
+  const maxPosition = document.getElementById('max-position');
+  const singleStockLimit = document.getElementById('single-stock-limit');
+  const sectorLimit = document.getElementById('sector-limit');
+  const maxDrawdownLimit = document.getElementById('max-drawdown-limit');
+
+  if (maxPosition) maxPosition.value = 80;
+  if (singleStockLimit) singleStockLimit.value = 20;
+  if (sectorLimit) sectorLimit.value = 30;
+  if (maxDrawdownLimit) maxDrawdownLimit.value = 15;
+
+  showSuccess('交易模型配置已重置');
+}
+
+/**
+ * Collect trading model configuration from UI
+ */
+function collectTradingModelConfig() {
+  return {
+    model: {
+      id: document.getElementById('trading-model-select')?.value || 'score_rank',
+      parameters: {}
+    },
+    rebalancing: {
+      frequency: document.getElementById('rebalance-frequency')?.value || 'weekly',
+      day: parseInt(document.getElementById('rebalance-day')?.value || '5', 10),
+      positionCount: parseInt(document.getElementById('position-count')?.value || '10', 10),
+      weightMethod: document.getElementById('weight-method')?.value || 'equal'
+    },
+    triggers: {
+      condition: document.getElementById('trigger-condition')?.value || 'none',
+      cooldownDays: parseInt(document.getElementById('cooldown-days')?.value || '5', 10),
+      stopLoss: parseFloat(document.getElementById('stop-loss')?.value || '10', 10),
+      takeProfit: parseFloat(document.getElementById('take-profit')?.value || '20', 10),
+      enableDynamicStop: document.getElementById('enable-dynamic-stop')?.checked || false,
+      enableTrailingStop: document.getElementById('enable-trailing-stop')?.checked || false
+    },
+    risk: {
+      maxPosition: parseFloat(document.getElementById('max-position')?.value || '80', 10),
+      singleStockLimit: parseFloat(document.getElementById('single-stock-limit')?.value || '20', 10),
+      sectorLimit: parseFloat(document.getElementById('sector-limit')?.value || '30', 10),
+      maxDrawdownLimit: parseFloat(document.getElementById('max-drawdown-limit')?.value || '15', 10)
+    }
+  };
+}
+
+/**
+ * Save trading model configuration
+ */
+function saveTradingModel() {
+  const config = collectTradingModelConfig();
+
+  // Validate configuration
+  if (config.rebalancing.positionCount < 1 || config.rebalancing.positionCount > 50) {
+    showError('持仓数量必须在 1-50 之间');
+    return;
+  }
+
+  if (config.risk.maxPosition < 10 || config.risk.maxPosition > 100) {
+    showError('最大仓位必须在 10-100% 之间');
+    return;
+  }
+
+  if (config.triggers.stopLoss <= 0 || config.triggers.stopLoss > 50) {
+    showError('止损阈值必须在 1-50% 之间');
+    return;
+  }
+
+  if (config.triggers.takeProfit <= 0 || config.triggers.takeProfit > 100) {
+    showError('止盈阈值必须在 5-100% 之间');
+    return;
+  }
+
+  // Save to localStorage for persistence
+  localStorage.setItem('tradingModelConfig', JSON.stringify(config));
+
+  console.log('Trading model configuration saved:', config);
+  showSuccess('交易模型配置已保存');
+}
+
+/**
+ * Load saved trading model configuration
+ */
+function loadTradingModelConfig() {
+  try {
+    const saved = localStorage.getItem('tradingModelConfig');
+    if (saved) {
+      const config = JSON.parse(saved);
+
+      // Restore model selection
+      const modelSelect = document.getElementById('trading-model-select');
+      if (modelSelect && config.model?.id) {
+        modelSelect.value = config.model.id;
+        updateModelDescription(config.model.id);
+      }
+
+      // Restore rebalancing config
+      if (config.rebalancing) {
+        const freq = document.getElementById('rebalance-frequency');
+        if (freq && config.rebalancing.frequency) freq.value = config.rebalancing.frequency;
+
+        const positionCount = document.getElementById('position-count');
+        if (positionCount && config.rebalancing.positionCount) {
+          positionCount.value = config.rebalancing.positionCount;
+        }
+
+        const weightMethod = document.getElementById('weight-method');
+        if (weightMethod && config.rebalancing.weightMethod) {
+          weightMethod.value = config.rebalancing.weightMethod;
+        }
+      }
+
+      // Restore trigger config
+      if (config.triggers) {
+        const condition = document.getElementById('trigger-condition');
+        if (condition && config.triggers.condition) condition.value = config.triggers.condition;
+
+        const cooldown = document.getElementById('cooldown-days');
+        if (cooldown && config.triggers.cooldownDays !== undefined) {
+          cooldown.value = config.triggers.cooldownDays;
+          cooldown.disabled = config.triggers.condition === 'none';
+        }
+
+        const stopLoss = document.getElementById('stop-loss');
+        if (stopLoss && config.triggers.stopLoss !== undefined) {
+          stopLoss.value = config.triggers.stopLoss;
+        }
+
+        const takeProfit = document.getElementById('take-profit');
+        if (takeProfit && config.triggers.takeProfit !== undefined) {
+          takeProfit.value = config.triggers.takeProfit;
+        }
+
+        const dynamicStop = document.getElementById('enable-dynamic-stop');
+        if (dynamicStop && config.triggers.enableDynamicStop !== undefined) {
+          dynamicStop.checked = config.triggers.enableDynamicStop;
+        }
+
+        const trailingStop = document.getElementById('enable-trailing-stop');
+        if (trailingStop && config.triggers.enableTrailingStop !== undefined) {
+          trailingStop.checked = config.triggers.enableTrailingStop;
+        }
+      }
+
+      // Restore risk config
+      if (config.risk) {
+        const maxPosition = document.getElementById('max-position');
+        if (maxPosition && config.risk.maxPosition !== undefined) {
+          maxPosition.value = config.risk.maxPosition;
+        }
+
+        const singleLimit = document.getElementById('single-stock-limit');
+        if (singleLimit && config.risk.singleStockLimit !== undefined) {
+          singleLimit.value = config.risk.singleStockLimit;
+        }
+
+        const sectorLimit = document.getElementById('sector-limit');
+        if (sectorLimit && config.risk.sectorLimit !== undefined) {
+          sectorLimit.value = config.risk.sectorLimit;
+        }
+
+        const maxDdLimit = document.getElementById('max-drawdown-limit');
+        if (maxDdLimit && config.risk.maxDrawdownLimit !== undefined) {
+          maxDdLimit.value = config.risk.maxDrawdownLimit;
+        }
+      }
+
+      console.log('Trading model configuration loaded from storage');
+    }
+  } catch (error) {
+    console.error('Failed to load trading model config:', error);
+  }
+}
+
+// ============================================================================
 // Application Initialization
 // ============================================================================
 
@@ -1075,6 +1394,7 @@ function initializeApp() {
   loadStockList();
   loadStrategies();
   loadDashboardData();
+  loadTradingModelConfig();
 
   console.log('Application initialized');
 }

@@ -3,7 +3,413 @@
 /// REST endpoints for stock screening based on indicators
 
 ///|
-/// Screen request structure
+/// Market price indicators structure
+pub struct MarketPriceIndicators {
+  /// Stock code
+  code : String
+  /// Analysis date
+  date : String
+  /// Opening price
+  open : Float
+  /// Closing price
+  close : Float
+  /// Highest price
+  high : Float
+  /// Lowest price
+  low : Float
+  /// N-day average price
+  avg_price_n : Float
+  /// Current price change
+  price_change : Float
+  /// Price change percentage
+  price_change_pct : Float
+} derive(Show, ToJson)
+
+///|
+/// Volume indicators structure
+pub struct VolumeIndicators {
+  /// Stock code
+  code : String
+  /// Analysis date
+  date : String
+  /// Current volume
+  volume : Float
+  /// N-day average volume
+  avg_volume_n : Float
+  /// Volume ratio (current / avg)
+  volume_ratio : Float
+  /// Amount (volume * price)
+  amount : Float
+  /// N-day average amount
+  avg_amount_n : Float
+} derive(Show, ToJson)
+
+///|
+/// Turnover rate indicators
+pub struct TurnoverIndicators {
+  /// Stock code
+  code : String
+  /// Analysis date
+  date : String
+  /// Current turnover rate (%)
+  turnover_rate : Float
+  /// N-day average turnover rate
+  avg_turnover_rate_n : Float
+  /// Free float shares
+  free_shares : Float
+} derive(Show, ToJson)
+
+///|
+/// Price change indicators
+pub struct PriceChangeIndicators {
+  /// Stock code
+  code : String
+  /// Analysis date
+  date : String
+  /// Daily price change (%)
+  daily_change : Float
+  /// N-day average price change
+  avg_change_n : Float
+  /// N-day cumulative change
+  cumulative_change_n : Float
+  /// Highest price in N days
+  high_n : Float
+  /// Lowest price in N days
+  low_n : Float
+} derive(Show, ToJson)
+
+///|
+/// Calculate market price indicators from K-line data
+pub fn calculate_market_price_indicators(
+  klines : Array[@data.KLine],
+  n_period : Int,
+) -> MarketPriceIndicators {
+  if klines.length() == 0 {
+    return MarketPriceIndicators::{
+      code: "",
+      date: "",
+      open: 0.0,
+      close: 0.0,
+      high: 0.0,
+      low: 0.0,
+      avg_price_n: 0.0,
+      price_change: 0.0,
+      price_change_pct: 0.0,
+    }
+  }
+
+  let last = klines[klines.length() - 1]
+  let len = klines.length()
+
+  // Calculate N-day average price
+  let mut sum : Float = 0.0
+  let mut count = 0
+  let mut i = if len > n_period { len - n_period } else { 0 }
+  while i < len {
+    sum = sum + klines[i].close
+    count = count + 1
+    i = i + 1
+  }
+  let avg_price_n = if count > 0 { sum / Float::from_int(count) } else { 0.0 }
+
+  // Calculate price change
+  let price_change = if len >= 2 {
+    let prev_close = klines[len - 2].close
+    last.close - prev_close
+  } else {
+    0.0
+  }
+
+  // Calculate price change percentage
+  let price_change_pct = if len >= 2 {
+    let prev_close = klines[len - 2].close
+    if prev_close > 0.0 {
+      (price_change / prev_close) * 100.0
+    } else {
+      0.0
+    }
+  } else {
+    0.0
+  }
+
+  MarketPriceIndicators::{
+    code: last.code,
+    date: last.date,
+    open: last.open,
+    close: last.close,
+    high: last.high,
+    low: last.low,
+    avg_price_n,
+    price_change,
+    price_change_pct,
+  }
+}
+
+///|
+/// Calculate volume indicators from K-line data
+pub fn calculate_volume_indicators(
+  klines : Array[@data.KLine],
+  n_period : Int,
+) -> VolumeIndicators {
+  if klines.length() == 0 {
+    return VolumeIndicators::{
+      code: "",
+      date: "",
+      volume: 0.0,
+      avg_volume_n: 0.0,
+      volume_ratio: 0.0,
+      amount: 0.0,
+      avg_amount_n: 0.0,
+    }
+  }
+
+  let last = klines[klines.length() - 1]
+  let len = klines.length()
+
+  // Calculate N-day average volume
+  let mut sum_vol : Float = 0.0
+  let mut sum_amt : Float = 0.0
+  let mut count = 0
+  let mut i = if len > n_period { len - n_period } else { 0 }
+  while i < len {
+    sum_vol = sum_vol + klines[i].volume
+    sum_amt = sum_amt + klines[i].amount
+    count = count + 1
+    i = i + 1
+  }
+  let avg_volume_n = if count > 0 { sum_vol / Float::from_int(count) } else { 0.0 }
+  let avg_amount_n = if count > 0 { sum_amt / Float::from_int(count) } else { 0.0 }
+
+  // Calculate volume ratio
+  let volume_ratio = if avg_volume_n > 0.0 { last.volume / avg_volume_n } else { 0.0 }
+
+  VolumeIndicators::{
+    code: last.code,
+    date: last.date,
+    volume: last.volume,
+    avg_volume_n,
+    volume_ratio,
+    amount: last.amount,
+    avg_amount_n,
+  }
+}
+
+///|
+/// Calculate turnover rate indicators
+pub fn calculate_turnover_indicators(
+  klines : Array[@data.KLine],
+  free_shares : Float,
+  n_period : Int,
+) -> TurnoverIndicators {
+  if klines.length() == 0 || free_shares <= 0.0 {
+    return TurnoverIndicators::{
+      code: "",
+      date: "",
+      turnover_rate: 0.0,
+      avg_turnover_rate_n: 0.0,
+      free_shares: free_shares,
+    }
+  }
+
+  let last = klines[klines.length() - 1]
+  let len = klines.length()
+
+  // Calculate turnover rate = volume / free_shares * 100
+  let turnover_rate = (last.volume / free_shares) * 100.0
+
+  // Calculate N-day average turnover rate
+  let mut sum_turnover : Float = 0.0
+  let mut count = 0
+  let mut i = if len > n_period { len - n_period } else { 0 }
+  while i < len {
+    let daily_turnover : Float = (klines[i].volume / free_shares) * 100.0
+    sum_turnover = sum_turnover + daily_turnover
+    count = count + 1
+    i = i + 1
+  }
+  let avg_turnover_rate_n : Float = if count > 0 { sum_turnover / Float::from_int(count) } else { 0.0 }
+
+  TurnoverIndicators::{
+    code: last.code,
+    date: last.date,
+    turnover_rate,
+    avg_turnover_rate_n,
+    free_shares,
+  }
+}
+
+///|
+/// Calculate price change indicators
+pub fn calculate_price_change_indicators(
+  klines : Array[@data.KLine],
+  n_period : Int,
+) -> PriceChangeIndicators {
+  if klines.length() == 0 {
+    return PriceChangeIndicators::{
+      code: "",
+      date: "",
+      daily_change: 0.0,
+      avg_change_n: 0.0,
+      cumulative_change_n: 0.0,
+      high_n: 0.0,
+      low_n: 0.0,
+    }
+  }
+
+  let last = klines[klines.length() - 1]
+  let len = klines.length()
+
+  // Daily change
+  let daily_change = if len >= 2 {
+    let prev_close = klines[len - 2].close
+    ((last.close - prev_close) / prev_close) * 100.0
+  } else {
+    0.0
+  }
+
+  // N-day period start
+  let start_idx = if len > n_period { len - n_period } else { 0 }
+  let start_price = klines[start_idx].close
+
+  // Cumulative change
+  let cumulative_change_n = if start_price > 0.0 {
+    ((last.close - start_price) / start_price) * 100.0
+  } else {
+    0.0
+  }
+
+  // N-day average daily change
+  let mut sum_change : Float = 0.0
+  let mut count = 0
+  let mut j = start_idx + 1
+  while j < len {
+    let day_change : Float = ((klines[j].close - klines[j - 1].close) / klines[j - 1].close) * 100.0
+    sum_change = sum_change + day_change
+    count = count + 1
+    j = j + 1
+  }
+  let avg_change_n : Float = if count > 0 { sum_change / Float::from_int(count) } else { 0.0 }
+
+  // N-day high and low
+  let mut high_n = klines[start_idx].high
+  let mut low_n = klines[start_idx].low
+  let mut k = start_idx
+  while k < len {
+    if klines[k].high > high_n { high_n = klines[k].high }
+    if klines[k].low < low_n { low_n = klines[k].low }
+    k = k + 1
+  }
+
+  PriceChangeIndicators::{
+    code: last.code,
+    date: last.date,
+    daily_change,
+    avg_change_n,
+    cumulative_change_n,
+    high_n,
+    low_n,
+  }
+}
+
+///|
+/// Financial indicators structure
+pub struct FinancialIndicators {
+  /// Stock code
+  code : String
+  /// Analysis date
+  date : String
+  /// Average ROE (%)
+  roe_avg : Float
+  /// Net profit margin (%)
+  np_margin : Float
+  /// Gross profit margin (%)
+  gp_margin : Float
+  /// Net profit (in 10K CNY)
+  net_profit : Float
+  /// EPS (TTM)
+  eps_ttm : Float
+  /// Operating revenue (in 10K CNY)
+  mb_revenue : Float
+  /// Total share capital
+  total_share : Float
+  /// Free float shares
+  liqa_share : Float
+} derive(Show, ToJson)
+
+///|
+/// Unified stock screener result combining all indicators
+pub struct StockScreenerResult {
+  /// Stock code
+  code : String
+  /// Stock name
+  name : String
+  /// Market price indicators
+  price : MarketPriceIndicators
+  /// Volume indicators
+  volume : VolumeIndicators
+  /// Turnover indicators
+  turnover : TurnoverIndicators
+  /// Price change indicators
+  price_change : PriceChangeIndicators
+  /// Financial indicators
+  financial : FinancialIndicators
+  /// Composite score
+  score : Float
+  /// Health rating
+  health : String
+} derive(Show, ToJson)
+
+///|
+/// Screen filter condition
+pub struct ScreenFilterCondition {
+  /// Indicator field to filter
+  field : String
+  /// Operator: >, <, =, >=, <=, between
+  operator : String
+  /// Minimum value (for >, >=, between)
+  min_value : Float?
+  /// Maximum value (for <, <=, between)
+  max_value : Float?
+}
+
+///|
+/// Screen request with comprehensive filters
+pub struct ComprehensiveScreenRequest {
+  /// Price filters
+  price_filters : Array[ScreenFilterCondition]
+  /// Volume filters
+  volume_filters : Array[ScreenFilterCondition]
+  /// Financial filters
+  financial_filters : Array[ScreenFilterCondition]
+  /// Technical filters
+  technical_filters : Array[ScreenFilterCondition]
+  /// Indicator weights for scoring
+  weights : Map[String, Float]
+  /// Sort field
+  sort_by : String
+  /// Sort order (true = desc, false = asc)
+  sort_desc : Bool
+  /// Maximum results
+  limit : Int
+}
+
+///|
+/// Create default comprehensive screen request
+pub fn ComprehensiveScreenRequest::default() -> ComprehensiveScreenRequest {
+  ComprehensiveScreenRequest::{
+    price_filters: [],
+    volume_filters: [],
+    financial_filters: [],
+    technical_filters: [],
+    weights: {},
+    sort_by: "score",
+    sort_desc: true,
+    limit: 100,
+  }
+}
+
+///|
+/// Screen request structure (legacy - kept for backward compatibility)
 pub struct ScreenRequest {
   /// Minimum ROE (%)
   min_roe : Float?
@@ -607,4 +1013,362 @@ pub fn handle_get_indicator_detail(indicator_id : String) -> HttpResponse {
     }
     _ => make_response(404, "{\"error\":\"Indicator not found\",\"id\":\"\{indicator_id}\"}")
   }
+}
+
+///|
+/// Trading model types
+pub enum TradingModelType {
+  /// Periodic rebalancing (weekly, bi-weekly, monthly, quarterly)
+  PeriodicRebalance
+  /// Condition-based trigger
+  ConditionTrigger
+  /// Score-based ranking
+  ScoreRanking
+  /// Multi-factor weighted
+  MultiFactor
+} derive(Show, ToJson, Eq)
+
+///|
+/// Rebalancing frequency options
+pub enum RebalanceFrequency {
+  /// Weekly (every Monday)
+  Weekly
+  /// Bi-weekly (every 2 weeks)
+  BiWeekly
+  /// Monthly (first trading day of month)
+  Monthly
+  /// Quarterly (first trading day of quarter)
+  Quarterly
+} derive(Show, ToJson, Eq)
+
+///|
+/// Convert frequency to string
+pub fn RebalanceFrequency::to_string(self : RebalanceFrequency) -> String {
+  match self {
+    RebalanceFrequency::Weekly => "weekly"
+    RebalanceFrequency::BiWeekly => "biweekly"
+    RebalanceFrequency::Monthly => "monthly"
+    RebalanceFrequency::Quarterly => "quarterly"
+  }
+}
+
+///|
+/// Parse frequency from string
+pub fn RebalanceFrequency::from_string(s : String) -> RebalanceFrequency {
+  match s {
+    "weekly" => RebalanceFrequency::Weekly
+    "biweekly" => RebalanceFrequency::BiWeekly
+    "monthly" => RebalanceFrequency::Monthly
+    "quarterly" => RebalanceFrequency::Quarterly
+    _ => RebalanceFrequency::Monthly
+  }
+}
+
+///|
+/// Periodic rebalancing configuration
+pub struct PeriodicRebalanceConfig {
+  /// Rebalancing frequency
+  frequency : RebalanceFrequency
+  /// Specific day of week (1-5 for Mon-Fri, used for weekly)
+  day_of_week : Int?
+  /// Specific day of month (1-31, used for monthly)
+  day_of_month : Int?
+  /// Number of stocks to hold
+  holding_count : Int
+  /// Whether to reinvest dividends
+  reinvest_dividends : Bool
+} derive(Show, ToJson)
+
+///|
+/// Condition trigger type
+pub enum TriggerConditionType {
+  /// Technical indicator trigger (RSI, MACD, etc.)
+  Technical
+  /// Price-based trigger
+  Price
+  /// Volume-based trigger
+  Volume
+  /// Financial metric trigger
+  Financial
+} derive(Show, ToJson, Eq)
+
+///|
+/// Single trigger condition
+pub struct TriggerCondition {
+  /// Condition type
+  condition_type : TriggerConditionType
+  /// Indicator field (e.g., "rsi", "macd", "price")
+  field : String
+  /// Operator (>, <, >=, <=, =, cross_above, cross_below)
+  operator : String
+  /// Threshold value
+  threshold : Float
+  /// Period for calculation
+  period : Int?
+} derive(Show, ToJson)
+
+///|
+/// Condition-based trigger configuration
+pub struct ConditionTriggerConfig {
+  /// Trigger conditions (all must be met for AND, any for OR)
+  conditions : Array[TriggerCondition]
+  /// Logic operator: "AND" or "OR"
+  logic_operator : String
+  /// Action when triggered: "buy", "sell", "rebalance"
+  action : String
+  /// Cooldown period in days after trigger
+  cooldown_days : Int
+  /// Stop loss percentage
+  stop_loss_pct : Float?
+  /// Take profit percentage
+  take_profit_pct : Float?
+} derive(Show, ToJson)
+
+///|
+/// Trading model instance
+pub struct TradingModelInstance {
+  /// Model ID
+  id : String
+  /// Model name
+  name : String
+  /// Model type
+  model_type : TradingModelType
+  /// Configuration
+  config : Json
+  /// Created at
+  created_at : String
+  /// Is active
+  is_active : Bool
+} derive(Show, ToJson)
+
+///|
+/// Create default periodic rebalance config
+pub fn PeriodicRebalanceConfig::default() -> PeriodicRebalanceConfig {
+  PeriodicRebalanceConfig::{
+    frequency: RebalanceFrequency::Monthly,
+    day_of_week: None,
+    day_of_month: Some(1),
+    holding_count: 10,
+    reinvest_dividends: true,
+  }
+}
+
+///|
+/// Create default condition trigger config
+pub fn ConditionTriggerConfig::default() -> ConditionTriggerConfig {
+  ConditionTriggerConfig::{
+    conditions: [],
+    logic_operator: "AND",
+    action: "rebalance",
+    cooldown_days: 5,
+    stop_loss_pct: Some(10.0),
+    take_profit_pct: Some(20.0),
+  }
+}
+
+///|
+/// Create a trigger condition
+pub fn TriggerCondition::create(
+  condition_type : TriggerConditionType,
+  field : String,
+  operator : String,
+  threshold : Float,
+  period : Int?,
+) -> TriggerCondition {
+  TriggerCondition::{
+    condition_type,
+    field,
+    operator,
+    threshold,
+    period,
+  }
+}
+
+///|
+/// Technical trigger condition builder
+pub fn TriggerCondition::technical(
+  field : String,
+  operator : String,
+  threshold : Float,
+  period : Int?,
+) -> TriggerCondition {
+  TriggerCondition::{
+    condition_type: TriggerConditionType::Technical,
+    field,
+    operator,
+    threshold,
+    period,
+  }
+}
+
+///|
+/// Price trigger condition builder
+pub fn TriggerCondition::price(
+  operator : String,
+  threshold : Float,
+) -> TriggerCondition {
+  TriggerCondition::{
+    condition_type: TriggerConditionType::Price,
+    field: "price",
+    operator,
+    threshold,
+    period: None,
+  }
+}
+
+///|
+/// Evaluate if a trigger condition is met
+pub fn TriggerCondition::evaluate(
+  self : TriggerCondition,
+  current_value : Float,
+  prev_value : Float?,
+) -> Bool {
+  match self.operator {
+    ">" => current_value > self.threshold
+    "<" => current_value < self.threshold
+    ">=" => current_value >= self.threshold
+    "<=" => current_value <= self.threshold
+    "=" => Float::to_double(current_value) == Float::to_double(self.threshold)
+    "cross_above" => {
+      match prev_value {
+        Some(prev) => prev <= self.threshold && current_value > self.threshold
+        None => false
+      }
+    }
+    "cross_below" => {
+      match prev_value {
+        Some(prev) => prev >= self.threshold && current_value < self.threshold
+        None => false
+      }
+    }
+    _ => false
+  }
+}
+
+///|
+/// Evaluate all trigger conditions
+pub fn evaluate_trigger_conditions(
+  conditions : Array[TriggerCondition],
+  values : Map[String, Float],
+  prev_values : Map[String, Float]?,
+  logic_operator : String,
+) -> Bool {
+  if conditions.length() == 0 {
+    return false
+  }
+
+  let results : Array[Bool] = []
+  for cond in conditions {
+    let current_val = match values.get(cond.field) {
+      Some(v) => v
+      None => 0.0
+    }
+    let prev_val = match prev_values {
+      Some(pv) => pv.get(cond.field)
+      None => None
+    }
+    results.push(cond.evaluate(current_val, prev_val))
+  }
+
+  // Apply logic operator
+  if logic_operator == "AND" {
+    let mut all_true = true
+    for r in results {
+      if !r { all_true = false }
+    }
+    all_true
+  } else {
+    // OR
+    let mut any_true = false
+    for r in results {
+      if r { any_true = true }
+    }
+    any_true
+  }
+}
+
+///|
+/// Handler: Create periodic rebalancing model
+pub fn handle_create_periodic_model(config_body : String?) -> HttpResponse {
+  let _freq = RebalanceFrequency::Monthly
+  let config = PeriodicRebalanceConfig::default()
+
+  let reinvest_str = if config.reinvest_dividends { "true" } else { "false" }
+  let config_json = "{\"frequency\":\"\{config.frequency.to_string()}\",\"holding_count\":\{Int::to_string(config.holding_count)},\"reinvest_dividends\":\{reinvest_str}}"
+
+  let response = "{\"status\":\"created\",\"model_type\":\"periodic_rebalance\",\"config\":\{config_json},\"message\":\"Periodic rebalancing model configured\"}"
+  make_response(200, response)
+}
+
+///|
+/// Handler: Create condition trigger model
+pub fn handle_create_trigger_model(config_body : String?) -> HttpResponse {
+  let config = ConditionTriggerConfig::default()
+
+  let conditions_json = "[" + config.conditions.map(fn(c) {
+    "{\"type\":\"technical\",\"field\":\"\{c.field}\",\"operator\":\"\{c.operator}\",\"threshold\":\{c.threshold}}"
+  }).join(",") + "]"
+
+  let response = "{\"status\":\"created\",\"model_type\":\"condition_trigger\",\"config\":{\"logic_operator\":\"\{config.logic_operator}\",\"action\":\"\{config.action}\",\"cooldown_days\":\{Int::to_string(config.cooldown_days)},\"conditions\":\{conditions_json}},\"message\":\"Condition trigger model configured\"}"
+  make_response(200, response)
+}
+
+///|
+/// Handler: Get trading model examples
+pub fn handle_get_model_examples() -> HttpResponse {
+  let examples = [
+    "{\"id\":\"example_1\",\"name\":\"Monthly Rebalance\",\"type\":\"periodic_rebalance\",\"config\":{\"frequency\":\"monthly\",\"holding_count\":10,\"reinvest_dividends\":true},\"description\":\"Rebalance portfolio monthly, holding top 10 scored stocks\"}",
+    "{\"id\":\"example_2\",\"name\":\"RSI Oversold Trigger\",\"type\":\"condition_trigger\",\"config\":{\"conditions\":[{\"field\":\"rsi\",\"operator\":\"cross_below\",\"threshold\":30}],\"logic_operator\":\"AND\",\"action\":\"buy\",\"cooldown_days\":5},\"description\":\"Buy when RSI crosses below 30\"}",
+    "{\"id\":\"example_3\",\"name\":\"MACD Golden Cross\",\"type\":\"condition_trigger\",\"config\":{\"conditions\":[{\"field\":\"macd\",\"operator\":\"cross_above\",\"threshold\":0}],\"logic_operator\":\"AND\",\"action\":\"buy\",\"cooldown_days\":3},\"description\":\"Buy on MACD golden cross\"}",
+    "{\"id\":\"example_4\",\"name\":\"Weekly Rotation\",\"type\":\"periodic_rebalance\",\"config\":{\"frequency\":\"weekly\",\"day_of_week\":1,\"holding_count\":5},\"description\":\"Weekly rotation every Monday\"}",
+  ]
+
+  let total = Int::to_string(examples.length())
+  let response = "{\"examples\":[" + examples.join(",") + "],\"total\":\{total}}"
+  make_response(200, response)
+}
+
+///|
+/// Handler: Get available trigger types
+pub fn handle_get_trigger_types() -> HttpResponse {
+  let trigger_types = [
+    "{\"id\":\"technical\",\"name\":\"Technical Indicator Trigger\",\"description\":\"Trigger based on technical indicators like RSI, MACD, KDJ\",\"supported_fields\":[\"rsi\",\"macd\",\"kdj_k\",\"kdj_d\",\"ma_short\",\"ma_long\"],\"operators\":[\">\",\"<\",\">=\",\"<=\",\"=\",\"cross_above\",\"cross_below\"]}",
+    "{\"id\":\"price\",\"name\":\"Price Trigger\",\"description\":\"Trigger based on price movements\",\"supported_fields\":[\"price\",\"price_change_pct\",\"cumulative_change\"],\"operators\":[\">\",\"<\",\">=\",\"<=\",\"=\",\"cross_above\",\"cross_below\"]}",
+    "{\"id\":\"volume\",\"name\":\"Volume Trigger\",\"description\":\"Trigger based on volume changes\",\"supported_fields\":[\"volume\",\"volume_ratio\",\"turnover_rate\"],\"operators\":[\">\",\"<\",\">=\",\"<=\",\"=\"]}",
+    "{\"id\":\"financial\",\"name\":\"Financial Trigger\",\"description\":\"Trigger based on financial metrics\",\"supported_fields\":[\"roe\",\"np_margin\",\"eps\",\"pe_ratio\"],\"operators\":[\">\",\"<\",\">=\",\"<=\"]}",
+  ]
+
+  let total = Int::to_string(trigger_types.length())
+  let response = "{\"trigger_types\":[" + trigger_types.join(",") + "],\"total\":\{total}}"
+  make_response(200, response)
+}
+
+///|
+/// Handler: Get rebalancing frequencies
+pub fn handle_get_rebalance_frequencies() -> HttpResponse {
+  let frequencies = [
+    "{\"id\":\"weekly\",\"name\":\"Weekly\",\"description\":\"Rebalance every week (default: Monday)\",\"configurable\":\"day_of_week\"}",
+    "{\"id\":\"biweekly\",\"name\":\"Bi-weekly\",\"description\":\"Rebalance every 2 weeks\",\"configurable\":null}",
+    "{\"id\":\"monthly\",\"name\":\"Monthly\",\"description\":\"Rebalance every month\",\"configurable\":\"day_of_month\"}",
+    "{\"id\":\"quarterly\",\"name\":\"Quarterly\",\"description\":\"Rebalance every quarter\",\"configurable\":null}",
+  ]
+
+  let total = Int::to_string(frequencies.length())
+  let response = "{\"frequencies\":[" + frequencies.join(",") + "],\"total\":\{total}}"
+  make_response(200, response)
+}
+
+///|
+/// Handler: List all trading models
+pub fn handle_list_all_trading_models() -> HttpResponse {
+  // Combine built-in models and trigger types
+  let models = get_trading_models()
+  let models_json = models.map(fn(m) {
+    let params_json = "[" + m.parameters.map(fn(p) { "\"\{p}\"" }).join(",") + "]"
+    "{\"id\":\"\{m.id}\",\"name\":\"\{m.name}\",\"description\":\"\{m.description}\",\"model_type\":\"\{m.model_type}\",\"parameters\":\{params_json},\"output\":\"\{m.output}\"}"
+  })
+
+  let total = Int::to_string(models.length())
+  let response = "{\"models\":[" + models_json.join(",") + "],\"total\":\{total}}"
+  make_response(200, response)
 }

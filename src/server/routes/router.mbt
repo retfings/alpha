@@ -187,6 +187,45 @@ pub fn route_request(path : String, http_method : String) -> HttpResponse {
     return handle_set_weights("{}")
   }
 
+  // ===== Trading Model Configuration Endpoints =====
+  if clean_path == "/api/trading-models/all" && http_method == "GET" {
+    return handle_list_all_trading_models()
+  }
+
+  if clean_path == "/api/trading-models/examples" && http_method == "GET" {
+    return handle_get_model_examples()
+  }
+
+  if clean_path == "/api/trading-models/periodic" && http_method == "POST" {
+    return handle_create_periodic_model(None)
+  }
+
+  if clean_path == "/api/trading-models/trigger" && http_method == "POST" {
+    return handle_create_trigger_model(None)
+  }
+
+  if clean_path == "/api/trading-models/trigger-types" && http_method == "GET" {
+    return handle_get_trigger_types()
+  }
+
+  if clean_path == "/api/trading-models/rebalance-frequencies" && http_method == "GET" {
+    return handle_get_rebalance_frequencies()
+  }
+
+  // ===== Extended Screener Endpoints =====
+  if clean_path == "/api/screener" && http_method == "POST" {
+    return handle_screener(None)
+  }
+
+  if clean_path == "/api/screener/indicators" && http_method == "GET" {
+    return handle_get_all_indicators()
+  }
+
+  if clean_path.has_prefix("/api/screener/indicators/") && http_method == "GET" {
+    let id = clean_path[25:].to_string()
+    return handle_get_indicator_detail(id)
+  }
+
   // ===== Backtest Endpoints =====
   if clean_path == "/api/backtest/run" && http_method == "POST" {
     return handle_run_backtest("{}")

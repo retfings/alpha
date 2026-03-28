@@ -1627,10 +1627,73 @@ if __name__ == '__main__':
 
 ---
 
+## 股票筛选 API
+
+完整的股票筛选系统 API 规范，请参阅：
+- [股票筛选系统 API 规范](api/stock-screener-api.md) - 完整的 API 接口设计文档
+
+### 股票筛选端点
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/screen/stocks` | GET/POST | 执行筛选，返回结果 |
+| `/api/screen/config` | POST | 保存筛选配置 |
+| `/api/screen/config` | GET | 获取筛选配置列表 |
+| `/api/screen/config/:id` | GET | 获取特定配置详情 |
+| `/api/screen/weights` | PUT | 更新指标权重 |
+
+### 指标元数据端点
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/indicators/market` | GET | 获取行情指标列表 |
+| `/api/indicators/technical` | GET | 获取技术指标列表 |
+| `/api/indicators/financial` | GET | 获取财务指标列表 |
+| `/api/indicators/descriptions` | GET | 获取所有指标说明 |
+| `/api/indicators/:id` | GET | 获取单个指标详情 |
+
+### 交易模型端点
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/trading-model/config` | POST | 配置交易模型 |
+| `/api/trading-model/config` | GET | 获取交易模型配置列表 |
+| `/api/trading-model/config/:id` | GET | 获取特定配置详情 |
+| `/api/trading-model/simulate` | POST | 模拟交易结果 |
+
+### 技术指标支持
+
+| 指标 | 说明 | 标准参数 |
+|------|------|----------|
+| MACD | 趋势跟踪动量指标 | 12, 26, 9 |
+| RSI | 相对强弱指标 | 14 |
+| KDJ | 随机振荡指标 | 9, 3, 3 |
+| MA | 移动平均线 | 可配置 |
+| Bollinger | 布林带 | 20, 2.0 |
+| ATR | 平均真实波幅 | 14 |
+
+### 筛选条件
+
+| 条件 | 类型 | 说明 |
+|------|------|------|
+| `min_roe` | float | 最小 ROE (%) |
+| `min_np_margin` | float | 最小净利率 (%) |
+| `min_eps` | float | 最小每股收益 |
+| `min_price` | float | 最小价格 |
+| `max_price` | float | 最大价格 |
+| `min_volume` | float | 最小成交量 |
+| `sort_by` | string | 排序字段 |
+| `sort_order` | string | 排序顺序 |
+| `limit` | int | 结果数量限制 |
+
+---
+
 ## 更新日志
 
 | 版本 | 日期 | 变更内容 |
 |------|------|----------|
+| 1.3 | 2026-03-28 | 更新股票筛选系统 API 规范，新增端点：/api/screen/stocks, /api/screen/config, /api/screen/weights, /api/indicators/market, /api/indicators/technical, /api/indicators/financial, /api/indicators/descriptions, /api/trading-model/config, /api/trading-model/simulate |
+| 1.2 | 2026-03-28 | 新增股票筛选 API 完整文档，包括技术指标、交易模型和权重配置 |
 | 1.1 | 2026-03-28 | 新增选股指标 API：/api/indicators, /api/screen, /api/trading-models, /api/weights |
 | 1.0 | 2026-03-27 | 初始版本，包含核心 API 端点 |
 
