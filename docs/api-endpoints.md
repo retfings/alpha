@@ -6,12 +6,16 @@
 
 ### 启动服务器
 
+使用 MoonBit 内置 HTTP 服务器启动服务：
+
 ```bash
 MOONBIT_CMD=serve MOONBIT_ARGS="--port 8080" moon run cmd/main
 ```
 
 **参数**:
 - `--port`: 服务器端口（默认：8080）
+
+启动成功后，访问 `http://localhost:8080/api/health` 检查服务状态。
 
 ### 基础 URL
 
@@ -973,6 +977,499 @@ curl -X DELETE http://localhost:8080/api/strategies/usr_ma_001
 
 ---
 
+## 选股指标 API
+
+### 获取所有指标列表
+
+#### `GET /api/indicators`
+
+获取所有可用的选股指标。
+
+**请求**:
+```http
+GET /api/indicators HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "indicators": [
+    {
+      "id": "roe",
+      "name": "ROE",
+      "category": "financial",
+      "unit": "%"
+    },
+    {
+      "id": "np_margin",
+      "name": "Net Profit Margin",
+      "category": "financial",
+      "unit": "%"
+    },
+    {
+      "id": "eps",
+      "name": "EPS",
+      "category": "financial",
+      "unit": "CNY"
+    },
+    {
+      "id": "price",
+      "name": "Price",
+      "category": "market",
+      "unit": "CNY"
+    },
+    {
+      "id": "volume",
+      "name": "Volume",
+      "category": "market",
+      "unit": "shares"
+    },
+    {
+      "id": "macd",
+      "name": "MACD",
+      "category": "technical",
+      "unit": "price"
+    },
+    {
+      "id": "rsi",
+      "name": "RSI",
+      "category": "technical",
+      "unit": "index"
+    },
+    {
+      "id": "kdj",
+      "name": "KDJ",
+      "category": "technical",
+      "unit": "index"
+    }
+  ],
+  "total": 8
+}
+```
+
+**cURL 示例**:
+```bash
+curl http://localhost:8080/api/indicators
+```
+
+---
+
+### 按分类获取指标
+
+#### `GET /api/indicators/:category`
+
+按分类获取指标列表，支持的分类：`financial`（财务）、`technical`（技术）、`market`（市场）。
+
+**路径参数**:
+- `category`: 指标分类
+
+**请求**:
+```http
+GET /api/indicators/technical HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "category": "technical",
+  "indicators": [
+    {
+      "id": "macd",
+      "name": "MACD",
+      "category": "technical",
+      "unit": "price",
+      "description": "Moving Average Convergence Divergence"
+    },
+    {
+      "id": "rsi",
+      "name": "RSI",
+      "category": "technical",
+      "unit": "index",
+      "description": "Relative Strength Index"
+    },
+    {
+      "id": "kdj",
+      "name": "KDJ",
+      "category": "technical",
+      "unit": "index",
+      "description": "Stochastic Oscillator"
+    },
+    {
+      "id": "ma",
+      "name": "Moving Average",
+      "category": "technical",
+      "unit": "price",
+      "description": "Simple/Exponential Moving Average"
+    },
+    {
+      "id": "bollinger",
+      "name": "Bollinger Bands",
+      "category": "technical",
+      "unit": "price",
+      "description": "Volatility bands"
+    },
+    {
+      "id": "atr",
+      "name": "ATR",
+      "category": "technical",
+      "unit": "price",
+      "description": "Average True Range"
+    }
+  ],
+  "total": 6
+}
+```
+
+**cURL 示例**:
+```bash
+# 获取技术指标
+curl http://localhost:8080/api/indicators/technical
+
+# 获取财务指标
+curl http://localhost:8080/api/indicators/financial
+
+# 获取市场指标
+curl http://localhost:8080/api/indicators/market
+
+# 获取所有指标
+curl http://localhost:8080/api/indicators/all
+```
+
+---
+
+### 获取指标详情
+
+#### `GET /api/indicators/:id`
+
+获取单个指标的详细信息。
+
+**路径参数**:
+- `id`: 指标 ID
+
+**请求**:
+```http
+GET /api/indicators/roe HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "id": "roe",
+  "name": "Return on Equity",
+  "description": "Net income divided by shareholders equity",
+  "formula": "ROE = Net Income / Shareholders Equity",
+  "category": "financial",
+  "unit": "%",
+  "range": "0-50%"
+}
+```
+
+**cURL 示例**:
+```bash
+# 获取 ROE 详情
+curl http://localhost:8080/api/indicators/roe
+
+# 获取 MACD 详情
+curl http://localhost:8080/api/indicators/macd
+
+# 获取 RSI 详情
+curl http://localhost:8080/api/indicators/rsi
+```
+
+---
+
+### 执行选股筛选
+
+#### `POST /api/screen`
+
+执行选股筛选，返回符合条件的股票列表。
+
+**请求体参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `min_roe` | float | 否 | 最小 ROE (%) |
+| `min_np_margin` | float | 否 | 最小净利率 (%) |
+| `min_eps` | float | 否 | 最小每股收益 |
+| `min_price` | float | 否 | 最小价格 |
+| `max_price` | float | 否 | 最大价格 |
+| `min_volume` | float | 否 | 最小成交量 |
+| `min_health` | string | 否 | 最小健康评级 |
+| `sort_by` | string | 否 | 排序字段 |
+| `sort_order` | string | 否 | 排序顺序 (asc/desc) |
+| `limit` | int | 否 | 返回数量限制 |
+
+**请求**:
+```http
+POST /api/screen HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "min_roe": 15.0,
+  "min_np_margin": 10.0,
+  "sort_by": "roe",
+  "sort_order": "desc",
+  "limit": 20
+}
+```
+
+**响应**:
+```json
+{
+  "results": [
+    {
+      "code": "sh.600001",
+      "name": "Stock 600001",
+      "roe": 25.0,
+      "np_margin": 18.0,
+      "eps": 3.5,
+      "price": 15.8,
+      "volume": 1500000.0,
+      "health": "Excellent",
+      "score": 90.0
+    },
+    {
+      "code": "sh.600003",
+      "name": "Stock 600003",
+      "roe": 18.5,
+      "np_margin": 15.0,
+      "eps": 2.8,
+      "price": 12.3,
+      "volume": 1200000.0,
+      "health": "Good",
+      "score": 80.0
+    }
+  ],
+  "total": 2
+}
+```
+
+**cURL 示例**:
+```bash
+# 筛选 ROE > 15% 的股票
+curl -X POST http://localhost:8080/api/screen \
+  -H "Content-Type: application/json" \
+  -d '{"min_roe": 15.0}'
+
+# 综合筛选
+curl -X POST http://localhost:8080/api/screen \
+  -H "Content-Type: application/json" \
+  -d '{
+    "min_roe": 15.0,
+    "min_np_margin": 10.0,
+    "min_eps": 2.0,
+    "sort_by": "roe",
+    "sort_order": "desc",
+    "limit": 20
+  }'
+```
+
+---
+
+### 获取交易模型列表
+
+#### `GET /api/trading-models`
+
+获取所有可用的交易模型。
+
+**请求**:
+```http
+GET /api/trading-models HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "models": [
+    {
+      "id": "score_rank",
+      "name": "综合评分排序模型",
+      "description": "Based on multi-factor scoring and ranking",
+      "model_type": "scoring",
+      "parameters": ["weights", "normalize_method", "rank_method"],
+      "output": "ranked_stock_list"
+    },
+    {
+      "id": "cluster_select",
+      "name": "聚类选股模型",
+      "description": "Groups stocks using clustering algorithms, selects from best clusters",
+      "model_type": "clustering",
+      "parameters": ["n_clusters", "features", "selection_ratio"],
+      "output": "cluster_assignments"
+    },
+    {
+      "id": "ml_classifier",
+      "name": "机器学习分类模型",
+      "description": "ML-based classification for buy/hold/sell signals",
+      "model_type": "classification",
+      "parameters": ["model_type", "features", "thresholds"],
+      "output": "signal_labels"
+    },
+    {
+      "id": "factor_weighted",
+      "name": "因子加权模型",
+      "description": "Weighted combination of multiple factors",
+      "model_type": "factor",
+      "parameters": ["factor_weights", "normalization", "decay"],
+      "output": "composite_scores"
+    },
+    {
+      "id": "rule_based",
+      "name": "规则筛选模型",
+      "description": "Rule-based filtering with logical conditions",
+      "model_type": "rule_engine",
+      "parameters": ["rules", "logic_operator", "min_matches"],
+      "output": "filtered_stocks"
+    }
+  ],
+  "total": 5
+}
+```
+
+**cURL 示例**:
+```bash
+curl http://localhost:8080/api/trading-models
+```
+
+---
+
+### 设置指标权重
+
+#### `POST /api/weights`
+
+设置选股指标的权重配置。
+
+**请求体参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `weights` | array | 是 | 权重配置列表 |
+
+**权重配置项**:
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `indicator` | string | 指标 ID |
+| `weight` | float | 权重值 (0-1) |
+| `direction` | string | 方向 (asc/desc/neutral) |
+
+**请求**:
+```http
+POST /api/weights HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "weights": [
+    {
+      "indicator": "roe",
+      "weight": 0.3,
+      "direction": "asc"
+    },
+    {
+      "indicator": "np_margin",
+      "weight": 0.2,
+      "direction": "asc"
+    },
+    {
+      "indicator": "pe_ratio",
+      "weight": 0.2,
+      "direction": "desc"
+    },
+    {
+      "indicator": "rsi",
+      "weight": 0.15,
+      "direction": "neutral"
+    },
+    {
+      "indicator": "macd",
+      "weight": 0.15,
+      "direction": "asc"
+    }
+  ]
+}
+```
+
+**响应**:
+```json
+{
+  "status": "configured",
+  "message": "Weights saved successfully",
+  "note": "Persistence not yet implemented"
+}
+```
+
+**cURL 示例**:
+```bash
+curl -X POST http://localhost:8080/api/weights \
+  -H "Content-Type: application/json" \
+  -d '{
+    "weights": [
+      {"indicator": "roe", "weight": 0.3, "direction": "asc"},
+      {"indicator": "np_margin", "weight": 0.2, "direction": "asc"}
+    ]
+  }'
+```
+
+---
+
+### 获取当前权重配置
+
+#### `GET /api/weights`
+
+获取当前的指标权重配置。
+
+**请求**:
+```http
+GET /api/weights HTTP/1.1
+Host: localhost:8080
+```
+
+**响应**:
+```json
+{
+  "weights": [
+    {
+      "indicator": "roe",
+      "weight": 0.3,
+      "direction": "asc"
+    },
+    {
+      "indicator": "np_margin",
+      "weight": 0.2,
+      "direction": "asc"
+    },
+    {
+      "indicator": "eps",
+      "weight": 0.2,
+      "direction": "asc"
+    },
+    {
+      "indicator": "pe_ratio",
+      "weight": 0.15,
+      "direction": "desc"
+    },
+    {
+      "indicator": "rsi",
+      "weight": 0.15,
+      "direction": "neutral"
+    }
+  ]
+}
+```
+
+**cURL 示例**:
+```bash
+curl http://localhost:8080/api/weights
+```
+
+---
+
 ## 批量操作 (待实现)
 
 ### 批量回测
@@ -1134,8 +1631,9 @@ if __name__ == '__main__':
 
 | 版本 | 日期 | 变更内容 |
 |------|------|----------|
+| 1.1 | 2026-03-28 | 新增选股指标 API：/api/indicators, /api/screen, /api/trading-models, /api/weights |
 | 1.0 | 2026-03-27 | 初始版本，包含核心 API 端点 |
 
 ---
 
-*最后更新：2026-03-27*
+*最后更新：2026-03-28*
