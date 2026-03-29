@@ -305,3 +305,84 @@ int32_t moonbit_list_files(const char *dir_path, const char ***result_arr, const
   return count;
 #endif
 }
+
+// List CSV files in directory and return as newline-separated string
+// Format: "sh_600001_...\nsz_000001_...\n..."
+MOONBIT_FFI_EXPORT
+moonbit_bytes_t moonbit_list_csv_files(const char *dir_path) {
+#ifdef _WIN32
+  WIN32_FIND_DATAA find_data;
+  HANDLE hFind;
+  char search_path[MAX_PATH];
+
+  snprintf(search_path, sizeof(search_path), "%s\\*.csv", dir_path);
+  hFind = FindFirstFileA(search_path, &find_data);
+
+  if (hFind == INVALID_HANDLE_VALUE) {
+    return moonbit_make_bytes(0, 0);
+  }
+
+  // Build result string
+  char result[1024 * 1024] = {0};  // 1MB buffer
+  int total_len = 0;
+
+  do {
+    if (strcmp(find_data.cFileName, ".") != 0 && strcmp(find_data.cFileName, "..") != 0) {
+      int len = strlen(find_data.cFileName);
+      if (total_len + len + 1 < (int)sizeof(result) - 1) {
+        strcpy(result + total_len, find_data.cFileName);
+        total_len += len;
+        result[total_len++] = '\n';
+      }
+    }
+  } while (FindNextFileA(hFind, &find_data) != 0);
+
+  FindClose(hFind);
+
+  if (total_len > 0) {
+    result[total_len - 1] = '\0';  // Remove trailing newline
+    total_len--;
+  }
+
+  moonbit_bytes_t bytes = moonbit_make_bytes(total_len, 0);
+  memcpy(bytes, result, total_len);
+  return bytes;
+#else
+  // POSIX implementation
+  DIR *dir = opendir(dir_path);
+  if (!dir) {
+    return moonbit_make_bytes(0, 0);
+  }
+
+  // Build result string
+  char result[1024 * 1024] = {0};  // 1MB buffer
+  int total_len = 0;
+
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+      const char *name = entry->d_name;
+      size_t name_len = strlen(name);
+      // Only include .csv files
+      if (name_len > 4 && strcmp(name + name_len - 4, ".csv") == 0) {
+        if (total_len + name_len + 1 < (int)sizeof(result) - 1) {
+          strcpy(result + total_len, name);
+          total_len += name_len;
+          result[total_len++] = '\n';
+        }
+      }
+    }
+  }
+
+  closedir(dir);
+
+  if (total_len > 0) {
+    result[total_len - 1] = '\0';  // Remove trailing newline
+    total_len--;
+  }
+
+  moonbit_bytes_t bytes = moonbit_make_bytes(total_len, 0);
+  memcpy(bytes, result, total_len);
+  return bytes;
+#endif
+}

@@ -120,3 +120,27 @@ pub fn get_project_root() -> String? {
     None => None
   }
 }
+
+///|
+/// List CSV files in directory (returns newline-separated filenames)
+#borrow(dir_path)
+extern "c" fn __list_csv_files(dir_path : Bytes) -> Bytes = "moonbit_list_csv_files"
+
+///|
+/// List CSV files in directory as Array[String]
+pub fn list_csv_files(dir : String) -> Array[String] {
+  let dir_bytes = @utf8.encode(dir)
+  let result_bytes = __list_csv_files(dir_bytes)
+  let result = @utf8.decode_lossy(result_bytes)
+
+  // Split by newline and convert to Array of String
+  if result == "" {
+    []
+  } else {
+    let files : Array[String] = []
+    for view in result.split("\n") {
+      files.push(view.to_string())
+    }
+    files
+  }
+}
