@@ -1134,10 +1134,6 @@ async function changePageSize(newPageSize) {
   }
 }
 
-  // Update chart
-  updateScreenerChart(results);
-}
-
 /**
  * Get color based on score
  */
