@@ -1247,15 +1247,72 @@ fn get_screener_mock_data() -> Array[ScreenerStockResult] {
 pub fn handle_screener(request_body : String?) -> HttpResponse {
   let _request = parse_screener_request(request_body.unwrap_or("{}"))
 
-  // Get mock data (in production, would apply filters and calculate scores)
-  let results = get_screener_mock_data()
+  // Get all available stocks from data files
+  let stock_codes = scan_stock_files()
+
+  // Calculate indicators for each stock from K-line CSV data
+  let results : Array[ScreenerStockResult] = []
+
+  for code in stock_codes {
+    // Load K-line data for the stock from CSV
+    let klines = load_klines_for_stock(code)
+
+    if klines.length() == 0 {
+      continue
+    }
+
+    // Get latest kline for current price
+    let latest = klines[klines.length() - 1]
+    let price = latest.close
+    let volume = latest.volume
+    let turnover_rate = latest.turn
+
+    // Calculate technical indicators from K-line data
+    let rsi = calculate_rsi_from_klines(klines, 14)
+    let macd_val = calculate_macd_from_klines(klines, 12, 26, 9)
+    let kdj_val = calculate_kdj_from_klines(klines, 9)
+
+    // Get stock info for name
+    let stock_info = get_stock_info(code)
+
+    // Mock financial data (in production, would load from actual financial reports)
+    let roe : Float = Float::add(10.0, Float::div(price, 5.0))
+    let np_margin : Float = Float::add(8.0, Float::div(price, 8.0))
+    let eps : Float = Float::div(price, 10.0)
+
+    // Calculate score based on technical and price factors
+    let momentum_score : Float = if rsi > 50.0 { Float::mul(rsi, 0.5) } else { Float::mul(rsi, 0.3) }
+    let volume_score : Float = if volume > 0.0 { Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0) } else { 0.0 }
+    let price_score : Float = if price > 1.0 { Float::min(price, 30.0) } else { 0.0 }
+    let score : Float = Float::min(Float::add(Float::add(momentum_score, volume_score), price_score), 100.0)
+
+    results.push(ScreenerStockResult::{
+      code: code,
+      name: stock_info.name,
+      price: price,
+      rsi: rsi,
+      macd: macd_val,
+      kdj: kdj_val,
+      roe: roe,
+      np_margin: np_margin,
+      eps: eps,
+      volume: volume,
+      score: score,
+    })
+  }
+
+  // Apply filters from request (simplified - in production would parse request properly)
+  let filtered = results.filter(fn(r) { r.price > 1.0 })
+
+  // Sort by score descending
+  let sorted = sort_screener_results_by_score(filtered)
 
   // Build response JSON
-  let results_json = results.map(fn(r) {
+  let results_json = sorted.map(fn(r) {
     "{\"code\":\"\{r.code}\",\"name\":\"\{r.name}\",\"price\":\{r.price},\"rsi\":\{r.rsi},\"macd\":\{r.macd},\"kdj\":\{r.kdj},\"roe\":\{r.roe},\"np_margin\":\{r.np_margin},\"eps\":\{r.eps},\"volume\":\{r.volume},\"score\":\{r.score}}"
   })
 
-  let total = Int::to_string(results.length())
+  let total = Int::to_string(sorted.length())
   let response = "{\"results\":[" +
     results_json.join(",") +
     "],\"total\":\{total}}"
@@ -1686,6 +1743,77 @@ pub fn handle_get_rebalance_frequencies() -> HttpResponse {
     frequencies.join(",") +
     "],\"total\":\{total}}"
   make_response(200, response)
+}
+
+///|
+/// Calculate RSI from K-line data
+fn calculate_rsi_from_klines(klines: Array[@data.KLine], period: Int) -> Float {
+  if klines.length() < period + 1 {
+    return 50.0
+  }
+
+  let closes = klines.map(fn(k) { k.close })
+  let rsi_array = @indicator.rsi(closes, period)
+
+  if rsi_array.length() > 0 {
+    rsi_array[rsi_array.length() - 1]
+  } else {
+    50.0
+  }
+}
+
+///|
+/// Calculate MACD from K-line data
+fn calculate_macd_from_klines(klines: Array[@data.KLine], fast: Int, slow: Int, signal: Int) -> Float {
+  if klines.length() < slow + 1 {
+    return 0.0
+  }
+
+  let closes = klines.map(fn(k) { k.close })
+  let result = @indicator.macd(closes, fast, slow, signal)
+
+  if result.macd_line.length() > 0 {
+    result.macd_line[result.macd_line.length() - 1]
+  } else {
+    0.0
+  }
+}
+
+///|
+/// Calculate KDJ from K-line data
+fn calculate_kdj_from_klines(klines: Array[@data.KLine], n_period: Int) -> Float {
+  if klines.length() < n_period {
+    return 50.0
+  }
+
+  let (k_line, d_line, j_line) = @indicator.kdj(klines, n_period, 3, 3)
+
+  if j_line.length() > 0 {
+    j_line[j_line.length() - 1]
+  } else {
+    50.0
+  }
+}
+
+///|
+/// Sort screener results by score (descending)
+fn sort_screener_results_by_score(results: Array[ScreenerStockResult]) -> Array[ScreenerStockResult] {
+  let sorted = results.copy()
+  let len = sorted.length()
+  let mut i = 0
+  while i < len {
+    let mut j = 0
+    while j < len - i - 1 {
+      if sorted[j].score < sorted[j + 1].score {
+        let temp = sorted[j]
+        sorted[j] = sorted[j + 1]
+        sorted[j + 1] = temp
+      }
+      j = j + 1
+    }
+    i = i + 1
+  }
+  sorted
 }
 
 ///|

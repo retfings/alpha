@@ -555,10 +555,27 @@ async function runScreener() {
   try {
     // Collect filter conditions
     const filters = Array.from(state.filters.values())
-      .filter(f => f.enabled !== false && f.value !== '');
+      .filter(f => f.enabled !== false && f.value !== '')
+      .map(f => ({
+        indicator: f.indicatorId,
+        operator: f.operator,
+        value: parseFloat(f.value)
+      }));
 
-    // Mock screening results (replace with actual API call)
-    await simulateScreening(filters);
+    // Collect weights
+    const weights = Object.fromEntries(state.weights);
+
+    // Build API request
+    const config = {
+      filters: filters,
+      weights: weights,
+      sort_by: 'score',
+      sort_order: 'desc',
+      limit: 100
+    };
+
+    // Call actual API
+    await callScreenerApi(config);
 
     showToast(`筛选完成，找到 ${state.results.length} 只股票`, 'success');
   } catch (error) {
@@ -570,34 +587,40 @@ async function runScreener() {
 }
 
 /**
- * Simulate screening (replace with actual API call)
- * @param {Array} filters - Filter conditions
+ * Call screener API
+ * @param {Object} config - Screener configuration
  */
-async function simulateScreening(filters) {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
+async function callScreenerApi(config) {
+  const response = await fetch('/api/screener', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  });
 
-  // Mock data
-  const mockStocks = [
-    { code: '600000', name: '浦发银行', score: 85.5 },
-    { code: '600036', name: '招商银行', score: 92.3 },
-    { code: '000001', name: '平安银行', score: 78.9 },
-    { code: '601398', name: '工商银行', score: 81.2 },
-    { code: '600519', name: '贵州茅台', score: 95.8 },
-    { code: '000858', name: '五粮液', score: 88.6 },
-    { code: '600276', name: '恒瑞医药', score: 76.4 },
-    { code: '000333', name: '美的集团', score: 83.7 },
-    { code: '601888', name: '中国中免', score: 71.2 },
-    { code: '600030', name: '中信证券', score: 79.5 }
-  ];
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `HTTP ${response.status}`);
+  }
 
-  // Sort by score
-  state.results = mockStocks
-    .map(stock => ({
-      ...stock,
-      indicators: generateRandomIndicators()
-    }))
-    .sort((a, b) => b.score - a.score);
+  const data = await response.json();
+
+  // Transform API results to match frontend format
+  state.results = data.results.map((stock, index) => ({
+    code: stock.code,
+    name: stock.name,
+    score: stock.score || 0,
+    indicators: {
+      price: stock.price,
+      rsi: stock.rsi,
+      macd: stock.macd,
+      kdj: stock.kdj,
+      roe: stock.roe,
+      np_margin: stock.np_margin,
+      eps: stock.eps,
+      volume: stock.volume,
+      turnover_rate: stock.turnover_rate
+    }
+  })).sort((a, b) => b.score - a.score);
 
   renderResults();
 }
@@ -612,7 +635,7 @@ function generateRandomIndicators() {
     pb: (Math.random() * 10).toFixed(2),
     roe: (Math.random() * 30 - 5).toFixed(2),
     turnover_rate: (Math.random() * 10).toFixed(2)
-  };
+  }
 }
 
 /**
@@ -672,7 +695,6 @@ function setupSortableHeaders(headerRow) {
   const sortableCols = {
     'rank': { key: 'rank', defaultOrder: 'asc' },
     'code': { key: 'code', defaultOrder: 'asc' },
-    'name': { key: 'name', defaultOrder: 'asc' },
     'score': { key: 'score', defaultOrder: 'desc' }
   };
 
@@ -766,9 +788,8 @@ function renderTableRows(bodyEl) {
     row.innerHTML = `
       <td class="col-rank">${index + 1}</td>
       <td class="col-code">${stock.code}</td>
-      <td class="col-name">${stock.name}</td>
       <td class="col-score"><span class="stock-score ${getScoreClass(stock.score)}">${stock.score.toFixed(1)}</span></td>
-      <td class="col-indicators">PE: ${stock.indicators.pe} | ROE: ${stock.indicators.roe}%</td>
+      <td class="col-indicators">价格：${stock.indicators.price?.toFixed(2) || '--'} | RSI: ${stock.indicators.rsi?.toFixed(1) || '--'}</td>
       <td class="col-action">
         <button class="btn-view-detail" data-code="${stock.code}">详情</button>
         <button class="btn-compare" data-code="${stock.code}">对比</button>
