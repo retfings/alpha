@@ -73,7 +73,7 @@ pub fn start_server(port : Int) -> Unit {
   println("")
 
   let mut request_count = 0
-  while request_count < 100 {
+  while true {
     request_count = request_count + 1
     println("Waiting for request \{request_count}...")
 
