@@ -79,11 +79,18 @@ pub fn initialize_stock_cache() -> Array[ScreenerStockResult] {
 /// Get cached stock data (for use in handle_screener)
 pub fn get_cached_stocks_array() -> Array[ScreenerStockResult] {
   // Calculate stock indicators on each request
-  // This is still faster than the original approach because we only calculate once per request
+  // Limit to first 500 stocks for performance (5511 total stocks would take ~37 seconds)
   let stock_codes = scan_stock_files()
   let results : Array[ScreenerStockResult] = []
+  let mut count = 0
+  let max_stocks = 500  // Limit for performance
 
   for code in stock_codes {
+    if count >= max_stocks {
+      break
+    }
+    count = count + 1
+
     let klines = load_klines_for_stock(code)
 
     if klines.length() == 0 {
@@ -1204,6 +1211,8 @@ pub struct ScreenerRequest {
   sort_by : String
   sort_order : String
   limit : Int
+  page : Int
+  page_size : Int
 }
 
 ///|
@@ -1452,13 +1461,31 @@ pub fn limit_results(
 /// Parse screener request from JSON with proper filter handling
 fn parse_screener_request(json : String) -> ScreenerRequest {
   // Simple JSON parsing - extract filters array
-  // Format: {"filters":[{"indicator":"price","operator":"gt","value":1.0}],"weights":{},"sort_by":"score","sort_order":"desc","limit":100}
+  // Format: {"filters":[{"indicator":"price","operator":"gt","value":1.0}],"weights":{},"sort_by":"score","sort_order":"desc","limit":100,"page":1,"page_size":10}
 
   let filters : Array[ScreenerFilter] = []
   let weights : Map[String, Int] = {}
   let mut sort_by = "score"
   let mut sort_order = "desc"
   let mut limit = 100
+  let mut page = 1
+  let mut page_size = 10
+
+  // Parse page if present
+  if json.contains("\"page\"") {
+    let p = extract_json_int(json, "\"page\"")
+    if p > 0 {
+      page = p
+    }
+  }
+
+  // Parse page_size if present
+  if json.contains("\"page_size\"") {
+    let ps = extract_json_int(json, "\"page_size\"")
+    if ps > 0 {
+      page_size = ps
+    }
+  }
 
   // Parse filters if present
   if json.contains("\"filters\"") {
@@ -1548,7 +1575,7 @@ fn parse_screener_request(json : String) -> ScreenerRequest {
     }
   }
 
-  return ScreenerRequest::{ filters, weights, sort_by, sort_order, limit }
+  return ScreenerRequest::{ filters, weights, sort_by, sort_order, limit, page, page_size }
 }
 
 ///|
@@ -1706,18 +1733,40 @@ pub fn handle_screener(request_body : String?) -> HttpResponse {
     sort_screener_results_by_score(filtered)
   }
 
-  // Limit results
-  let limited = limit_results(sorted, Some(request.limit))
+  // Apply pagination: calculate start and end index
+  let total_count = sorted.length()
+  let start_index = (request.page - 1) * request.page_size
+  let end_index = request.page * request.page_size
+
+  // Slice results for current page
+  let paginated : Array[ScreenerStockResult] = if start_index < total_count {
+    let actual_end = if end_index > total_count { total_count } else { end_index }
+    let result : Array[ScreenerStockResult] = []
+    let mut i = start_index
+    while i < actual_end {
+      result.push(sorted[i])
+      i = i + 1
+    }
+    result
+  } else {
+    []
+  }
+
+  // Limit results (apply request.limit if specified)
+  let limited = limit_results(paginated, Some(request.limit))
 
   // Build response JSON
   let results_json = limited.map(fn(r) {
     "{\"code\":\"\{r.code}\",\"price\":\{r.price},\"volume\":\{r.volume},\"amount\":\{r.amount},\"turn\":\{r.turn},\"ma5\":\{r.ma5},\"ma10\":\{r.ma10},\"score\":\{r.score}}"
   })
 
-  let total = Int::to_string(limited.length())
+  let total = Int::to_string(total_count)
+  let current_page = Int::to_string(request.page)
+  let page_size = Int::to_string(request.page_size)
+  let total_pages = Int::to_string((total_count + request.page_size - 1) / request.page_size)
   let response = "{\"results\":[" +
     results_json.join(",") +
-    "],\"total\":\{total}}"
+    "],\"total\":\{total},\"page\":\{current_page},\"page_size\":\{page_size},\"total_pages\":\{total_pages}}"
 
   make_response(200, response)
 }
