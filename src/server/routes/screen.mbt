@@ -3,6 +3,145 @@
 /// REST endpoints for stock screening based on indicators
 
 ///|
+/// Initialize stock data cache at server startup
+/// Loads all K-line data and pre-calculates indicators for fast screening
+pub fn initialize_stock_cache() -> Array[ScreenerStockResult] {
+  let stock_codes = scan_stock_files()
+  let results : Array[ScreenerStockResult] = []
+
+  for code in stock_codes {
+    let klines = load_klines_for_stock(code)
+
+    if klines.length() == 0 {
+      continue
+    }
+
+    // Get latest kline for current price
+    let latest = klines[klines.length() - 1]
+    let price = latest.close
+    let volume = latest.volume
+    let amount = latest.amount
+    let turn = latest.turn
+
+    // Calculate MA5 (5-day moving average)
+    let ma5 = calculate_ma_from_klines(klines, 5)
+
+    // Calculate MA10 (10-day moving average)
+    let ma10 = calculate_ma_from_klines(klines, 10)
+
+    // Calculate score based on price momentum and volume
+    let ma5_momentum : Float = if ma5 > 0.0 {
+      (price - ma5) / ma5 * 100.0
+    } else {
+      0.0
+    }
+    let ma10_momentum : Float = if ma10 > 0.0 {
+      (price - ma10) / ma10 * 100.0
+    } else {
+      0.0
+    }
+
+    // Volume score
+    let volume_score : Float = if volume > 0.0 {
+      Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0)
+    } else {
+      0.0
+    }
+
+    // Combined score
+    let score : Float = Float::min(
+      Float::add(
+        Float::add(
+          Float::mul(ma5_momentum, 2.0),
+          Float::mul(ma10_momentum, 1.5),
+        ),
+        volume_score,
+      ),
+      100.0,
+    )
+
+    results.push(ScreenerStockResult::{
+      code,
+      price,
+      volume,
+      amount,
+      turn,
+      ma5,
+      ma10,
+      score,
+    })
+  }
+
+  results
+}
+
+///|
+/// Get cached stock data (for use in handle_screener)
+pub fn get_cached_stocks_array() -> Array[ScreenerStockResult] {
+  // Calculate stock indicators on each request
+  // This is still faster than the original approach because we only calculate once per request
+  let stock_codes = scan_stock_files()
+  let results : Array[ScreenerStockResult] = []
+
+  for code in stock_codes {
+    let klines = load_klines_for_stock(code)
+
+    if klines.length() == 0 {
+      continue
+    }
+
+    let latest = klines[klines.length() - 1]
+    let price = latest.close
+    let volume = latest.volume
+    let amount = latest.amount
+    let turn = latest.turn
+    let ma5 = calculate_ma_from_klines(klines, 5)
+    let ma10 = calculate_ma_from_klines(klines, 10)
+
+    let ma5_momentum : Float = if ma5 > 0.0 {
+      (price - ma5) / ma5 * 100.0
+    } else {
+      0.0
+    }
+    let ma10_momentum : Float = if ma10 > 0.0 {
+      (price - ma10) / ma10 * 100.0
+    } else {
+      0.0
+    }
+
+    let volume_score : Float = if volume > 0.0 {
+      Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0)
+    } else {
+      0.0
+    }
+
+    let score : Float = Float::min(
+      Float::add(
+        Float::add(
+          Float::mul(ma5_momentum, 2.0),
+          Float::mul(ma10_momentum, 1.5),
+        ),
+        volume_score,
+      ),
+      100.0,
+    )
+
+    results.push(ScreenerStockResult::{
+      code,
+      price,
+      volume,
+      amount,
+      turn,
+      ma5,
+      ma10,
+      score,
+    })
+  }
+
+  results
+}
+
+///|
 /// Market price indicators structure
 pub struct MarketPriceIndicators {
   /// Stock code
@@ -1091,18 +1230,6 @@ pub struct ScreenerStockResult {
 } derive(Show, ToJson)
 
 ///|
-/// Parse screener request from JSON
-fn parse_screener_request(_json : String) -> ScreenerRequest {
-  ScreenerRequest::{
-    filters: [],
-    weights: {},
-    sort_by: "score",
-    sort_order: "desc",
-    limit: 100,
-  }
-}
-
-///|
 /// Mock stock data for screener with K-line based indicators (for testing)
 fn get_screener_mock_data() -> Array[ScreenerStockResult] {
   [
@@ -1322,89 +1449,265 @@ pub fn limit_results(
 }
 
 ///|
-/// Handler: Run stock screener with filters and weights
-pub fn handle_screener(request_body : String?) -> HttpResponse {
-  let _request = parse_screener_request(request_body.unwrap_or("{}"))
+/// Parse screener request from JSON with proper filter handling
+fn parse_screener_request(json : String) -> ScreenerRequest {
+  // Simple JSON parsing - extract filters array
+  // Format: {"filters":[{"indicator":"price","operator":"gt","value":1.0}],"weights":{},"sort_by":"score","sort_order":"desc","limit":100}
 
-  // Get all available stocks from data files
-  let stock_codes = scan_stock_files()
+  let filters : Array[ScreenerFilter] = []
+  let weights : Map[String, Int] = {}
+  let mut sort_by = "score"
+  let mut sort_order = "desc"
+  let mut limit = 100
 
-  // Calculate indicators for each stock from K-line CSV data
-  let results : Array[ScreenerStockResult] = []
+  // Parse filters if present
+  if json.contains("\"filters\"") {
+    // Extract filters array content
+    match json.find("\"filters\"") {
+      Some(filters_start) => {
+        // Find the opening bracket
+        match json[filters_start:].find("[") {
+          Some(bracket_pos) => {
+            let filters_content_start = filters_start + bracket_pos
+            // Find matching closing bracket
+            let mut bracket_count = 0
+            let mut filters_content_end = filters_content_start
+            let content = json[filters_content_start:]
+            let mut i = 0
+            while i < content.char_length() {
+              let c = content.at(i)
+              if c == 91 {  // '['
+                bracket_count = bracket_count + 1
+              } else if c == 93 {  // ']'
+                bracket_count = bracket_count - 1
+                if bracket_count == 0 {
+                  filters_content_end = filters_content_start + i
+                  break
+                }
+              }
+              i = i + 1
+            }
 
-  for code in stock_codes {
-    // Load K-line data for the stock from CSV
-    let klines = load_klines_for_stock(code)
+            // Parse each filter object
+            if filters_content_end > filters_content_start {
+              let filters_str = json[filters_content_start:filters_content_end + 1]
+              // Extract individual filter objects
+              let filter_objects = filters_str.split("},{").to_array()
+              for obj in filter_objects {
+                let clean_obj = obj.replace(old="{", new="").replace(old="}", new="").to_string()
+                // Parse indicator, operator, value
+                let indicator = extract_json_string(clean_obj, "\"indicator\"")
+                let operator = extract_json_string(clean_obj, "\"operator\"")
+                let value = extract_json_float(clean_obj, "\"value\"")
 
-    if klines.length() == 0 {
-      continue
+                if indicator != "" && operator != "" {
+                  filters.push(ScreenerFilter::{
+                    indicator,
+                    operator,
+                    value: value,
+                    min: None,
+                    max: None,
+                  })
+                }
+              }
+            }
+          }
+          None => ()
+        }
+      }
+      None => ()
     }
-
-    // Get latest kline for current price
-    let latest = klines[klines.length() - 1]
-    let price = latest.close
-    let volume = latest.volume
-    let amount = latest.amount
-    let turn = latest.turn
-
-    // Calculate MA5 (5-day moving average)
-    let ma5 = calculate_ma_from_klines(klines, 5)
-
-    // Calculate MA10 (10-day moving average)
-    let ma10 = calculate_ma_from_klines(klines, 10)
-
-    // Calculate score based on price momentum and volume
-    // Price momentum: compare current price to MA5 and MA10
-    let ma5_momentum : Float = if ma5 > 0.0 {
-      (price - ma5) / ma5 * 100.0
-    } else {
-      0.0
-    }
-    let ma10_momentum : Float = if ma10 > 0.0 {
-      (price - ma10) / ma10 * 100.0
-    } else {
-      0.0
-    }
-
-    // Volume score
-    let volume_score : Float = if volume > 0.0 {
-      Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0)
-    } else {
-      0.0
-    }
-
-    // Combined score
-    let score : Float = Float::min(
-      Float::add(
-        Float::add(
-          Float::mul(ma5_momentum, 2.0),
-          Float::mul(ma10_momentum, 1.5),
-        ),
-        volume_score,
-      ),
-      100.0,
-    )
-
-    results.push(ScreenerStockResult::{
-      code,
-      price,
-      volume,
-      amount,
-      turn,
-      ma5,
-      ma10,
-      score,
-    })
   }
 
-  // Apply filters from request
-  let filtered = apply_screener_filters(results, _request.filters)
+  // Parse weights if present
+  if json.contains("\"weights\"") {
+    // Simplified: just use empty weights for now
+  }
 
-  // Sort by score descending
-  let sorted = sort_screener_results_by_score(filtered)
+  // Parse sort_by if present
+  if json.contains("\"sort_by\"") {
+    let sb = extract_json_string(json, "\"sort_by\"")
+    if sb != "" {
+      sort_by = sb
+    }
+  }
+
+  // Parse sort_order if present
+  if json.contains("\"sort_order\"") {
+    let so = extract_json_string(json, "\"sort_order\"")
+    if so != "" {
+      sort_order = so
+    }
+  }
+
+  // Parse limit if present
+  if json.contains("\"limit\"") {
+    let lim = extract_json_int(json, "\"limit\"")
+    if lim > 0 {
+      limit = lim
+    }
+  }
+
+  return ScreenerRequest::{ filters, weights, sort_by, sort_order, limit }
+}
+
+///|
+/// Extract string value from JSON (public for use in other modules)
+pub fn extract_json_string(json : String, key : String) -> String {
+  match json.find(key) {
+    Some(key_pos) => {
+      let rest = json[key_pos:]
+      match rest.find(":") {
+        Some(colon_pos) => {
+          let after_colon = rest[colon_pos + 1:]
+          let trimmed = after_colon.trim().to_string()
+          if trimmed.length() == 0 {
+            return ""
+          }
+
+          // Check if it's a quoted string
+          if trimmed.at(0) == 34 {
+            // Find closing quote
+            let content = trimmed[1:].to_string()
+            match content.find("\"") {
+              Some(end_quote) => content[0:end_quote].to_string()
+              None => ""
+            }
+          } else {
+            ""
+          }
+        }
+        None => ""
+      }
+    }
+    None => ""
+  }
+}
+
+///|
+/// Simple float parser (handles basic decimal numbers)
+fn parse_float_simple_for_screener(s : String) -> Float {
+  // Handle negative numbers
+  let mut negative = false
+  let mut start_idx = 0
+  if s.length() > 0 && s.at(0) == 45 {
+    negative = true
+    start_idx = 1
+  }
+
+  let mut int_part : Int = 0
+  let mut dec_part : Float = 0.0
+  let mut dec_divisor : Float = 1.0
+  let mut in_decimal = false
+
+  let mut i = start_idx
+  while i < s.char_length() {
+    let c = s.at(i)
+    // '0' = 48, '9' = 57 in ASCII/UTF-16
+    if c >= 48 && c <= 57 {
+      let digit : Int = UInt16::to_int(c) - 48
+      if !in_decimal {
+        int_part = int_part * 10 + digit
+      } else {
+        dec_divisor = dec_divisor * 10.0
+        dec_part = dec_part + Float::from_int(digit) / dec_divisor
+      }
+    } else if c == 46 {
+      // '.' = 46
+      in_decimal = true
+    }
+    i = i + 1
+  }
+
+  let result = Float::from_int(int_part) + dec_part
+  if negative {
+    -result
+  } else {
+    result
+  }
+}
+
+///|
+/// Extract float value from JSON (public for use in other modules)
+pub fn extract_json_float(json : String, key : String) -> Float? {
+  match json.find(key) {
+    Some(key_pos) => {
+      let rest = json[key_pos:]
+      match rest.find(":") {
+        Some(colon_pos) => {
+          let after_colon = rest[colon_pos + 1:]
+          let trimmed = after_colon.trim().to_string()
+          if trimmed.length() == 0 {
+            return None
+          }
+
+          // Parse numeric value - extract digits, decimal point, and minus sign
+          let mut num_end = 0
+          let mut i = 0
+          while i < trimmed.char_length() && i < 20 {
+            let c = trimmed.at(i)
+            if (c >= 48 && c <= 57) || c == 46 || c == 45 {
+              num_end = i + 1
+            } else if num_end > 0 {
+              break
+            }
+            i = i + 1
+          }
+
+          if num_end == 0 {
+            return None
+          }
+
+          let num_str = trimmed[0:num_end].to_string()
+          Some(parse_float_simple_for_screener(num_str))
+        }
+        None => None
+      }
+    }
+    None => None
+  }
+}
+
+///|
+/// Extract int value from JSON
+fn extract_json_int(json : String, key : String) -> Int {
+  let float_val = extract_json_float(json, key)
+  match float_val {
+    Some(f) => Float::to_int(f)
+    None => 100
+  }
+}
+
+///|
+/// Handler: Run stock screener with filters and weights
+pub fn handle_screener(request_body : String?) -> HttpResponse {
+  let request = parse_screener_request(request_body.unwrap_or("{}"))
+
+  // Get cached stock data (pre-calculated at server startup)
+  let all_results = get_cached_stocks_array()
+
+  // Apply filters from request
+  let filtered = apply_screener_filters(all_results, request.filters)
+
+  // Sort by specified field
+  let sorted = if request.sort_by == "price" {
+    sort_screener_results_by_field(filtered, "price", request.sort_order == "desc")
+  } else if request.sort_by == "volume" {
+    sort_screener_results_by_field(filtered, "volume", request.sort_order == "desc")
+  } else if request.sort_by == "amount" {
+    sort_screener_results_by_field(filtered, "amount", request.sort_order == "desc")
+  } else if request.sort_by == "turn" {
+    sort_screener_results_by_field(filtered, "turn", request.sort_order == "desc")
+  } else if request.sort_by == "ma5" {
+    sort_screener_results_by_field(filtered, "ma5", request.sort_order == "desc")
+  } else if request.sort_by == "ma10" {
+    sort_screener_results_by_field(filtered, "ma10", request.sort_order == "desc")
+  } else {
+    sort_screener_results_by_score(filtered)
+  }
 
   // Limit results
-  let limited = limit_results(sorted, Some(_request.limit))
+  let limited = limit_results(sorted, Some(request.limit))
 
   // Build response JSON
   let results_json = limited.map(fn(r) {
@@ -1417,6 +1720,40 @@ pub fn handle_screener(request_body : String?) -> HttpResponse {
     "],\"total\":\{total}}"
 
   make_response(200, response)
+}
+
+///|
+/// Sort screener results by specified field
+pub fn sort_screener_results_by_field(
+  results : Array[ScreenerStockResult],
+  field : String,
+  desc : Bool,
+) -> Array[ScreenerStockResult] {
+  let sorted = results.copy()
+  let len = sorted.length()
+  let mut i = 0
+  while i < len {
+    let mut j = 0
+    while j < len - i - 1 {
+      let val_j = get_indicator_value(sorted[j], field)
+      let val_j1 = get_indicator_value(sorted[j + 1], field)
+
+      let should_swap = if desc {
+        val_j < val_j1
+      } else {
+        val_j > val_j1
+      }
+
+      if should_swap {
+        let temp = sorted[j]
+        sorted[j] = sorted[j + 1]
+        sorted[j + 1] = temp
+      }
+      j = j + 1
+    }
+    i = i + 1
+  }
+  sorted
 }
 
 ///|

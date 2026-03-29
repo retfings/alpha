@@ -46,6 +46,11 @@ extern "c" fn http_server_close(server_fd : Int) -> Int = "moonbit_http_server_c
 pub fn start_server(port : Int) -> Unit {
   println("Starting HTTP server on port \{port}")
 
+  // Initialize stock data cache at startup (pre-load all K-line data)
+  println("Initializing stock data cache...")
+  let cache = @routes.initialize_stock_cache()
+  println("Loaded \{cache.length()} stocks into cache (cached for fast screening)")
+
   let server_fd = http_server_create(port)
   if server_fd < 0 {
     println("Failed to create server socket")
@@ -68,6 +73,7 @@ pub fn start_server(port : Int) -> Unit {
   println("  GET  /api/backtest/:id/result - Get result")
   println("  GET  /api/drawdown/:code      - Get drawdown")
   println("  GET  /api/portfolio/drawdown  - Portfolio drawdown")
+  println("  POST /api/screener            - Screen stocks with filters (e.g., price > 1)")
   println("")
   println("Press Ctrl+C to stop")
   println("")

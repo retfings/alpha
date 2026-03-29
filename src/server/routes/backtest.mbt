@@ -22,19 +22,19 @@ fn parse_backtest_request(json : String) -> BacktestRequest {
   let mut initial_capital_val = initial_capital
 
   if json.contains("\"stock\"") {
-    stock_val = extract_json_string(json, "stock")
+    stock_val = extract_json_string_simple(json, "stock")
   }
   if json.contains("\"strategy\"") {
-    strategy_val = extract_json_string(json, "strategy")
+    strategy_val = extract_json_string_simple(json, "strategy")
   }
   if json.contains("\"start_date\"") {
-    start_date_val = extract_json_string(json, "start_date")
+    start_date_val = extract_json_string_simple(json, "start_date")
   }
   if json.contains("\"end_date\"") {
-    end_date_val = extract_json_string(json, "end_date")
+    end_date_val = extract_json_string_simple(json, "end_date")
   }
   if json.contains("\"initial_capital\"") {
-    initial_capital_val = extract_json_float(json, "initial_capital")
+    initial_capital_val = extract_json_float_simple(json, "initial_capital")
   }
 
   BacktestRequest::{
@@ -49,8 +49,8 @@ fn parse_backtest_request(json : String) -> BacktestRequest {
 }
 
 ///|
-/// Extract string value from JSON
-fn extract_json_string(json : String, key : String) -> String {
+/// Extract string value from JSON (local private version for backtest)
+fn extract_json_string_simple(json : String, key : String) -> String {
   let search_key = "\"" + key + "\":\""
   match json.find(search_key) {
     Some(idx) => {
@@ -66,8 +66,8 @@ fn extract_json_string(json : String, key : String) -> String {
 }
 
 ///|
-/// Extract float value from JSON
-fn extract_json_float(json : String, key : String) -> Float {
+/// Extract float value from JSON (local private version for backtest)
+fn extract_json_float_simple(json : String, key : String) -> Float {
   let search_key = "\"" + key + "\":"
   match json.find(search_key) {
     Some(idx) => {
