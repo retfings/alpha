@@ -260,7 +260,18 @@ const operators = [
  * @param {Function} onDeselect - Callback when indicator is deselected
  */
 export function setupIndicatorHandlers(container, onSelect, onDeselect) {
+  // Prevent multiple event listeners on same container
+  if (container._indicatorHandlersAttached) {
+    return;
+  }
+  container._indicatorHandlersAttached = true;
+
   container.addEventListener('click', (e) => {
+    // Ignore clicks on help tooltip
+    if (e.target.closest('.indicator-help') || e.target.closest('.indicator-help-tooltip')) {
+      return;
+    }
+
     const card = e.target.closest('.indicator-card');
     if (!card) return;
 
