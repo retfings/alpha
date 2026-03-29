@@ -372,6 +372,14 @@ function addFilterControl(indicator) {
     enabled: true,
     weight: weight
   });
+
+  // Focus the value input
+  setTimeout(() => {
+    const valueInput = filterEl.querySelector('.filter-value-input');
+    if (valueInput) {
+      valueInput.focus();
+    }
+  }, 100);
 }
 
 /**
@@ -552,8 +560,23 @@ function autoBalanceWeights() {
  * Run the stock screener
  */
 async function runScreener() {
+  console.log('runScreener called');
+  console.log('state.selectedIndicators:', state.selectedIndicators);
+  console.log('state.filters:', state.filters);
+
   if (state.selectedIndicators.size === 0) {
-    showToast('请选择至少一个指标', 'warning');
+    showToast('请先选择指标：点击左侧指标卡片添加', 'warning');
+    return;
+  }
+
+  // Check if there are any enabled filters with values
+  const validFilters = Array.from(state.filters.values())
+    .filter(f => f.enabled !== false && f.value !== '' && f.value !== undefined);
+
+  console.log('Valid filters:', validFilters);
+
+  if (validFilters.length === 0) {
+    showToast('请为已选指标设置筛选条件（输入数值）', 'warning');
     return;
   }
 
@@ -567,13 +590,11 @@ async function runScreener() {
 
   try {
     // Collect filter conditions
-    const filters = Array.from(state.filters.values())
-      .filter(f => f.enabled !== false && f.value !== '')
-      .map(f => ({
-        indicator: f.indicatorId,
-        operator: f.operator,
-        value: parseFloat(f.value)
-      }));
+    const filters = validFilters.map(f => ({
+      indicator: f.indicatorId,
+      operator: f.operator,
+      value: parseFloat(f.value)
+    }));
 
     console.log('Filters being sent:', JSON.stringify(filters, null, 2));
 
