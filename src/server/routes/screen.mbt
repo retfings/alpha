@@ -313,6 +313,156 @@ pub fn get_cached_stocks_array_for_date(query_date : String) -> Array[ScreenerSt
 }
 
 ///|
+/// Get screener results for date range, applying filters to each day
+pub fn get_screener_results_with_date_range(
+  start_date : String,
+  end_date : String,
+  filters : Array[ScreenerFilter]
+) -> Array[ScreenerStockResult] {
+  let stock_codes = scan_stock_files()
+  let results : Array[ScreenerStockResult] = []
+  let mut count = 0
+  let max_stocks = 500
+
+  for code in stock_codes {
+    if count >= max_stocks {
+      break
+    }
+    count = count + 1
+
+    let klines = load_klines_for_stock(code)
+
+    if klines.length() == 0 {
+      continue
+    }
+
+    // Filter klines by date range
+    let filtered_klines = filter_klines_by_date(klines, start_date, end_date)
+
+    if filtered_klines.length() == 0 {
+      continue
+    }
+
+    let stock_info = get_stock_info(code)
+
+    // Iterate through each day in the range
+    for kline in filtered_klines {
+      let price = kline.close
+      let volume = kline.volume
+      let amount = kline.amount
+      let turn = kline.turn
+      let ma5 = calculate_ma_from_klines(filtered_klines, 5)
+      let ma10 = calculate_ma_from_klines(filtered_klines, 10)
+
+      // Create temporary result for filter checking
+      let temp_result = ScreenerStockResult::{
+        code,
+        name: stock_info.name,
+        price,
+        volume,
+        amount,
+        turn,
+        ma5,
+        ma10,
+        score: 0.0
+      }
+
+      // Check if this day's data passes all filters
+      let mut passes_all_filters = true
+      for filter in filters {
+        let value = get_indicator_value(temp_result, filter.indicator)
+
+        match filter.operator {
+          ">" =>
+            match filter.value {
+              Some(v) => if value <= v { passes_all_filters = false }
+              None => ignore(())
+            }
+          ">=" =>
+            match filter.value {
+              Some(v) => if value < v { passes_all_filters = false }
+              None => ignore(())
+            }
+          "<" =>
+            match filter.value {
+              Some(v) => if value >= v { passes_all_filters = false }
+              None => ignore(())
+            }
+          "<=" =>
+            match filter.value {
+              Some(v) => if value > v { passes_all_filters = false }
+              None => ignore(())
+            }
+          "=" =>
+            match filter.value {
+              Some(v) => if Float::abs(value - v) > 0.0001 { passes_all_filters = false }
+              None => ignore(())
+            }
+          "between" =>
+            match (filter.min, filter.max) {
+              (Some(min), Some(max)) =>
+                if value < min || value > max {
+                  passes_all_filters = false
+                }
+              _ => ignore(())
+            }
+          _ => ignore(())
+        }
+
+        if !passes_all_filters {
+          break
+        }
+      }
+
+      // If passes all filters, add to results
+      if passes_all_filters {
+        let ma5_momentum : Float = if ma5 > 0.0 {
+          (price - ma5) / ma5 * 100.0
+        } else {
+          0.0
+        }
+        let ma10_momentum : Float = if ma10 > 0.0 {
+          (price - ma10) / ma10 * 100.0
+        } else {
+          0.0
+        }
+
+        let volume_score : Float = if volume > 0.0 {
+          Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0)
+        } else {
+          0.0
+        }
+
+        let score : Float = Float::min(
+          Float::add(
+            Float::add(
+              Float::mul(ma5_momentum, 2.0),
+              Float::mul(ma10_momentum, 1.5),
+            ),
+            volume_score,
+          ),
+          100.0,
+        )
+
+        results.push(ScreenerStockResult::{
+          code,
+          name: stock_info.name,
+          price,
+          volume,
+          amount,
+          turn,
+          ma5,
+          ma10,
+          score,
+        })
+      }
+    }
+  }
+
+  results
+}
+
+///|
 /// Filter K-lines for a specific date
 fn filter_klines_for_single_date(
   klines : Array[@data.KLine],
@@ -1954,13 +2104,22 @@ pub fn handle_screener(request_body : String?) -> HttpResponse {
 
   // Get stock data based on date mode
   let all_results = if request.date_range_mode {
-    get_cached_stocks_array_with_date(request.start_date, request.end_date)
+    // In range mode, iterate through each day and apply filters
+    get_screener_results_with_date_range(
+      request.start_date,
+      request.end_date,
+      request.filters
+    )
   } else {
     get_cached_stocks_array_for_date(request.query_date)
   }
 
-  // Apply filters from request
-  let filtered = apply_screener_filters(all_results, request.filters)
+  // Apply filters from request (already applied in range mode)
+  let filtered = if request.date_range_mode {
+    all_results
+  } else {
+    apply_screener_filters(all_results, request.filters)
+  }
 
   // Sort by specified field
   let sorted = if request.sort_by == "price" {
