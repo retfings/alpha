@@ -827,7 +827,8 @@ async function runScreener() {
       weights: config.weights,
       sort_by: 'score',
       sort_order: 'desc',
-      limit: 100
+      page: 1,
+      page_size: 10
     };
 
     // Call actual backend API
