@@ -29,7 +29,13 @@ let dashboardData = {
 let screenerState = {
   indicators: [],
   results: [],
-  filters: {}
+  filters: {},
+  pagination: {
+    page: 1,
+    page_size: 10,
+    total: 0,
+    total_pages: 1
+  }
 };
 
 // ============================================================================
@@ -655,6 +661,34 @@ function setupScreenerHandlers() {
     });
   }
 
+  // Pagination - previous page button
+  const prevBtn = document.getElementById('prev-page');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (screenerState.pagination.page > 1) {
+        goToPage(screenerState.pagination.page - 1);
+      }
+    });
+  }
+
+  // Pagination - next page button
+  const nextBtn = document.getElementById('next-page');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (screenerState.pagination.page < screenerState.pagination.total_pages) {
+        goToPage(screenerState.pagination.page + 1);
+      }
+    });
+  }
+
+  // Pagination - page size change
+  const pageSizeSelect = document.getElementById('page-size');
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener('change', (e) => {
+      changePageSize(e.target.value);
+    });
+  }
+
   // Trading model select change
   const modelSelect = document.getElementById('trading-model-select');
   if (modelSelect) {
@@ -820,6 +854,7 @@ async function runScreener() {
   try {
     const config = collectScreenerConfig();
     const sortBy = document.getElementById('sort-by')?.value || 'score_desc';
+    const pageSize = parseInt(document.getElementById('page-size')?.value) || 10;
 
     // Build request body matching backend ScreenerRequest format
     const requestBody = {
@@ -828,7 +863,7 @@ async function runScreener() {
       sort_by: 'score',
       sort_order: 'desc',
       page: 1,
-      page_size: 10
+      page_size: pageSize
     };
 
     // Call actual backend API
@@ -837,9 +872,18 @@ async function runScreener() {
 
     screenerState.results = results;
     screenerState.filters = config;
+    screenerState.pagination = {
+      page: 1,
+      page_size: pageSize,
+      total: response.total || 0,
+      total_pages: response.total_pages || 1
+    };
 
     // Apply sorting
     sortScreenerResults(sortBy);
+
+    // Update pagination UI
+    updatePaginationUI();
 
     showSuccess('选股完成');
   } catch (error) {
@@ -979,7 +1023,116 @@ function updateScreenerResults(results) {
     </tr>
   `).join('');
 
-  if (countEl) countEl.textContent = results.length;
+  if (countEl) countEl.textContent = screenerState.pagination.total;
+}
+
+/**
+ * Update pagination UI
+ */
+function updatePaginationUI() {
+  const currentPageEl = document.getElementById('current-page');
+  const totalPagesEl = document.getElementById('total-pages');
+  const prevBtn = document.getElementById('prev-page');
+  const nextBtn = document.getElementById('next-page');
+
+  const { page, total_pages } = screenerState.pagination;
+
+  if (currentPageEl) currentPageEl.textContent = page;
+  if (totalPagesEl) totalPagesEl.textContent = total_pages || 1;
+
+  if (prevBtn) {
+    prevBtn.disabled = page <= 1;
+    prevBtn.style.opacity = page <= 1 ? '0.5' : '1';
+    prevBtn.style.cursor = page <= 1 ? 'not-allowed' : 'pointer';
+  }
+
+  if (nextBtn) {
+    nextBtn.disabled = page >= total_pages;
+    nextBtn.style.opacity = page >= total_pages ? '0.5' : '1';
+    nextBtn.style.cursor = page >= total_pages ? 'not-allowed' : 'pointer';
+  }
+}
+
+/**
+ * Go to specific page
+ */
+async function goToPage(page) {
+  const totalPages = screenerState.pagination.total_pages;
+  if (page < 1 || page > totalPages) return;
+
+  showLoading();
+
+  try {
+    const config = screenerState.filters;
+    const sortBy = document.getElementById('sort-by')?.value || 'score_desc';
+    const pageSize = screenerState.pagination.page_size;
+
+    const requestBody = {
+      filters: config.filters,
+      weights: config.weights,
+      sort_by: 'score',
+      sort_order: 'desc',
+      page: page,
+      page_size: pageSize
+    };
+
+    const response = await api.runScreener(requestBody);
+    const results = response.results || [];
+
+    screenerState.results = results;
+    screenerState.pagination.page = page;
+    screenerState.pagination.total_pages = response.total_pages || 1;
+
+    sortScreenerResults(sortBy);
+    updatePaginationUI();
+
+    showSuccess(`第 ${page} 页加载完成`);
+  } catch (error) {
+    console.error('Page load error:', error);
+    showError('加载失败：' + error.message);
+  } finally {
+    hideLoading();
+  }
+}
+
+/**
+ * Change page size
+ */
+async function changePageSize(newPageSize) {
+  showLoading();
+
+  try {
+    const config = screenerState.filters;
+    const sortBy = document.getElementById('sort-by')?.value || 'score_desc';
+
+    const requestBody = {
+      filters: config.filters,
+      weights: config.weights,
+      sort_by: 'score',
+      sort_order: 'desc',
+      page: 1,
+      page_size: parseInt(newPageSize) || 10
+    };
+
+    const response = await api.runScreener(requestBody);
+    const results = response.results || [];
+
+    screenerState.results = results;
+    screenerState.pagination.page = 1;
+    screenerState.pagination.page_size = parseInt(newPageSize) || 10;
+    screenerState.pagination.total_pages = response.total_pages || 1;
+
+    sortScreenerResults(sortBy);
+    updatePaginationUI();
+
+    showSuccess('每页条数已更新');
+  } catch (error) {
+    console.error('Page size change error:', error);
+    showError('加载失败：' + error.message);
+  } finally {
+    hideLoading();
+  }
+}
 
   // Update chart
   updateScreenerChart(results);
