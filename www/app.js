@@ -842,18 +842,18 @@ async function runScreener() {
  * Generate mock screener results for demonstration
  */
 function generateMockScreenerResults(config) {
-  // Mock stock data
+  // Mock stock data from K-line (only price, volume, amount, turn, MA indicators)
   const mockStocks = [
-    { code: 'sh.600000', name: '浦发银行', price: 8.52, market_cap: 2500, pe_ratio: 5.2, roe: 12.5, np_margin: 28.3, eps: 1.25, rsi: 45.2, macd: 0.0234, kdj: 52.3, volume: 25000000 },
-    { code: 'sh.600001', name: '邯郸钢铁', price: 3.45, market_cap: 450, pe_ratio: 8.5, roe: 8.2, np_margin: 5.1, eps: 0.32, rsi: 62.8, macd: -0.0123, kdj: 71.2, volume: 18000000 },
-    { code: 'sh.600002', name: '齐鲁石化', price: 5.67, market_cap: 680, pe_ratio: 6.8, roe: 15.8, np_margin: 12.4, eps: 0.89, rsi: 38.5, macd: 0.0456, kdj: 35.8, volume: 12000000 },
-    { code: 'sh.600003', name: '东北高速', price: 4.23, market_cap: 520, pe_ratio: 12.3, roe: 6.5, np_margin: 18.2, eps: 0.45, rsi: 55.1, macd: 0.0089, kdj: 48.6, volume: 9500000 },
-    { code: 'sh.600004', name: '白云机场', price: 12.89, market_cap: 1800, pe_ratio: 18.5, roe: 18.3, np_margin: 32.5, eps: 1.85, rsi: 72.4, macd: 0.1234, kdj: 82.1, volume: 32000000 },
-    { code: 'sh.600005', name: '武钢股份', price: 4.56, market_cap: 580, pe_ratio: 7.2, roe: 10.2, np_margin: 8.7, eps: 0.52, rsi: 48.9, macd: -0.0056, kdj: 42.3, volume: 21000000 },
-    { code: 'sh.600006', name: '东风汽车', price: 7.34, market_cap: 920, pe_ratio: 9.8, roe: 14.6, np_margin: 6.8, eps: 0.78, rsi: 58.2, macd: 0.0312, kdj: 61.5, volume: 15000000 },
-    { code: 'sh.600007', name: '上港集团', price: 6.12, market_cap: 1350, pe_ratio: 11.2, roe: 22.1, np_margin: 42.3, eps: 1.12, rsi: 41.6, macd: -0.0178, kdj: 38.9, volume: 28000000 },
-    { code: 'sh.600008', name: '首创股份', price: 3.89, market_cap: 380, pe_ratio: 15.6, roe: 9.8, np_margin: 15.6, eps: 0.41, rsi: 67.3, macd: 0.0201, kdj: 69.8, volume: 11000000 },
-    { code: 'sh.600009', name: '上海机场', price: 45.67, market_cap: 3200, pe_ratio: 22.5, roe: 25.4, np_margin: 38.9, eps: 2.35, rsi: 52.8, macd: 0.5678, kdj: 55.2, volume: 8500000 },
+    { code: 'sh.600000', name: '浦发银行', price: 8.52, volume: 25000000, amount: 213000000, turn: 0.85, ma5: 8.45, ma10: 8.38 },
+    { code: 'sh.600001', name: '邯郸钢铁', price: 3.45, volume: 18000000, amount: 62100000, turn: 1.25, ma5: 3.42, ma10: 3.38 },
+    { code: 'sh.600002', name: '齐鲁石化', price: 5.67, volume: 12000000, amount: 68040000, turn: 0.92, ma5: 5.72, ma10: 5.65 },
+    { code: 'sh.600003', name: '东北高速', price: 4.23, volume: 9500000, amount: 40185000, turn: 0.68, ma5: 4.28, ma10: 4.32 },
+    { code: 'sh.600004', name: '白云机场', price: 12.89, volume: 32000000, amount: 412480000, turn: 1.85, ma5: 12.75, ma10: 12.58 },
+    { code: 'sh.600005', name: '武钢股份', price: 4.56, volume: 21000000, amount: 95760000, turn: 1.12, ma5: 4.52, ma10: 4.48 },
+    { code: 'sh.600006', name: '东风汽车', price: 7.34, volume: 15000000, amount: 110100000, turn: 0.95, ma5: 7.28, ma10: 7.22 },
+    { code: 'sh.600007', name: '上港集团', price: 6.12, volume: 28000000, amount: 171360000, turn: 1.35, ma5: 6.18, ma10: 6.25 },
+    { code: 'sh.600008', name: '首创股份', price: 3.89, volume: 11000000, amount: 42790000, turn: 0.78, ma5: 3.85, ma10: 3.82 },
+    { code: 'sh.600009', name: '上海机场', price: 45.67, volume: 8500000, amount: 388195000, turn: 2.15, ma5: 45.32, ma10: 44.85 },
   ];
 
   // Apply filters
@@ -876,37 +876,46 @@ function generateMockScreenerResults(config) {
     return true;
   });
 
-  // Calculate weighted scores
+  // Calculate weighted scores based on K-line indicators
   filtered = filtered.map(stock => {
     let score = 0;
     let totalWeight = 0;
 
-    // Technical indicators scoring
-    if (config.weights.rsi > 0) {
-      score += (stock.rsi / 100) * config.weights.rsi;
-      totalWeight += config.weights.rsi;
-    }
-    if (config.weights.macd > 0) {
-      score += (stock.macd > 0 ? 1 : 0) * config.weights.macd;
-      totalWeight += config.weights.macd;
-    }
-    if (config.weights.kdj > 0) {
-      score += (stock.kdj / 100) * config.weights.kdj;
-      totalWeight += config.weights.kdj;
+    // Price scoring (higher price = higher score for simplicity)
+    if (config.weights.price > 0) {
+      score += (stock.price / 50) * config.weights.price;
+      totalWeight += config.weights.price;
     }
 
-    // Fundamental indicators scoring
-    if (config.weights.roe > 0) {
-      score += Math.min(stock.roe / 30, 1) * config.weights.roe;
-      totalWeight += config.weights.roe;
+    // Volume scoring (higher volume = more active = higher score)
+    if (config.weights.volume > 0) {
+      score += Math.min(stock.volume / 50000000, 1) * config.weights.volume;
+      totalWeight += config.weights.volume;
     }
-    if (config.weights.np_margin > 0) {
-      score += Math.min(stock.np_margin / 50, 1) * config.weights.np_margin;
-      totalWeight += config.weights.np_margin;
+
+    // Amount scoring
+    if (config.weights.amount > 0) {
+      score += Math.min(stock.amount / 500000000, 1) * config.weights.amount;
+      totalWeight += config.weights.amount;
     }
-    if (config.weights.eps > 0) {
-      score += Math.min(stock.eps / 3, 1) * config.weights.eps;
-      totalWeight += config.weights.eps;
+
+    // Turnover rate scoring (moderate turnover is best)
+    if (config.weights.turn > 0) {
+      const turnScore = stock.turn >= 0.5 && stock.turn <= 3 ? 1 : 0.5;
+      score += turnScore * config.weights.turn;
+      totalWeight += config.weights.turn;
+    }
+
+    // MA5 trend scoring (price above MA5 = bullish)
+    if (config.weights.ma5_trend > 0) {
+      score += (stock.price > stock.ma5 ? 1 : 0) * config.weights.ma5_trend;
+      totalWeight += config.weights.ma5_trend;
+    }
+
+    // MA10 trend scoring (price above MA10 = bullish)
+    if (config.weights.ma10_trend > 0) {
+      score += (stock.price > stock.ma10 ? 1 : 0) * config.weights.ma10_trend;
+      totalWeight += config.weights.ma10_trend;
     }
 
     return {
@@ -930,7 +939,7 @@ function updateScreenerResults(results) {
   if (results.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="11" class="empty-state">
+        <td colspan="9" class="empty-state">
           <div class="empty-state-icon">📊</div>
           <h4>暂无结果</h4>
           <p>配置筛选条件后点击"运行选股"</p>
@@ -946,14 +955,11 @@ function updateScreenerResults(results) {
       <td>${stock.code}</td>
       <td>${stock.name}</td>
       <td>${formatNumber(stock.price, 2)}</td>
-      <td>${formatNumber(stock.market_cap || 0, 0)}</td>
-      <td class="${stock.pe_ratio < 15 ? 'positive' : stock.pe_ratio > 30 ? 'negative' : ''}">${formatNumber(stock.pe_ratio || 0, 1)}</td>
-      <td class="${stock.roe > 15 ? 'positive' : stock.roe < 5 ? 'negative' : ''}">${formatNumber(stock.roe, 1)}</td>
-      <td class="${stock.rsi > 70 ? 'negative' : stock.rsi < 30 ? 'positive' : ''}">${formatNumber(stock.rsi, 1)}</td>
-      <td class="${stock.macd > 0 ? 'positive' : 'negative'}">${formatNumber(stock.macd, 4)}</td>
-      <td>${formatNumber(stock.kdj, 1)}</td>
-      <td class="${stock.np_margin > 20 ? 'positive' : stock.np_margin < 5 ? 'negative' : ''}">${formatNumber(stock.np_margin, 1)}</td>
-      <td>${formatNumber(stock.eps, 2)}</td>
+      <td>${formatNumber(stock.volume, 0)}</td>
+      <td>${formatNumber(stock.amount / 10000, 0)}万</td>
+      <td>${formatNumber(stock.turn * 100, 2)}%</td>
+      <td>${formatNumber(stock.ma5, 2)}</td>
+      <td>${formatNumber(stock.ma10, 2)}</td>
       <td class="score-cell" style="color: ${getScoreColor(stock.score)}">${formatNumber(stock.score, 1)}</td>
       <td class="action-cell">
         <button class="btn-sm btn-analyze" onclick="analyzeStock('${stock.code}')">分析</button>
@@ -1006,19 +1012,16 @@ function exportScreenerResults() {
     return;
   }
 
-  const headers = ['代码', '名称', '价格', '市值 (亿)', '市盈率', 'ROE(%)', 'RSI', 'MACD', 'KDJ', '净利率 (%)', 'EPS', '综合评分'];
+  const headers = ['代码', '名称', '收盘价', '成交量', '成交额', '换手率 (%)', '5 日均线', '10 日均线', '综合评分'];
   const rows = screenerState.results.map(stock => [
     stock.code,
     stock.name,
     stock.price,
-    stock.market_cap || 0,
-    stock.pe_ratio || 0,
-    stock.roe,
-    stock.rsi,
-    stock.macd,
-    stock.kdj,
-    stock.np_margin,
-    stock.eps,
+    stock.volume,
+    stock.amount,
+    stock.turn,
+    stock.ma5,
+    stock.ma10,
     stock.score
   ]);
 

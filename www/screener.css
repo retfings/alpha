@@ -1,5 +1,16 @@
 /* Stock Screener Page Styles */
 
+/* Indicator Note */
+.indicator-note {
+  padding: 8px 12px;
+  background: #f0f7ff;
+  border-left: 3px solid #1890ff;
+  color: #595959;
+  font-size: 12px;
+  margin: 0 16px 12px;
+  border-radius: 4px;
+}
+
 /* Layout */
 .screener-layout {
   display: grid;

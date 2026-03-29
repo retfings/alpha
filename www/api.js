@@ -410,7 +410,8 @@ function queuedFetch(endpoint, options = {}) {
  * @returns {Promise<string[]>} Array of stock codes
  */
 export async function getStocks() {
-  return apiFetch('/stocks');
+  const result = await apiFetch('/stocks');
+  return result.stocks.map(stock => stock.code);
 }
 
 /**

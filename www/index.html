@@ -62,200 +62,18 @@
               <button class="btn-reset" id="reset-filters">重置</button>
             </div>
 
-            <!-- Technical Indicators -->
+            <!-- Technical Indicators (derived from K-line data) -->
             <div class="indicator-group">
-              <h4>技术指标</h4>
+              <h4>技术指标（基于 K 线数据）</h4>
+              <p class="indicator-note">以下指标均从 K 线数据计算得出，可用数据源：@data/sh_600004_2026-01-01_2026-03-26.csv</p>
+
               <div class="indicator-list" id="technical-indicators">
-                <!-- RSI -->
-                <div class="indicator-item" data-indicator="rsi">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">RSI <span class="tooltip-trigger" data-tooltip="相对强弱指数 (RSI): 衡量价格变动速度和幅度的动量指标。计算方法：RSI = 100 - 100/(1+RS), RS=平均涨幅/平均跌幅。通常 14 天周期，>70 超买，<30 超卖。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="值" step="0.01">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.01">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.01">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
-                  </div>
-                </div>
-
-                <!-- MACD -->
-                <div class="indicator-item" data-indicator="macd">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">MACD <span class="tooltip-trigger" data-tooltip="平滑异同移动平均线 (MACD): 利用长短周期 EMA 的聚合与分离来研判买卖时机。计算方法：MACD 线=12 日 EMA-26 日 EMA, 信号线=9 日 EMA。金叉买入，死叉卖出。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="值" step="0.0001">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.0001">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.0001">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
-                  </div>
-                </div>
-
-                <!-- KDJ -->
-                <div class="indicator-item" data-indicator="kdj">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">KDJ <span class="tooltip-trigger" data-tooltip="随机指标 (KDJ): 通过统计价格位置来研判超买超卖。计算方法：K=2/3*前日 K+1/3*RSV, D=2/3*前日 D+1/3*前日 K, J=3K-2D。K>D 金叉买入，K<D 死叉卖出。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="值" step="0.01">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.01">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.01">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
-                  </div>
-                </div>
-
-                <!-- MA Trend -->
-                <div class="indicator-item" data-indicator="ma_trend">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">MA 趋势 <span class="tooltip-trigger" data-tooltip="移动平均线趋势 (MA Trend): 通过短长期均线比较判断趋势方向。计算方法：短期 MA(10 日) > 长期 MA(20 日) 为上升趋势 (金叉), 反之为下降趋势 (死叉)。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="值" step="0.01">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Fundamental Indicators -->
-            <div class="indicator-group">
-              <h4>基本面指标</h4>
-              <div class="indicator-list" id="fundamental-indicators">
-                <!-- ROE -->
-                <div class="indicator-item" data-indicator="roe">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">ROE <span class="tooltip-trigger" data-tooltip="净资产收益率 (ROE): 衡量公司利用股东权益创造利润的能力。计算方法：ROE = 净利润 / 股东权益 × 100%。越高代表盈利能力越强，通常>15% 为优秀。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="%" step="0.1">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.1">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.1">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="2" step="1">
-                  </div>
-                </div>
-
-                <!-- Net Profit Margin -->
-                <div class="indicator-item" data-indicator="np_margin">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">净利率 <span class="tooltip-trigger" data-tooltip="净利率 (Net Profit Margin): 衡量公司盈利能力，表示每一元收入中有多少是净利润。计算方法：净利率 = 净利润 / 营业收入 × 100%。越高代表盈利效率越好。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="%" step="0.1">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.1">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.1">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
-                  </div>
-                </div>
-
-                <!-- EPS -->
-                <div class="indicator-item" data-indicator="eps">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">EPS <span class="tooltip-trigger" data-tooltip="每股收益 (EPS): 衡量公司每股创造的净利润。计算方法：EPS = 净利润 / 总股本。是衡量公司盈利能力和股票价值的重要指标，越高越好。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="元" step="0.01">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.01">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.01">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Market Indicators -->
-            <div class="indicator-group">
-              <h4>市场指标</h4>
-              <div class="indicator-list" id="market-indicators">
                 <!-- Price -->
                 <div class="indicator-item" data-indicator="price">
                   <div class="indicator-header">
                     <label class="toggle-label">
                       <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">价格 <span class="tooltip-trigger" data-tooltip="股票价格 (Price)&#10;&#10;公式：市场交易价格&#10;&#10;含义：当前市场价格，反映市场对该股票的即时估值。&#10;&#10;使用场景：筛选低价股或高价股，设置价格区间避免流动性过差或过高的股票。">?</span></span>
+                      <span class="indicator-name">收盘价 <span class="tooltip-trigger" data-tooltip="收盘价：当日最后一笔成交价格，反映市场对该股票的最终估值。">?</span></span>
                     </label>
                     <select class="operator-select">
                       <option value="gt">></option>
@@ -271,7 +89,7 @@
                   </div>
                   <div class="indicator-weight">
                     <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="0" step="1">
+                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
                   </div>
                 </div>
 
@@ -280,7 +98,7 @@
                   <div class="indicator-header">
                     <label class="toggle-label">
                       <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">成交量 <span class="tooltip-trigger" data-tooltip="成交量 (Volume)&#10;&#10;公式：一定时间内的交易股数总和&#10;&#10;含义：反映市场活跃度和流动性，高成交量表示交易活跃。&#10;&#10;使用场景：筛选活跃股票，避免流动性不足的标的；配合价格突破确认趋势。">?</span></span>
+                      <span class="indicator-name">成交量 <span class="tooltip-trigger" data-tooltip="成交量：当日成交的总股数，反映市场活跃度和资金参与程度。">?</span></span>
                     </label>
                     <select class="operator-select">
                       <option value="gt">></option>
@@ -290,22 +108,47 @@
                     </select>
                   </div>
                   <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="股数" step="1000">
+                    <input type="number" class="value-input" placeholder="股" step="1000">
                     <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="1000">
                     <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="1000">
                   </div>
                   <div class="indicator-weight">
                     <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="0" step="1">
+                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
+                  </div>
+                </div>
+
+                <!-- Amount -->
+                <div class="indicator-item" data-indicator="amount">
+                  <div class="indicator-header">
+                    <label class="toggle-label">
+                      <input type="checkbox" class="indicator-toggle" checked>
+                      <span class="indicator-name">成交额 <span class="tooltip-trigger" data-tooltip="成交额：当日成交的总金额（成交量 × 成交价），反映资金流向。">?</span></span>
+                    </label>
+                    <select class="operator-select">
+                      <option value="gt">></option>
+                      <option value="eq">=</option>
+                      <option value="lt"><</option>
+                      <option value="range">范围</option>
+                    </select>
+                  </div>
+                  <div class="indicator-values">
+                    <input type="number" class="value-input" placeholder="元" step="10000">
+                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="10000">
+                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="10000">
+                  </div>
+                  <div class="indicator-weight">
+                    <label>权重：<span class="weight-value">1</span></label>
+                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
                   </div>
                 </div>
 
                 <!-- Turnover Rate -->
-                <div class="indicator-item" data-indicator="turnover_rate">
+                <div class="indicator-item" data-indicator="turn">
                   <div class="indicator-header">
                     <label class="toggle-label">
                       <input type="checkbox" class="indicator-toggle" checked>
-                      <span class="indicator-name">换手率 <span class="tooltip-trigger" data-tooltip="换手率 (Turnover Rate)&#10;&#10;公式：成交量 / 流通股本 × 100%&#10;&#10;含义：反映股票流通性强弱，表示筹码交换频率。&#10;&#10;使用场景：>10% 高换手表示活跃或主力进出；<1% 低换手表示交投清淡。适合短线选股和流动性筛选。">?</span></span>
+                      <span class="indicator-name">换手率 <span class="tooltip-trigger" data-tooltip="换手率：成交量占流通股本的比例，反映股票流通性和筹码交换频率。">?</span></span>
                     </label>
                     <select class="operator-select">
                       <option value="gt">></option>
@@ -315,113 +158,57 @@
                     </select>
                   </div>
                   <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="%" step="0.1">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.1">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.1">
+                    <input type="number" class="value-input" placeholder="%" step="0.01">
+                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.01">
+                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.01">
                   </div>
                   <div class="indicator-weight">
                     <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="0" step="1">
+                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
                   </div>
                 </div>
 
-                <!-- Market Cap -->
-                <div class="indicator-item" data-indicator="market_cap">
+                <!-- MA5 Trend -->
+                <div class="indicator-item" data-indicator="ma5_trend">
                   <div class="indicator-header">
                     <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle">
-                      <span class="indicator-name">总市值 <span class="tooltip-trigger" data-tooltip="总市值 (Market Cap)&#10;&#10;公式：股价 × 总股本&#10;&#10;含义：反映公司规模和市场估值水平。&#10;&#10;使用场景：大盘股 (>1000 亿) 稳健但弹性小；中盘股 (100-1000 亿) 成长性好；小盘股 (<100 亿) 弹性大但风险高。">?</span></span>
+                      <input type="checkbox" class="indicator-toggle" checked>
+                      <span class="indicator-name">5 日均线趋势 <span class="tooltip-trigger" data-tooltip="5 日均线趋势：最近 5 日收盘价的平均值，反映短期价格趋势方向。">?</span></span>
                     </label>
                     <select class="operator-select">
                       <option value="gt">></option>
                       <option value="eq">=</option>
                       <option value="lt"><</option>
-                      <option value="range">范围</option>
                     </select>
                   </div>
                   <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="亿元" step="1">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="1">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="1">
+                    <input type="number" class="value-input" placeholder="值" step="0.01">
                   </div>
                   <div class="indicator-weight">
                     <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="0" step="1">
+                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
                   </div>
                 </div>
 
-                <!-- P/E Ratio -->
-                <div class="indicator-item" data-indicator="pe_ratio">
+                <!-- MA10 Trend -->
+                <div class="indicator-item" data-indicator="ma10_trend">
                   <div class="indicator-header">
                     <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle">
-                      <span class="indicator-name">市盈率 <span class="tooltip-trigger" data-tooltip="市盈率 (P/E Ratio)&#10;&#10;公式：股价 / 每股收益 (EPS)&#10;&#10;含义：衡量股票估值水平，表示投资者愿意为每元盈利支付的价格。&#10;&#10;使用场景：<15 低估；15-25 合理；>30 高估。适合价值投资和成长股筛选。">?</span></span>
+                      <input type="checkbox" class="indicator-toggle" checked>
+                      <span class="indicator-name">10 日均线趋势 <span class="tooltip-trigger" data-tooltip="10 日均线趋势：最近 10 日收盘价的平均值，反映中期价格趋势方向。">?</span></span>
                     </label>
                     <select class="operator-select">
                       <option value="gt">></option>
                       <option value="eq">=</option>
                       <option value="lt"><</option>
-                      <option value="range">范围</option>
                     </select>
                   </div>
                   <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="倍" step="0.1">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.1">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.1">
+                    <input type="number" class="value-input" placeholder="值" step="0.01">
                   </div>
                   <div class="indicator-weight">
                     <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="0" step="1">
-                  </div>
-                </div>
-
-                <!-- P/B Ratio -->
-                <div class="indicator-item" data-indicator="pb_ratio">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle">
-                      <span class="indicator-name">市净率 <span class="tooltip-trigger" data-tooltip="市净率 (P/B Ratio)&#10;&#10;公式：股价 / 每股净资产&#10;&#10;含义：衡量股票相对净资产的估值，适用于重资产行业。&#10;&#10;使用场景：<1 破净可能被低估；1-3 合理；>5 高估。适合银行、保险、地产等周期股估值。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="倍" step="0.1">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.1">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.1">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="0" step="1">
-                  </div>
-                </div>
-
-                <!-- Dividend Yield -->
-                <div class="indicator-item" data-indicator="dividend_yield">
-                  <div class="indicator-header">
-                    <label class="toggle-label">
-                      <input type="checkbox" class="indicator-toggle">
-                      <span class="indicator-name">股息率 <span class="tooltip-trigger" data-tooltip="股息率 (Dividend Yield)&#10;&#10;公式：每股分红 / 股价 × 100%&#10;&#10;含义：衡量股票现金分红回报率，反映收益能力。&#10;&#10;使用场景：>3% 适合收息策略；>5% 高股息股票具有防御性。适合价值投资和长期持有。">?</span></span>
-                    </label>
-                    <select class="operator-select">
-                      <option value="gt">></option>
-                      <option value="eq">=</option>
-                      <option value="lt"><</option>
-                      <option value="range">范围</option>
-                    </select>
-                  </div>
-                  <div class="indicator-values">
-                    <input type="number" class="value-input" placeholder="%" step="0.1">
-                    <input type="number" class="value-input min-value" placeholder="最小值" style="display:none;" step="0.1">
-                    <input type="number" class="value-input max-value" placeholder="最大值" style="display:none;" step="0.1">
-                  </div>
-                  <div class="indicator-weight">
-                    <label>权重：<span class="weight-value">1</span></label>
-                    <input type="range" class="weight-slider" min="0" max="5" value="0" step="1">
+                    <input type="range" class="weight-slider" min="0" max="5" value="1" step="1">
                   </div>
                 </div>
               </div>
@@ -583,16 +370,14 @@
                 <select id="sort-by">
                   <option value="score_desc">综合评分 (高到低)</option>
                   <option value="score_asc">综合评分 (低到高)</option>
-                  <option value="roe_desc">ROE (高到低)</option>
-                  <option value="roe_asc">ROE (低到高)</option>
-                  <option value="rsi_desc">RSI (高到低)</option>
-                  <option value="rsi_asc">RSI (低到高)</option>
-                  <option value="macd_desc">MACD (高到低)</option>
-                  <option value="macd_asc">MACD (低到高)</option>
-                  <option value="pe_ratio_desc">市盈率 (高到低)</option>
-                  <option value="pe_ratio_asc">市盈率 (低到高)</option>
-                  <option value="market_cap_desc">市值 (高到低)</option>
-                  <option value="market_cap_asc">市值 (低到高)</option>
+                  <option value="price_desc">收盘价 (高到低)</option>
+                  <option value="price_asc">收盘价 (低到高)</option>
+                  <option value="volume_desc">成交量 (高到低)</option>
+                  <option value="volume_asc">成交量 (低到高)</option>
+                  <option value="amount_desc">成交额 (高到低)</option>
+                  <option value="amount_asc">成交额 (低到高)</option>
+                  <option value="turn_desc">换手率 (高到低)</option>
+                  <option value="turn_asc">换手率 (低到高)</option>
                 </select>
               </label>
             </div>
@@ -603,15 +388,12 @@
                   <tr>
                     <th>代码</th>
                     <th>名称</th>
-                    <th>价格</th>
-                    <th>市值 (亿)</th>
-                    <th>市盈率</th>
-                    <th>ROE(%)</th>
-                    <th>RSI</th>
-                    <th>MACD</th>
-                    <th>KDJ</th>
-                    <th>净利率 (%)</th>
-                    <th>EPS</th>
+                    <th>收盘价</th>
+                    <th>成交量</th>
+                    <th>成交额</th>
+                    <th>换手率 (%)</th>
+                    <th>5 日均线</th>
+                    <th>10 日均线</th>
                     <th>综合评分</th>
                     <th>操作</th>
                   </tr>
