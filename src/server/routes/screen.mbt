@@ -22,6 +22,7 @@ pub fn initialize_stock_cache() -> Array[ScreenerStockResult] {
     let volume = latest.volume
     let amount = latest.amount
     let turn = latest.turn
+    let stock_info = get_stock_info(code)
 
     // Calculate MA5 (5-day moving average)
     let ma5 = calculate_ma_from_klines(klines, 5)
@@ -62,6 +63,7 @@ pub fn initialize_stock_cache() -> Array[ScreenerStockResult] {
 
     results.push(ScreenerStockResult::{
       code,
+      name: stock_info.name,
       price,
       volume,
       amount,
@@ -104,6 +106,7 @@ pub fn get_cached_stocks_array() -> Array[ScreenerStockResult] {
     let turn = latest.turn
     let ma5 = calculate_ma_from_klines(klines, 5)
     let ma10 = calculate_ma_from_klines(klines, 10)
+    let stock_info = get_stock_info(code)
 
     let ma5_momentum : Float = if ma5 > 0.0 {
       (price - ma5) / ma5 * 100.0
@@ -135,6 +138,7 @@ pub fn get_cached_stocks_array() -> Array[ScreenerStockResult] {
 
     results.push(ScreenerStockResult::{
       code,
+      name: stock_info.name,
       price,
       volume,
       amount,
@@ -1229,6 +1233,7 @@ pub struct ScreenerFilter {
 /// Screener result structure with technical indicators and K-line based data
 pub struct ScreenerStockResult {
   code : String
+  name : String
   price : Float
   volume : Float
   amount : Float
@@ -1244,6 +1249,7 @@ fn get_screener_mock_data() -> Array[ScreenerStockResult] {
   [
     ScreenerStockResult::{
       code: "sh.600000",
+      name: "Stock 600000",
       price: 8.52,
       volume: 25000000.0,
       amount: 213000000.0,
@@ -1254,6 +1260,7 @@ fn get_screener_mock_data() -> Array[ScreenerStockResult] {
     },
     ScreenerStockResult::{
       code: "sh.600001",
+      name: "Stock 600001",
       price: 3.45,
       volume: 18000000.0,
       amount: 62100000.0,
@@ -1264,6 +1271,7 @@ fn get_screener_mock_data() -> Array[ScreenerStockResult] {
     },
     ScreenerStockResult::{
       code: "sh.600002",
+      name: "Stock 600002",
       price: 5.67,
       volume: 12000000.0,
       amount: 68040000.0,
@@ -1274,6 +1282,7 @@ fn get_screener_mock_data() -> Array[ScreenerStockResult] {
     },
     ScreenerStockResult::{
       code: "sh.600003",
+      name: "Stock 600003",
       price: 4.23,
       volume: 9500000.0,
       amount: 40185000.0,
@@ -1284,6 +1293,7 @@ fn get_screener_mock_data() -> Array[ScreenerStockResult] {
     },
     ScreenerStockResult::{
       code: "sh.600004",
+      name: "Stock 600004",
       price: 12.89,
       volume: 32000000.0,
       amount: 412480000.0,
@@ -1757,7 +1767,7 @@ pub fn handle_screener(request_body : String?) -> HttpResponse {
 
   // Build response JSON
   let results_json = limited.map(fn(r) {
-    "{\"code\":\"\{r.code}\",\"price\":\{r.price},\"volume\":\{r.volume},\"amount\":\{r.amount},\"turn\":\{r.turn},\"ma5\":\{r.ma5},\"ma10\":\{r.ma10},\"score\":\{r.score}}"
+    "{\"code\":\"\{r.code}\",\"name\":\"\{r.name}\",\"price\":\{r.price},\"volume\":\{r.volume},\"amount\":\{r.amount},\"turn\":\{r.turn},\"ma5\":\{r.ma5},\"ma10\":\{r.ma10},\"score\":\{r.score}}"
   })
 
   let total = Int::to_string(total_count)
