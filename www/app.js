@@ -856,6 +856,9 @@ async function runScreener() {
     const sortBy = document.getElementById('sort-by')?.value || 'score_desc';
     const pageSize = parseInt(document.getElementById('page-size')?.value) || 10;
 
+    console.log('=== 选股器调试信息 ===');
+    console.log('收集的筛选条件:', JSON.stringify(config.filters, null, 2));
+
     // Build request body matching backend ScreenerRequest format
     const requestBody = {
       filters: config.filters,
@@ -866,9 +869,13 @@ async function runScreener() {
       page_size: pageSize
     };
 
+    console.log('发送请求:', JSON.stringify(requestBody, null, 2));
+
     // Call actual backend API
     const response = await api.runScreener(requestBody);
     const results = response.results || [];
+
+    console.log('API 返回结果:', JSON.stringify(results.map(s => ({ code: s.code, price: s.price })), null, 2));
 
     screenerState.results = results;
     screenerState.filters = config;
