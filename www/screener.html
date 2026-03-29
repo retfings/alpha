@@ -15,11 +15,10 @@
     <header>
       <h1>股票筛选器</h1>
       <nav>
-        <button class="nav-btn" data-link="index.html">Dashboard</button>
-        <button class="nav-btn active" data-link="screener.html">Stock Screener</button>
-        <button class="nav-btn" data-link="stock_strategy.html">Strategy Config</button>
-        <button class="nav-btn" data-link="trading-models.html">Trading Models</button>
-        <button class="nav-btn" data-link="#backtest">Backtest</button>
+        <button class="nav-btn" data-link="../index.html">首页</button>
+        <button class="nav-btn active" data-link="screener.html">股票筛选器</button>
+        <button class="nav-btn" data-link="stock_strategy.html">策略配置</button>
+        <button class="nav-btn" data-link="trading-models.html">交易模型</button>
       </nav>
     </header>
 
@@ -130,8 +129,14 @@
                 <tr>
                   <th class="col-rank">排名</th>
                   <th class="col-code">代码</th>
+                  <th class="col-name">名称</th>
+                  <th class="col-price">收盘价</th>
+                  <th class="col-volume">成交量 (万股)</th>
+                  <th class="col-amount">成交额 (万元)</th>
+                  <th class="col-turn">换手率 (%)</th>
+                  <th class="col-ma5">5 日均线</th>
+                  <th class="col-ma10">10 日均线</th>
                   <th class="col-score">综合得分</th>
-                  <th class="col-indicators" id="dynamic-headers">指标值</th>
                   <th class="col-action">操作</th>
                 </tr>
               </thead>
@@ -151,7 +156,7 @@
     </main>
 
     <footer>
-      <p>量化回撤框架 v0.1.0 | 股票筛选器</p>
+      <p>量化回撤框架 v0.1.0</p>
     </footer>
   </div>
 

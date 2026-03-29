@@ -701,6 +701,13 @@ function setupSortableHeaders(headerRow) {
   const sortableCols = {
     'rank': { key: 'rank', defaultOrder: 'asc' },
     'code': { key: 'code', defaultOrder: 'asc' },
+    'name': { key: 'name', defaultOrder: 'asc' },
+    'price': { key: 'indicators.price', defaultOrder: 'desc' },
+    'volume': { key: 'indicators.volume', defaultOrder: 'desc' },
+    'amount': { key: 'indicators.amount', defaultOrder: 'desc' },
+    'turn': { key: 'indicators.turn', defaultOrder: 'desc' },
+    'ma5': { key: 'indicators.ma5', defaultOrder: 'desc' },
+    'ma10': { key: 'indicators.ma10', defaultOrder: 'desc' },
     'score': { key: 'score', defaultOrder: 'desc' }
   };
 
@@ -747,10 +754,19 @@ function handleSort(key, defaultOrder, th) {
   });
   th.classList.add(newOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
 
-  // Sort results
+  // Sort results - handle nested property access
   const sorted = [...state.results].sort((a, b) => {
-    let valA = a[key] !== undefined ? a[key] : 0;
-    let valB = b[key] !== undefined ? b[key] : 0;
+    let valA, valB;
+
+    // Handle nested property access (e.g., 'indicators.price')
+    if (key.includes('.')) {
+      const [parent, child] = key.split('.');
+      valA = a[parent]?.[child] !== undefined ? a[parent][child] : 0;
+      valB = b[parent]?.[child] !== undefined ? b[parent][child] : 0;
+    } else {
+      valA = a[key] !== undefined ? a[key] : 0;
+      valB = b[key] !== undefined ? b[key] : 0;
+    }
 
     // Handle string comparison for code/name
     if (typeof valA === 'string') {
@@ -793,9 +809,15 @@ function renderTableRows(bodyEl) {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td class="col-rank">${index + 1}</td>
-      <td class="col-code">${stock.code}<br><small style="color: #666;">${stock.name || ''}</small></td>
+      <td class="col-code">${stock.code}</td>
+      <td class="col-name">${stock.name || '--'}</td>
+      <td class="col-price">${stock.indicators.price?.toFixed(2) || '--'}</td>
+      <td class="col-volume">${(stock.indicators.volume / 10000).toFixed(0)}</td>
+      <td class="col-amount">${(stock.indicators.amount / 10000).toFixed(0)}</td>
+      <td class="col-turn">${(stock.indicators.turn * 100).toFixed(2)}%</td>
+      <td class="col-ma5">${stock.indicators.ma5?.toFixed(2) || '--'}</td>
+      <td class="col-ma10">${stock.indicators.ma10?.toFixed(2) || '--'}</td>
       <td class="col-score"><span class="stock-score ${getScoreClass(stock.score)}">${stock.score.toFixed(1)}</span></td>
-      <td class="col-indicators">价格：${stock.indicators.price?.toFixed(2) || '--'} | 成交量：${(stock.indicators.volume / 10000).toFixed(0)} 万股</td>
       <td class="col-action">
         <button class="btn-view-detail" data-code="${stock.code}">详情</button>
         <button class="btn-compare" data-code="${stock.code}">对比</button>
@@ -897,7 +919,7 @@ function saveConfiguration() {
 }
 
 /**
- * Export results (placeholder)
+ * Export results to CSV
  */
 function exportResults() {
   if (state.results.length === 0) {
@@ -905,17 +927,19 @@ function exportResults() {
     return;
   }
 
-  // Generate CSV
-  const headers = ['排名', '代码', '名称', '得分', 'PE', 'PB', 'ROE', '换手率'];
+  // Generate CSV with correct field names matching API response
+  const headers = ['排名', '代码', '名称', '得分', '收盘价', '成交量 (万股)', '成交额 (万元)', '换手率 (%)', '5 日均线', '10 日均线'];
   const rows = state.results.map((stock, i) => [
     i + 1,
     stock.code,
-    stock.name,
+    stock.name || '--',
     stock.score.toFixed(1),
-    stock.indicators.pe,
-    stock.indicators.pb,
-    stock.indicators.roe,
-    stock.indicators.turnover_rate
+    stock.indicators.price?.toFixed(2) || '--',
+    (stock.indicators.volume / 10000).toFixed(0),
+    (stock.indicators.amount / 10000).toFixed(0),
+    (stock.indicators.turn * 100).toFixed(2),
+    stock.indicators.ma5?.toFixed(2) || '--',
+    stock.indicators.ma10?.toFixed(2) || '--'
   ]);
 
   const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
