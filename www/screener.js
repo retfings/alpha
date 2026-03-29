@@ -204,9 +204,12 @@ function handleIndicatorSelect(indicatorId) {
   state.selectedIndicators.set(indicatorId, indicator);
   state.weights.set(indicatorId, 50); // Default weight
 
+  // Auto-add filter condition for the selected indicator
+  addFilterControl(indicator);
+
   updateSelectedIndicatorsList();
   updateWeightConfig();
-  showToast(`已添加指标：${indicator.name}`, 'success');
+  showToast(`已添加指标：${indicator.name}，请配置筛选条件`, 'success');
 }
 
 /**
@@ -302,7 +305,7 @@ function clearAllSelected() {
 // ============================================================================
 
 /**
- * Add a random condition (placeholder - should show a modal)
+ * Add a condition for a selected indicator
  */
 function addRandomCondition() {
   if (state.selectedIndicators.size === 0) {
@@ -310,13 +313,23 @@ function addRandomCondition() {
     return;
   }
 
-  // Add filter for first selected indicator without filter
+  // Find first selected indicator that doesn't have a filter yet
+  let indicatorToAdd = null;
   for (const [id, indicator] of state.selectedIndicators) {
     if (!state.filters.has(id)) {
-      addFilterControl(indicator);
+      indicatorToAdd = indicator;
       break;
     }
   }
+
+  // If all indicators already have filters, prompt user
+  if (!indicatorToAdd) {
+    showToast('所有已选指标已添加筛选条件', 'info');
+    return;
+  }
+
+  addFilterControl(indicatorToAdd);
+  showToast(`已添加条件：${indicatorToAdd.name}`, 'success');
 }
 
 /**
