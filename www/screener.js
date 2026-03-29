@@ -233,7 +233,6 @@ function handleIndicatorDeselect(indicatorId) {
 function updateSelectedIndicatorsList() {
   const container = document.getElementById('selected-indicators');
   const countEl = document.getElementById('selected-count');
-  const emptyEl = document.getElementById('selected-empty');
 
   if (!container) return;
 
@@ -243,8 +242,16 @@ function updateSelectedIndicatorsList() {
   container.innerHTML = '';
 
   if (state.selectedIndicators.size === 0) {
-    container.appendChild(emptyEl);
+    // Create empty state element
+    const emptyEl = document.createElement('div');
+    emptyEl.id = 'selected-empty';
+    emptyEl.className = 'selected-empty';
     emptyEl.style.display = 'flex';
+    emptyEl.innerHTML = `
+      <span class="empty-icon">📋</span>
+      <span class="empty-text">点击左侧指标添加到筛选条件</span>
+    `;
+    container.appendChild(emptyEl);
   } else {
     state.selectedIndicators.forEach((indicator, id) => {
       const tag = indicatorModule.createSelectedIndicatorTag(indicator);
