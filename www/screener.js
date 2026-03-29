@@ -605,20 +605,18 @@ async function callScreenerApi(config) {
   const data = await response.json();
 
   // Transform API results to match frontend format
+  // Backend returns: code, name, price, volume, amount, turn, ma5, ma10, score
   state.results = data.results.map((stock, index) => ({
     code: stock.code,
     name: stock.name,
     score: stock.score || 0,
     indicators: {
       price: stock.price,
-      rsi: stock.rsi,
-      macd: stock.macd,
-      kdj: stock.kdj,
-      roe: stock.roe,
-      np_margin: stock.np_margin,
-      eps: stock.eps,
       volume: stock.volume,
-      turnover_rate: stock.turnover_rate
+      amount: stock.amount,
+      turn: stock.turn,
+      ma5: stock.ma5,
+      ma10: stock.ma10
     }
   })).sort((a, b) => b.score - a.score);
 
@@ -787,9 +785,9 @@ function renderTableRows(bodyEl) {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td class="col-rank">${index + 1}</td>
-      <td class="col-code">${stock.code}</td>
+      <td class="col-code">${stock.code}<br><small style="color: #666;">${stock.name || ''}</small></td>
       <td class="col-score"><span class="stock-score ${getScoreClass(stock.score)}">${stock.score.toFixed(1)}</span></td>
-      <td class="col-indicators">价格：${stock.indicators.price?.toFixed(2) || '--'} | RSI: ${stock.indicators.rsi?.toFixed(1) || '--'}</td>
+      <td class="col-indicators">价格：${stock.indicators.price?.toFixed(2) || '--'} | 成交量：${(stock.indicators.volume / 10000).toFixed(0)} 万股</td>
       <td class="col-action">
         <button class="btn-view-detail" data-code="${stock.code}">详情</button>
         <button class="btn-compare" data-code="${stock.code}">对比</button>
