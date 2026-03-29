@@ -233,6 +233,101 @@ pub fn get_cached_stocks_array_with_date(start_date : String, end_date : String)
 }
 
 ///|
+/// Get cached stock data for a specific date
+pub fn get_cached_stocks_array_for_date(query_date : String) -> Array[ScreenerStockResult] {
+  let stock_codes = scan_stock_files()
+  let results : Array[ScreenerStockResult] = []
+  let mut count = 0
+  let max_stocks = 500
+
+  for code in stock_codes {
+    if count >= max_stocks {
+      break
+    }
+    count = count + 1
+
+    let klines = load_klines_for_stock(code)
+
+    if klines.length() == 0 {
+      continue
+    }
+
+    // Filter klines for specific date
+    let filtered_klines = filter_klines_for_single_date(klines, query_date)
+
+    if filtered_klines.length() == 0 {
+      continue
+    }
+
+    let latest = filtered_klines[0]
+    let price = latest.close
+    let volume = latest.volume
+    let amount = latest.amount
+    let turn = latest.turn
+    let ma5 = calculate_ma_from_klines(filtered_klines, 5)
+    let ma10 = calculate_ma_from_klines(filtered_klines, 10)
+    let stock_info = get_stock_info(code)
+
+    let ma5_momentum : Float = if ma5 > 0.0 {
+      (price - ma5) / ma5 * 100.0
+    } else {
+      0.0
+    }
+    let ma10_momentum : Float = if ma10 > 0.0 {
+      (price - ma10) / ma10 * 100.0
+    } else {
+      0.0
+    }
+
+    let volume_score : Float = if volume > 0.0 {
+      Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0)
+    } else {
+      0.0
+    }
+
+    let score : Float = Float::min(
+      Float::add(
+        Float::add(
+          Float::mul(ma5_momentum, 2.0),
+          Float::mul(ma10_momentum, 1.5),
+        ),
+        volume_score,
+      ),
+      100.0,
+    )
+
+    results.push(ScreenerStockResult::{
+      code,
+      name: stock_info.name,
+      price,
+      volume,
+      amount,
+      turn,
+      ma5,
+      ma10,
+      score,
+    })
+  }
+
+  results
+}
+
+///|
+/// Filter K-lines for a specific date
+fn filter_klines_for_single_date(
+  klines : Array[@data.KLine],
+  query_date : String,
+) -> Array[@data.KLine] {
+  let filtered : Array[@data.KLine] = []
+  for kline in klines {
+    if kline.date == query_date {
+      filtered.push(kline)
+    }
+  }
+  filtered
+}
+
+///|
 /// Filter K-lines by date range
 fn filter_klines_by_date(
   klines : Array[@data.KLine],
@@ -1313,8 +1408,10 @@ pub struct ScreenerRequest {
   limit : Int
   page : Int
   page_size : Int
+  date_range_mode : Bool
   start_date : String
   end_date : String
+  query_date : String
 }
 
 ///|
@@ -1685,6 +1782,16 @@ fn parse_screener_request(json : String) -> ScreenerRequest {
     }
   }
 
+  // Parse date range mode
+  let mut date_range_mode = true
+  if json.contains("\"date_range_mode\"") {
+    if json.contains("\"date_range_mode\":true") {
+      date_range_mode = true
+    } else if json.contains("\"date_range_mode\":false") {
+      date_range_mode = false
+    }
+  }
+
   // Parse start_date and end_date if present
   let mut start_date = "2026-01-01"
   let mut end_date = "2026-03-26"
@@ -1701,7 +1808,16 @@ fn parse_screener_request(json : String) -> ScreenerRequest {
     }
   }
 
-  return ScreenerRequest::{ filters, weights, sort_by, sort_order, limit, page, page_size, start_date, end_date }
+  // Parse query_date if present
+  let mut query_date = "2026-03-26"
+  if json.contains("\"query_date\"") {
+    let qd = extract_json_string(json, "\"query_date\"")
+    if qd != "" {
+      query_date = qd
+    }
+  }
+
+  return ScreenerRequest::{ filters, weights, sort_by, sort_order, limit, page, page_size, date_range_mode, start_date, end_date, query_date }
 }
 
 ///|
@@ -1836,8 +1952,12 @@ fn extract_json_int(json : String, key : String) -> Int {
 pub fn handle_screener(request_body : String?) -> HttpResponse {
   let request = parse_screener_request(request_body.unwrap_or("{}"))
 
-  // Get stock data with date range filtering
-  let all_results = get_cached_stocks_array_with_date(request.start_date, request.end_date)
+  // Get stock data based on date mode
+  let all_results = if request.date_range_mode {
+    get_cached_stocks_array_with_date(request.start_date, request.end_date)
+  } else {
+    get_cached_stocks_array_for_date(request.query_date)
+  }
 
   // Apply filters from request
   let filtered = apply_screener_filters(all_results, request.filters)

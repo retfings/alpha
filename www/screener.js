@@ -25,7 +25,9 @@ const state = {
   isScreening: false,
   resultsLimit: 50, // Default display limit
   startDate: '2026-01-01',
-  endDate: '2026-03-26'
+  endDate: '2026-03-26',
+  queryDate: '2026-03-26',
+  dateRangeMode: true // true = range mode, false = single date mode
 };
 
 // ============================================================================
@@ -120,6 +122,18 @@ function setupEventHandlers() {
   }
   if (endDateInput) {
     endDateInput.addEventListener('change', handleDateChange);
+  }
+
+  // Single query date input
+  const queryDateInput = document.getElementById('query-date');
+  if (queryDateInput) {
+    queryDateInput.addEventListener('change', handleDateChange);
+  }
+
+  // Date mode toggle
+  const dateModeToggle = document.getElementById('date-mode-toggle');
+  if (dateModeToggle) {
+    dateModeToggle.addEventListener('change', handleDateModeChange);
   }
 
   // Navigation
@@ -642,10 +656,17 @@ async function runScreener() {
 
       // Handle between operator with min/max values
       if (f.operator === 'between' || f.operator === 'in_range') {
-        filter.min = parseFloat(f.minValue);
-        filter.max = parseFloat(f.maxValue);
+        const minVal = parseFloat(f.minValue);
+        const maxVal = parseFloat(f.maxValue);
+        if (!isNaN(minVal) && !isNaN(maxVal)) {
+          filter.min = minVal;
+          filter.max = maxVal;
+        }
       } else {
-        filter.value = parseFloat(f.value);
+        const val = parseFloat(f.value);
+        if (!isNaN(val)) {
+          filter.value = val;
+        }
       }
 
       return filter;
@@ -664,8 +685,10 @@ async function runScreener() {
       sort_order: 'desc',
       page: 1,
       page_size: state.resultsLimit === Infinity ? 10000 : state.resultsLimit,
+      date_range_mode: state.dateRangeMode,
       start_date: state.startDate,
-      end_date: state.endDate
+      end_date: state.endDate,
+      query_date: state.queryDate
     };
 
     console.log('Request config:', JSON.stringify(config, null, 2));
@@ -902,9 +925,38 @@ function handleDateChange(e) {
     state.startDate = value;
   } else if (inputId === 'end-date') {
     state.endDate = value;
+  } else if (inputId === 'query-date') {
+    state.queryDate = value;
   }
 
-  console.log(`Date range updated: ${state.startDate} to ${state.endDate}`);
+  console.log(`Date updated: ${state.dateRangeMode ? 'Range' : 'Single'} - ${state.startDate} to ${state.endDate} | Query: ${state.queryDate}`);
+}
+
+/**
+ * Handle date mode toggle change
+ * @param {Event} e - Change event
+ */
+function handleDateModeChange(e) {
+  const isRangeMode = e.target.checked;
+  state.dateRangeMode = isRangeMode;
+
+  const rangeGroup = document.getElementById('range-date-group');
+  const singleGroup = document.getElementById('single-date-group');
+  const toggleText = document.querySelector('.toggle-text');
+
+  if (rangeGroup && singleGroup) {
+    if (isRangeMode) {
+      rangeGroup.style.display = 'flex';
+      singleGroup.style.display = 'none';
+      if (toggleText) toggleText.textContent = '范围模式';
+    } else {
+      rangeGroup.style.display = 'none';
+      singleGroup.style.display = 'flex';
+      if (toggleText) toggleText.textContent = '单日模式';
+    }
+  }
+
+  console.log(`Date mode changed to: ${isRangeMode ? 'Range' : 'Single'}`);
 }
 
 /**

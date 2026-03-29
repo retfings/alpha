@@ -179,13 +179,45 @@
   background: #fafafa;
 }
 
+.date-range-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.date-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+}
+
+.date-mode-toggle input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.toggle-text {
+  font-weight: 500;
+}
+
 .date-range-controls {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .date-input-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.date-input-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;

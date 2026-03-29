@@ -112,17 +112,28 @@ export function createFilterControl(options = {}) {
 
   operatorSelect.addEventListener('change', (e) => {
     const isRange = e.target.value === 'between' || e.target.value === 'in_range';
+
+    // Save existing values before recreating inputs
+    const existingSingle = valueContainer.querySelector('.single-value');
+    const existingMin = valueContainer.querySelector('.min-value');
+    const existingMax = valueContainer.querySelector('.max-value');
+    const singleValue = existingSingle ? existingSingle.value : '';
+    const minValue = existingMin ? existingMin.value : '';
+    const maxValue = existingMax ? existingMax.value : '';
+
     if (isRange) {
       valueContainer.innerHTML = `
         <div class="filter-range-inputs">
-          <input type="number" class="filter-value-input min-value" placeholder="最小值">
+          <input type="number" class="filter-value-input min-value" value="${minValue || singleValue}" placeholder="最小值">
           <span class="range-separator">至</span>
-          <input type="number" class="filter-value-input max-value" placeholder="最大值">
+          <input type="number" class="filter-value-input max-value" value="${maxValue || singleValue}" placeholder="最大值">
         </div>
       `;
     } else {
+      // When switching from range to single, use min value as default
+      const defaultValue = minValue || singleValue;
       valueContainer.innerHTML = `
-        <input type="number" class="filter-value-input single-value" placeholder="输入阈值${unit}">
+        <input type="number" class="filter-value-input single-value" value="${defaultValue}" placeholder="输入阈值${unit}">
       `;
     }
   });
