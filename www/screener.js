@@ -23,7 +23,9 @@ const state = {
   searchQuery: '',
   results: [],
   isScreening: false,
-  resultsLimit: 50 // Default display limit
+  resultsLimit: 50, // Default display limit
+  startDate: '2026-01-01',
+  endDate: '2026-03-26'
 };
 
 // ============================================================================
@@ -108,6 +110,16 @@ function setupEventHandlers() {
   const limitSelect = document.getElementById('results-limit-select');
   if (limitSelect) {
     limitSelect.addEventListener('change', handleLimitChange);
+  }
+
+  // Date range inputs
+  const startDateInput = document.getElementById('start-date');
+  const endDateInput = document.getElementById('end-date');
+  if (startDateInput) {
+    startDateInput.addEventListener('change', handleDateChange);
+  }
+  if (endDateInput) {
+    endDateInput.addEventListener('change', handleDateChange);
   }
 
   // Navigation
@@ -651,7 +663,9 @@ async function runScreener() {
       sort_by: 'score',
       sort_order: 'desc',
       page: 1,
-      page_size: state.resultsLimit === Infinity ? 10000 : state.resultsLimit
+      page_size: state.resultsLimit === Infinity ? 10000 : state.resultsLimit,
+      start_date: state.startDate,
+      end_date: state.endDate
     };
 
     console.log('Request config:', JSON.stringify(config, null, 2));
@@ -874,6 +888,23 @@ function handleSort(key, defaultOrder, th) {
   }
 
   showToast(`Sorted by ${key} (${newOrder === 'asc' ? 'ascending' : 'descending'})`, 'info');
+}
+
+/**
+ * Handle date range change
+ * @param {Event} e - Change event
+ */
+function handleDateChange(e) {
+  const inputId = e.target.id;
+  const value = e.target.value;
+
+  if (inputId === 'start-date') {
+    state.startDate = value;
+  } else if (inputId === 'end-date') {
+    state.endDate = value;
+  }
+
+  console.log(`Date range updated: ${state.startDate} to ${state.endDate}`);
 }
 
 /**

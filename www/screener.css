@@ -172,6 +172,53 @@
   min-height: 300px;
 }
 
+/* Date Range Section */
+.date-range-section {
+  border-bottom: 1px solid #e8e8e8;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.date-range-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.date-input {
+  padding: 6px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 140px;
+}
+
+.date-input:hover {
+  border-color: #1890ff;
+}
+
+.date-input:focus {
+  border-color: #1890ff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+}
+
 /* Weight Config Section */
 .weight-config-section {
   border-top: 1px solid #e8e8e8;
