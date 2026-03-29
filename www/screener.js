@@ -25,8 +25,8 @@ const state = {
   isScreening: false,
   resultsLimit: 50, // Default display limit
   startDate: '2026-01-01',
-  endDate: '2026-03-26',
-  queryDate: '2026-03-26',
+  endDate: '2026-03-27',
+  queryDate: '2026-03-27',
   dateRangeMode: true // true = range mode, false = single date mode
 };
 
