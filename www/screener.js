@@ -621,7 +621,8 @@ async function runScreener() {
       weights: weights,
       sort_by: 'score',
       sort_order: 'desc',
-      limit: state.resultsLimit === Infinity ? 10000 : state.resultsLimit
+      page: 1,
+      page_size: state.resultsLimit === Infinity ? 10000 : state.resultsLimit
     };
 
     console.log('Request config:', JSON.stringify(config, null, 2));
