@@ -318,7 +318,8 @@ async function loadStockList() {
 
 async function loadStrategies() {
   try {
-    const strategies = await api.getStrategies();
+    const response = await api.getStrategies();
+    const strategies = response.strategies || [];
     const strategySelect = document.getElementById('backtest-strategy');
 
     if (strategySelect) {
