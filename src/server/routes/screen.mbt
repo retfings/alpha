@@ -1536,14 +1536,16 @@ fn parse_screener_request(json : String) -> ScreenerRequest {
                 let indicator = extract_json_string(clean_obj, "\"indicator\"")
                 let operator = extract_json_string(clean_obj, "\"operator\"")
                 let value = extract_json_float(clean_obj, "\"value\"")
+                let min_val = extract_json_float(clean_obj, "\"min\"")
+                let max_val = extract_json_float(clean_obj, "\"max\"")
 
                 if indicator != "" && operator != "" {
                   filters.push(ScreenerFilter::{
                     indicator,
                     operator,
                     value: value,
-                    min: None,
-                    max: None,
+                    min: min_val,
+                    max: max_val,
                   })
                 }
               }

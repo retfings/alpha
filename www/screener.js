@@ -383,6 +383,8 @@ function addFilterControl(indicator) {
     indicatorId: indicator.id,
     operator: '>',
     value: '',
+    minValue: '',
+    maxValue: '',
     enabled: true,
     weight: weight
   });
@@ -415,17 +417,22 @@ function setupFilterEventHandlers(filterEl) {
     });
   }
 
-  // Value change
-  const valueInput = filterEl.querySelector('.filter-value-input');
-  if (valueInput) {
-    valueInput.addEventListener('input', (e) => {
-      const filter = state.filters.get(indicatorId);
-      if (filter) {
+  // Value change - handle both single value and range inputs
+  filterEl.addEventListener('input', (e) => {
+    const filter = state.filters.get(indicatorId);
+    if (!filter) return;
+
+    if (e.target.classList.contains('filter-value-input')) {
+      if (e.target.classList.contains('min-value')) {
+        filter.minValue = e.target.value;
+      } else if (e.target.classList.contains('max-value')) {
+        filter.maxValue = e.target.value;
+      } else {
         filter.value = e.target.value;
-        state.filters.set(indicatorId, filter);
       }
-    });
-  }
+      state.filters.set(indicatorId, filter);
+    }
+  });
 
   // Enable/disable toggle
   const toggle = filterEl.querySelector('.filter-toggle input');
@@ -585,7 +592,18 @@ async function runScreener() {
 
   // Check if there are any enabled filters with values
   const validFilters = Array.from(state.filters.values())
-    .filter(f => f.enabled !== false && f.value !== '' && f.value !== undefined);
+    .filter(f => {
+      if (f.enabled === false) return false;
+
+      // For between operator, check minValue and maxValue
+      if (f.operator === 'between' || f.operator === 'in_range') {
+        return f.minValue !== '' && f.minValue !== undefined &&
+               f.maxValue !== '' && f.maxValue !== undefined;
+      }
+
+      // For other operators, check value
+      return f.value !== '' && f.value !== undefined;
+    });
 
   console.log('Valid filters:', validFilters);
 
@@ -604,11 +622,22 @@ async function runScreener() {
 
   try {
     // Collect filter conditions
-    const filters = validFilters.map(f => ({
-      indicator: f.indicatorId,
-      operator: f.operator,
-      value: parseFloat(f.value)
-    }));
+    const filters = validFilters.map(f => {
+      const filter = {
+        indicator: f.indicatorId,
+        operator: f.operator
+      };
+
+      // Handle between operator with min/max values
+      if (f.operator === 'between' || f.operator === 'in_range') {
+        filter.min = parseFloat(f.minValue);
+        filter.max = parseFloat(f.maxValue);
+      } else {
+        filter.value = parseFloat(f.value);
+      }
+
+      return filter;
+    });
 
     console.log('Filters being sent:', JSON.stringify(filters, null, 2));
 
