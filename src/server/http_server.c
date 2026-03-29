@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#define BUFFER_SIZE 65536
+#define BUFFER_SIZE 2097152  // 2MB - to support large screener responses with 5000+ stocks
 #define MAX_CONNECTIONS 10
 
 static int g_server_fd = -1;
