@@ -439,6 +439,8 @@ function setupFilterEventHandlers(filterEl) {
       if (filter) {
         filter.operator = e.target.value;
         state.filters.set(indicatorId, filter);
+        console.log(`Filter ${indicatorId} operator changed to: ${e.target.value}`);
+        console.log('Current filter state:', filter);
       }
     });
   }
@@ -451,12 +453,16 @@ function setupFilterEventHandlers(filterEl) {
     if (e.target.classList.contains('filter-value-input')) {
       if (e.target.classList.contains('min-value')) {
         filter.minValue = e.target.value;
+        console.log(`Filter ${indicatorId} minValue set to: "${e.target.value}"`);
       } else if (e.target.classList.contains('max-value')) {
         filter.maxValue = e.target.value;
+        console.log(`Filter ${indicatorId} maxValue set to: "${e.target.value}"`);
       } else {
         filter.value = e.target.value;
+        console.log(`Filter ${indicatorId} value set to: "${e.target.value}"`);
       }
       state.filters.set(indicatorId, filter);
+      console.log('State filters:', Object.fromEntries(state.filters));
     }
   });
 
@@ -623,8 +629,11 @@ async function runScreener() {
 
       // For between operator, check minValue and maxValue
       if (f.operator === 'between' || f.operator === 'in_range') {
-        return f.minValue !== '' && f.minValue !== undefined &&
-               f.maxValue !== '' && f.maxValue !== undefined;
+        // Check if values are not null/undefined and not empty string
+        const hasMin = f.minValue !== null && f.minValue !== undefined && f.minValue !== '';
+        const hasMax = f.maxValue !== null && f.maxValue !== undefined && f.maxValue !== '';
+        console.log(`Between filter: min="${f.minValue}" (${hasMin}), max="${f.maxValue}" (${hasMax})`);
+        return hasMin && hasMax;
       }
 
       // For other operators, check value

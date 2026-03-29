@@ -129,12 +129,20 @@ export function createFilterControl(options = {}) {
           <input type="number" class="filter-value-input max-value" value="${maxValue || singleValue}" placeholder="最大值">
         </div>
       `;
+      // Trigger input event to sync state with new input values
+      const minInput = valueContainer.querySelector('.min-value');
+      const maxInput = valueContainer.querySelector('.max-value');
+      if (minInput) minInput.dispatchEvent(new Event('input', { bubbles: true }));
+      if (maxInput) maxInput.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
       // When switching from range to single, use min value as default
       const defaultValue = minValue || singleValue;
       valueContainer.innerHTML = `
         <input type="number" class="filter-value-input single-value" value="${defaultValue}" placeholder="输入阈值${unit}">
       `;
+      // Trigger input event to sync state with new input value
+      const singleInput = valueContainer.querySelector('.single-value');
+      if (singleInput) singleInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
 
