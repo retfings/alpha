@@ -1078,18 +1078,15 @@ pub struct ScreenerFilter {
 }
 
 ///|
-/// Screener result structure with technical indicators
+/// Screener result structure with technical indicators and K-line based data
 pub struct ScreenerStockResult {
   code : String
-  name : String
   price : Float
-  rsi : Float
-  macd : Float
-  kdj : Float
-  roe : Float
-  np_margin : Float
-  eps : Float
   volume : Float
+  amount : Float
+  turn : Float
+  ma5 : Float
+  ma10 : Float
   score : Float
 } derive(Show, ToJson)
 
@@ -1106,140 +1103,222 @@ fn parse_screener_request(_json : String) -> ScreenerRequest {
 }
 
 ///|
-/// Mock stock data for screener with technical indicators
+/// Mock stock data for screener with K-line based indicators (for testing)
 fn get_screener_mock_data() -> Array[ScreenerStockResult] {
   [
     ScreenerStockResult::{
       code: "sh.600000",
-      name: "浦发银行",
       price: 8.52,
-      rsi: 45.2,
-      macd: 0.0234,
-      kdj: 52.3,
-      roe: 12.5,
-      np_margin: 28.3,
-      eps: 1.25,
       volume: 25000000.0,
+      amount: 213000000.0,
+      turn: 0.025,
+      ma5: 8.45,
+      ma10: 8.30,
       score: 65.0,
     },
     ScreenerStockResult::{
       code: "sh.600001",
-      name: "邯郸钢铁",
       price: 3.45,
-      rsi: 62.8,
-      macd: -0.0123,
-      kdj: 71.2,
-      roe: 8.2,
-      np_margin: 5.1,
-      eps: 0.32,
       volume: 18000000.0,
+      amount: 62100000.0,
+      turn: 0.018,
+      ma5: 3.40,
+      ma10: 3.35,
       score: 48.0,
     },
     ScreenerStockResult::{
       code: "sh.600002",
-      name: "齐鲁石化",
       price: 5.67,
-      rsi: 38.5,
-      macd: 0.0456,
-      kdj: 35.8,
-      roe: 15.8,
-      np_margin: 12.4,
-      eps: 0.89,
       volume: 12000000.0,
+      amount: 68040000.0,
+      turn: 0.012,
+      ma5: 5.60,
+      ma10: 5.50,
       score: 72.0,
     },
     ScreenerStockResult::{
       code: "sh.600003",
-      name: "东北高速",
       price: 4.23,
-      rsi: 55.1,
-      macd: 0.0089,
-      kdj: 48.6,
-      roe: 6.5,
-      np_margin: 18.2,
-      eps: 0.45,
       volume: 9500000.0,
+      amount: 40185000.0,
+      turn: 0.0095,
+      ma5: 4.20,
+      ma10: 4.15,
       score: 55.0,
     },
     ScreenerStockResult::{
       code: "sh.600004",
-      name: "白云机场",
       price: 12.89,
-      rsi: 72.4,
-      macd: 0.1234,
-      kdj: 82.1,
-      roe: 18.3,
-      np_margin: 32.5,
-      eps: 1.85,
       volume: 32000000.0,
+      amount: 412480000.0,
+      turn: 0.032,
+      ma5: 12.70,
+      ma10: 12.50,
       score: 85.0,
     },
-    ScreenerStockResult::{
-      code: "sh.600005",
-      name: "武钢股份",
-      price: 4.56,
-      rsi: 48.9,
-      macd: -0.0056,
-      kdj: 42.3,
-      roe: 10.2,
-      np_margin: 8.7,
-      eps: 0.52,
-      volume: 21000000.0,
-      score: 52.0,
-    },
-    ScreenerStockResult::{
-      code: "sh.600006",
-      name: "东风汽车",
-      price: 7.34,
-      rsi: 58.2,
-      macd: 0.0312,
-      kdj: 61.5,
-      roe: 14.6,
-      np_margin: 6.8,
-      eps: 0.78,
-      volume: 15000000.0,
-      score: 68.0,
-    },
-    ScreenerStockResult::{
-      code: "sh.600007",
-      name: "上港集团",
-      price: 6.12,
-      rsi: 41.6,
-      macd: -0.0178,
-      kdj: 38.9,
-      roe: 22.1,
-      np_margin: 42.3,
-      eps: 1.12,
-      volume: 28000000.0,
-      score: 78.0,
-    },
-    ScreenerStockResult::{
-      code: "sh.600008",
-      name: "首创股份",
-      price: 3.89,
-      rsi: 67.3,
-      macd: 0.0201,
-      kdj: 69.8,
-      roe: 9.8,
-      np_margin: 15.6,
-      eps: 0.41,
-      volume: 11000000.0,
-      score: 58.0,
-    },
-    ScreenerStockResult::{
-      code: "sh.600009",
-      name: "上海机场",
-      price: 45.67,
-      rsi: 52.8,
-      macd: 0.5678,
-      kdj: 55.2,
-      roe: 25.4,
-      np_margin: 38.9,
-      eps: 2.35,
-      volume: 8500000.0,
-      score: 88.0,
-    },
   ]
+}
+
+///|
+/// Calculate moving average from K-line data
+pub fn calculate_ma_from_klines(
+  klines : Array[@data.KLine],
+  period : Int,
+) -> Float {
+  if klines.length() < period {
+    // Not enough data, return latest close price
+    if klines.length() > 0 {
+      return klines[klines.length() - 1].close
+    }
+    return 0.0
+  }
+
+  // Calculate average of last 'period' closing prices
+  let mut sum : Float = 0.0
+  let start_idx = klines.length() - period
+  let mut i = start_idx
+  while i < klines.length() {
+    sum = sum + klines[i].close
+    i = i + 1
+  }
+
+  Float::div(sum, Float::from_int(period))
+}
+
+///|
+/// Apply filters to screener results
+pub fn apply_screener_filters(
+  results : Array[ScreenerStockResult],
+  filters : Array[ScreenerFilter],
+) -> Array[ScreenerStockResult] {
+  if filters.length() == 0 {
+    return results
+  }
+
+  let filtered : Array[ScreenerStockResult] = []
+
+  for result in results {
+    let mut matches = true
+
+    for filter in filters {
+      // Get the value for the indicator field
+      let value = get_indicator_value(result, filter.indicator)
+
+      // Apply the filter operator
+      match filter.operator {
+        ">" =>
+          match filter.value {
+            Some(v) => if value <= v { matches = false }
+            None => ignore(())
+          }
+        ">=" =>
+          match filter.value {
+            Some(v) => if value < v { matches = false }
+            None => ignore(())
+          }
+        "<" =>
+          match filter.value {
+            Some(v) => if value >= v { matches = false }
+            None => ignore(())
+          }
+        "<=" =>
+          match filter.value {
+            Some(v) => if value > v { matches = false }
+            None => ignore(())
+          }
+        "=" =>
+          match filter.value {
+            Some(v) => if Float::abs(value - v) > 0.0001 { matches = false }
+            None => ignore(())
+          }
+        "between" =>
+          match (filter.min, filter.max) {
+            (Some(min), Some(max)) =>
+              if value < min || value > max {
+                matches = false
+              }
+            _ => ignore(())
+          }
+        _ => ignore(())
+      }
+
+      if !matches {
+        break
+      }
+    }
+
+    if matches {
+      filtered.push(result)
+    }
+  }
+
+  filtered
+}
+
+///|
+/// Get indicator value from result by field name
+fn get_indicator_value(
+  result : ScreenerStockResult,
+  indicator : String,
+) -> Float {
+  match indicator {
+    "price" => result.price
+    "volume" => result.volume
+    "amount" => result.amount
+    "turn" => result.turn
+    "ma5" => result.ma5
+    "ma10" => result.ma10
+    "score" => result.score
+    _ => 0.0
+  }
+}
+
+///|
+/// Sort screener results by score (descending)
+pub fn sort_screener_results_by_score(
+  results : Array[ScreenerStockResult],
+) -> Array[ScreenerStockResult] {
+  // Simple bubble sort for now (can be optimized later)
+  let sorted = results.copy()
+  let len = sorted.length()
+  let mut i = 0
+  while i < len {
+    let mut j = 0
+    while j < len - i - 1 {
+      if sorted[j].score < sorted[j + 1].score {
+        // Swap
+        let temp = sorted[j]
+        sorted[j] = sorted[j + 1]
+        sorted[j + 1] = temp
+      }
+      j = j + 1
+    }
+    i = i + 1
+  }
+  sorted
+}
+
+///|
+/// Limit results to maximum count
+pub fn limit_results(
+  results : Array[ScreenerStockResult],
+  limit : Int?,
+) -> Array[ScreenerStockResult] {
+  match limit {
+    Some(n) =>
+      if results.length() <= n {
+        results
+      } else {
+        let limited : Array[ScreenerStockResult] = []
+        let mut i = 0
+        while i < n && i < results.length() {
+          limited.push(results[i])
+          i = i + 1
+        }
+        limited
+      }
+    None => results
+  }
 }
 
 ///|
@@ -1265,54 +1344,74 @@ pub fn handle_screener(request_body : String?) -> HttpResponse {
     let latest = klines[klines.length() - 1]
     let price = latest.close
     let volume = latest.volume
-    let turnover_rate = latest.turn
+    let amount = latest.amount
+    let turn = latest.turn
 
-    // Calculate technical indicators from K-line data
-    let rsi = calculate_rsi_from_klines(klines, 14)
-    let macd_val = calculate_macd_from_klines(klines, 12, 26, 9)
-    let kdj_val = calculate_kdj_from_klines(klines, 9)
+    // Calculate MA5 (5-day moving average)
+    let ma5 = calculate_ma_from_klines(klines, 5)
 
-    // Get stock info for name
-    let stock_info = get_stock_info(code)
+    // Calculate MA10 (10-day moving average)
+    let ma10 = calculate_ma_from_klines(klines, 10)
 
-    // Mock financial data (in production, would load from actual financial reports)
-    let roe : Float = Float::add(10.0, Float::div(price, 5.0))
-    let np_margin : Float = Float::add(8.0, Float::div(price, 8.0))
-    let eps : Float = Float::div(price, 10.0)
+    // Calculate score based on price momentum and volume
+    // Price momentum: compare current price to MA5 and MA10
+    let ma5_momentum : Float = if ma5 > 0.0 {
+      (price - ma5) / ma5 * 100.0
+    } else {
+      0.0
+    }
+    let ma10_momentum : Float = if ma10 > 0.0 {
+      (price - ma10) / ma10 * 100.0
+    } else {
+      0.0
+    }
 
-    // Calculate score based on technical and price factors
-    let momentum_score : Float = if rsi > 50.0 { Float::mul(rsi, 0.5) } else { Float::mul(rsi, 0.3) }
-    let volume_score : Float = if volume > 0.0 { Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0) } else { 0.0 }
-    let price_score : Float = if price > 1.0 { Float::min(price, 30.0) } else { 0.0 }
-    let score : Float = Float::min(Float::add(Float::add(momentum_score, volume_score), price_score), 100.0)
+    // Volume score
+    let volume_score : Float = if volume > 0.0 {
+      Float::min(Float::mul(Float::div(volume, 1000000.0), 10.0), 20.0)
+    } else {
+      0.0
+    }
+
+    // Combined score
+    let score : Float = Float::min(
+      Float::add(
+        Float::add(
+          Float::mul(ma5_momentum, 2.0),
+          Float::mul(ma10_momentum, 1.5),
+        ),
+        volume_score,
+      ),
+      100.0,
+    )
 
     results.push(ScreenerStockResult::{
-      code: code,
-      name: stock_info.name,
-      price: price,
-      rsi: rsi,
-      macd: macd_val,
-      kdj: kdj_val,
-      roe: roe,
-      np_margin: np_margin,
-      eps: eps,
-      volume: volume,
-      score: score,
+      code,
+      price,
+      volume,
+      amount,
+      turn,
+      ma5,
+      ma10,
+      score,
     })
   }
 
-  // Apply filters from request (simplified - in production would parse request properly)
-  let filtered = results.filter(fn(r) { r.price > 1.0 })
+  // Apply filters from request
+  let filtered = apply_screener_filters(results, _request.filters)
 
   // Sort by score descending
   let sorted = sort_screener_results_by_score(filtered)
 
+  // Limit results
+  let limited = limit_results(sorted, Some(_request.limit))
+
   // Build response JSON
-  let results_json = sorted.map(fn(r) {
-    "{\"code\":\"\{r.code}\",\"name\":\"\{r.name}\",\"price\":\{r.price},\"rsi\":\{r.rsi},\"macd\":\{r.macd},\"kdj\":\{r.kdj},\"roe\":\{r.roe},\"np_margin\":\{r.np_margin},\"eps\":\{r.eps},\"volume\":\{r.volume},\"score\":\{r.score}}"
+  let results_json = limited.map(fn(r) {
+    "{\"code\":\"\{r.code}\",\"price\":\{r.price},\"volume\":\{r.volume},\"amount\":\{r.amount},\"turn\":\{r.turn},\"ma5\":\{r.ma5},\"ma10\":\{r.ma10},\"score\":\{r.score}}"
   })
 
-  let total = Int::to_string(sorted.length())
+  let total = Int::to_string(limited.length())
   let response = "{\"results\":[" +
     results_json.join(",") +
     "],\"total\":\{total}}"
@@ -1747,7 +1846,10 @@ pub fn handle_get_rebalance_frequencies() -> HttpResponse {
 
 ///|
 /// Calculate RSI from K-line data
-fn calculate_rsi_from_klines(klines: Array[@data.KLine], period: Int) -> Float {
+fn calculate_rsi_from_klines(
+  klines : Array[@data.KLine],
+  period : Int,
+) -> Float {
   if klines.length() < period + 1 {
     return 50.0
   }
@@ -1764,7 +1866,12 @@ fn calculate_rsi_from_klines(klines: Array[@data.KLine], period: Int) -> Float {
 
 ///|
 /// Calculate MACD from K-line data
-fn calculate_macd_from_klines(klines: Array[@data.KLine], fast: Int, slow: Int, signal: Int) -> Float {
+fn calculate_macd_from_klines(
+  klines : Array[@data.KLine],
+  fast : Int,
+  slow : Int,
+  signal : Int,
+) -> Float {
   if klines.length() < slow + 1 {
     return 0.0
   }
@@ -1781,7 +1888,10 @@ fn calculate_macd_from_klines(klines: Array[@data.KLine], fast: Int, slow: Int, 
 
 ///|
 /// Calculate KDJ from K-line data
-fn calculate_kdj_from_klines(klines: Array[@data.KLine], n_period: Int) -> Float {
+fn calculate_kdj_from_klines(
+  klines : Array[@data.KLine],
+  n_period : Int,
+) -> Float {
   if klines.length() < n_period {
     return 50.0
   }
@@ -1793,27 +1903,6 @@ fn calculate_kdj_from_klines(klines: Array[@data.KLine], n_period: Int) -> Float
   } else {
     50.0
   }
-}
-
-///|
-/// Sort screener results by score (descending)
-fn sort_screener_results_by_score(results: Array[ScreenerStockResult]) -> Array[ScreenerStockResult] {
-  let sorted = results.copy()
-  let len = sorted.length()
-  let mut i = 0
-  while i < len {
-    let mut j = 0
-    while j < len - i - 1 {
-      if sorted[j].score < sorted[j + 1].score {
-        let temp = sorted[j]
-        sorted[j] = sorted[j + 1]
-        sorted[j + 1] = temp
-      }
-      j = j + 1
-    }
-    i = i + 1
-  }
-  sorted
 }
 
 ///|

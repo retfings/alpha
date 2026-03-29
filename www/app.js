@@ -820,10 +820,20 @@ async function runScreener() {
     const config = collectScreenerConfig();
     const sortBy = document.getElementById('sort-by')?.value || 'score_desc';
 
-    // Mock data for demonstration (in production, this would call the API)
-    const mockResults = generateMockScreenerResults(config);
+    // Build request body matching backend ScreenerRequest format
+    const requestBody = {
+      filters: config.filters,
+      weights: config.weights,
+      sort_by: 'score',
+      sort_order: 'desc',
+      limit: 100
+    };
 
-    screenerState.results = mockResults;
+    // Call actual backend API
+    const response = await api.runScreener(requestBody);
+    const results = response.results || [];
+
+    screenerState.results = results;
     screenerState.filters = config;
 
     // Apply sorting
@@ -953,13 +963,12 @@ function updateScreenerResults(results) {
   tbody.innerHTML = results.map(stock => `
     <tr data-code="${stock.code}">
       <td>${stock.code}</td>
-      <td>${stock.name}</td>
       <td>${formatNumber(stock.price, 2)}</td>
       <td>${formatNumber(stock.volume, 0)}</td>
       <td>${formatNumber(stock.amount / 10000, 0)}万</td>
-      <td>${formatNumber(stock.turn * 100, 2)}%</td>
-      <td>${formatNumber(stock.ma5, 2)}</td>
-      <td>${formatNumber(stock.ma10, 2)}</td>
+      <td>${formatNumber((stock.turn || 0) * 100, 2)}%</td>
+      <td>${formatNumber(stock.ma5 || 0, 2)}</td>
+      <td>${formatNumber(stock.ma10 || 0, 2)}</td>
       <td class="score-cell" style="color: ${getScoreColor(stock.score)}">${formatNumber(stock.score, 1)}</td>
       <td class="action-cell">
         <button class="btn-sm btn-analyze" onclick="analyzeStock('${stock.code}')">分析</button>
@@ -1012,16 +1021,15 @@ function exportScreenerResults() {
     return;
   }
 
-  const headers = ['代码', '名称', '收盘价', '成交量', '成交额', '换手率 (%)', '5 日均线', '10 日均线', '综合评分'];
+  const headers = ['代码', '收盘价', '成交量', '成交额', '换手率 (%)', '5 日均线', '10 日均线', '综合评分'];
   const rows = screenerState.results.map(stock => [
     stock.code,
-    stock.name,
     stock.price,
     stock.volume,
     stock.amount,
-    stock.turn,
-    stock.ma5,
-    stock.ma10,
+    stock.turn || 0,
+    stock.ma5 || 0,
+    stock.ma10 || 0,
     stock.score
   ]);
 
