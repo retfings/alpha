@@ -672,8 +672,6 @@ async function runScreener() {
       return filter;
     });
 
-    console.log('Filters being sent:', JSON.stringify(filters, null, 2));
-
     // Collect weights
     const weights = Object.fromEntries(state.weights);
 
@@ -690,8 +688,6 @@ async function runScreener() {
       end_date: state.endDate,
       query_date: state.queryDate
     };
-
-    console.log('Request config:', JSON.stringify(config, null, 2));
 
     // Call actual API
     await callScreenerApi(config);
@@ -723,8 +719,6 @@ async function callScreenerApi(config) {
 
   const data = await response.json();
 
-  console.log('API Response:', data);
-
   // Transform API results to match frontend format
   // Backend returns: code, name, price, volume, amount, turn, ma5, ma10, score
   state.results = data.results.map((stock, index) => ({
@@ -740,8 +734,6 @@ async function callScreenerApi(config) {
       ma10: stock.ma10
     }
   })).sort((a, b) => b.score - a.score);
-
-  console.log('Transformed results:', state.results);
 
   renderResults();
 }
