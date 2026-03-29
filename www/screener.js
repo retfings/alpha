@@ -22,7 +22,8 @@ const state = {
   currentCategory: 'market',
   searchQuery: '',
   results: [],
-  isScreening: false
+  isScreening: false,
+  resultsLimit: 50 // Default display limit
 };
 
 // ============================================================================
@@ -101,6 +102,12 @@ function setupEventHandlers() {
   const watchlistBtn = document.getElementById('btn-add-to-watchlist');
   if (watchlistBtn) {
     watchlistBtn.addEventListener('click', addToWatchlist);
+  }
+
+  // Results limit selector
+  const limitSelect = document.getElementById('results-limit-select');
+  if (limitSelect) {
+    limitSelect.addEventListener('change', handleLimitChange);
   }
 
   // Navigation
@@ -614,7 +621,7 @@ async function runScreener() {
       weights: weights,
       sort_by: 'score',
       sort_order: 'desc',
-      limit: 100
+      limit: state.resultsLimit === Infinity ? 10000 : state.resultsLimit
     };
 
     console.log('Request config:', JSON.stringify(config, null, 2));
@@ -840,13 +847,34 @@ function handleSort(key, defaultOrder, th) {
 }
 
 /**
+ * Handle results limit change
+ * @param {Event} e - Change event
+ */
+function handleLimitChange(e) {
+  const value = e.target.value;
+  state.resultsLimit = value === 'all' ? Infinity : parseInt(value, 10);
+
+  // Re-render table with new limit
+  const bodyEl = document.getElementById('results-body');
+  if (bodyEl) {
+    renderTableRows(bodyEl);
+  }
+
+  showToast(`已设置显示数量：${value === 'all' ? '全部' : value}`, 'info');
+}
+
+/**
  * Render table rows from current state.results
  * @param {HTMLElement} bodyEl - Table body element
  */
 function renderTableRows(bodyEl) {
   bodyEl.innerHTML = '';
 
-  state.results.forEach((stock, index) => {
+  // Apply display limit
+  const limit = state.resultsLimit;
+  const displayResults = limit === Infinity ? state.results : state.results.slice(0, limit);
+
+  displayResults.forEach((stock, index) => {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td class="col-rank">${index + 1}</td>

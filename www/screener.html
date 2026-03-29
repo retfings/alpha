@@ -147,6 +147,17 @@
 
           <!-- Results Actions -->
           <div class="results-actions" id="results-actions" style="display: none;">
+            <div class="results-limit-control">
+              <label class="results-limit-label">显示数量:</label>
+              <select class="results-limit-select" id="results-limit-select">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+                <option value="50" selected>50</option>
+                <option value="all">全部</option>
+              </select>
+            </div>
             <button class="btn-export" id="btn-export">导出数据</button>
             <button class="btn-add-to-watchlist" id="btn-add-to-watchlist">加入观察</button>
           </div>
