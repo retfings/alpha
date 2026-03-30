@@ -23,11 +23,7 @@ moon run alpha
 - [API 参考](docs/api-reference.md) - API 文档
 - [架构设计](docs/architecture.md) - 架构说明
 
-### 开发文档
 
-- [优化路线图](docs/optimization-roadmap.md) - 开发和优化计划
-- [代码修复文档](docs/code-fixes.md) - 修复记录
-- [测试覆盖率报告](docs/test-coverage-report.md) - 测试分析
 
 ## 项目状态
 
