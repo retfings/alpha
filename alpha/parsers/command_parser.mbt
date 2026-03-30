@@ -108,7 +108,7 @@ pub fn _parse_serve_args(args : Array[String]) -> Command {
 /// MOONBIT_ARGS = space-separated arguments
 pub fn _get_env_command() -> Command {
   match @ffi.getenv("MOONBIT_CMD") {
-    None => Command::Help
+    None => Command::Serve(8080)
     Some(cmd) => {
       let args_str = @ffi.getenv("MOONBIT_ARGS").unwrap_or("")
       let args = _parse_env_args(args_str)
